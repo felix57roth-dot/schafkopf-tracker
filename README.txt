@@ -1,35 +1,35 @@
-SCHAFKOPF TRACKER – VERSION 1.4
-==============================
+SCHAFKOPFTRACKER – VERSION 1.5
+=============================
 
 NEU
-- Schafkopfabende bearbeiten; getrennte Auswahl Gewinn/Verlust
-- Suchfeld, Datums-, Ergebnis- und Sortierfilter
-- Monats- und Jahresbilanz mit grafischen Monatsbalken
-- Rekorde, Gewinn- und Verlustserien
-- Gewinnkurve mit Euro-Skala, Zeitraumwahl und anklickbaren Punkten; Regler für viele Spielabende
-- Optionales persönliches Gewinnziel im laufenden Kalenderjahr
-- JSON-Export und Import-Vorschau mit „Nur neue Abende ergänzen“ oder „Alle Daten ersetzen“
-- Erinnerung an Sicherungen nach 10 weiteren Abenden bzw. 30 Tagen
-- Offline-Service-Worker mit Cache-Version 1.4 und Update-Meldung
+- Darstellungsfehler „Monats- und Jahresbilanz“ behoben: Auf allen Unterseiten
+  beginnt der Inhalt jetzt unterhalb des gruenen Kopfbereichs, nicht mehr darin.
+- Jahresauswahl passt sich auch bei sehr schmalen Handy-Bildschirmen an.
+- Der offizielle PWA-App-Name (manifest name + short_name) lautet
+  "Schafkopftracker". HTML-Titel und sichtbarer Schriftzug angepasst.
+- Version und Offline-Cache auf v1.5 erhoeht.
 
-INSTALLATION / UPDATE AUF GITHUB PAGES
-1. VOR DEM UPDATE: In der App unter „Profil“ → „Daten exportieren“ ein Backup anlegen.
-2. Auf GitHub im Repository alle fünf Dateien aus diesem Ordner hochladen und
-   die bisherigen Dateien mit denselben Namen ersetzen. „Commit changes“ bestätigen.
-3. Nach der Bereitstellung die bestehende Handy-App online öffnen. Falls ein
-   Update-Hinweis erscheint, „Aktualisieren“ auswählen. Ggf. App neu öffnen.
-4. Unter „Profil“ steht anschließend „Version 1.4“.
+UPDATE
+1. VORHER Backup in der alten App unter Profil > Daten exportieren erstellen.
+2. ZIP entpacken und die FÜNF Dateien aus diesem Ordner
+   in dasselbe GitHub-Repository (im Root) hochladen; bestaetigen.
+3. Nach GitHub-Pages-Bereitstellung die installierte App ONLINE oeffnen.
+   Update-Banner nutzen, ggf. App vollstaendig schliessen und neu oeffnen.
+4. Unter Profil > App-Updates sollte nun Version 1.5 stehen.
 
-WICHTIG
-- GLEICHE URL / GLEICHES GITHUB-REPOSITORY VERWENDEN!
-- Lokale Daten liegen weiterhin unter localStorage-Schlüssel schafkopf-tracker-v1.
-  Die neue Version löscht diesen Speicher nicht.
-- Bitte keine App-Daten/Browser-Sitedaten löschen und die App nicht ohne Backup
-  neu installieren. Speicherverlust ist trotz sorgfältiger Updates nie ausgeschlossen.
-- Die Daten werden NICHT synchronisiert. Jeder Freund speichert eigene Daten.
-- Offline-Nutzung setzt einmaliges Laden der Website mit Internet voraus.
-- Privatsphäre-Einstellung und Freundesrangliste sind weiterhin eine DEMO.
-- Keine externen Fonts, Bibliotheken oder Datenbanken nötig.
+WICHTIG ZUM APP-NAMEN
+- Ein bereits installiertes Android-App-Symbol kann trotz neuem Manifest
+  zunaechst weiterhin "Schafkopf" anzeigen. Android/Launcher uebernehmen
+  die neue Beschriftung nicht auf jedem Geraet automatisch.
+- Eine Neuinstallation kann erforderlich sein, um die neue Beschriftung
+  "Schafkopftracker" sichtbar zu machen. Vorher zwingend BACKUP exportieren,
+  danach Backup in der neu installierten App importieren.
+- Hersteller/Launcher koennen lange Beschriftungen mit ... kuerzen.
 
-Zum Testen lokal index.html öffnen. Vollständiger Offline-Betrieb und Updates
-benötigen eine HTTPS-Website wie GitHub Pages (oder localhost zum Entwickeln).
+DATENSCHUTZ & SPEICHER
+- Dieselbe GitHub-Pages-Adresse verwenden; localStorage-Schluessel bleibt
+  'schafkopf-tracker-v1' (unveraendert). KEIN automatisches Daten-Loeschen.
+- Backup lokal sicher aufbewahren. Vor dem Export NICHT App deinstallieren,
+  Browserdaten loeschen oder den Speicher zuruecksetzen!
+- Jeder Nutzer speichert Daten lokal; weiterhin keine Online-Datenbank.
+- Offline-Nutzung nach erstem Laden ueber HTTPS (z.B. GitHub Pages).
