@@ -122,6 +122,41 @@ html,body{max-width:100%;overflow-x:clip}
 .stats-heading h2{flex:1 1 210px;min-width:0;line-height:1.2;overflow-wrap:normal}
 .stats-heading .year-picker{margin-left:auto;display:inline-flex;align-items:center;gap:7px}
 @media(max-width:360px){.stats-heading h2{flex-basis:100%}.stats-heading .year-picker{margin-left:0}}
+
+/* v1.6: Einzelspiele mit Spielarten, Icon-Karten und Spielarten-Statistiken */
+.mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode-option input{position:absolute;opacity:0;pointer-events:none}
+.mode-option{position:relative}
+.mode-card{display:flex;align-items:center;justify-content:center;padding:12px;border:1px solid #d7e3d8;background:#f6f8f5;color:#315447;border-radius:14px;font-weight:800;cursor:pointer;text-align:center}
+.mode-option input:checked + .mode-card{background:#0d7454;color:#fff;border-color:#0d7454}
+.game-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.game-option input{position:absolute;opacity:0;pointer-events:none}
+.game-option{position:relative}
+.game-card{border:1px solid #d7e3d8;border-radius:16px;background:linear-gradient(180deg,#fafbfa,#f1f4f0);padding:11px 8px;display:grid;gap:8px;min-height:110px;align-items:center;justify-items:center;text-align:center;box-shadow:0 4px 12px rgba(11,46,33,.04);cursor:pointer;transition:.18s transform,.18s border-color,.18s box-shadow}
+.game-card .gico{width:50px;height:38px;color:#203a31;display:grid;place-items:center}
+.game-card .gico svg{width:100%;height:100%}
+.game-card .glabel{font-size:12px;font-weight:800;line-height:1.15}
+.game-option input:checked + .game-card{border-color:#c39a43;box-shadow:0 8px 20px rgba(195,154,67,.20);background:linear-gradient(180deg,#fffdf7,#f8f0dd);transform:translateY(-1px)}
+.game-option input:focus-visible + .game-card{outline:3px solid #c39a43;outline-offset:2px}
+.form-hint{font-size:12px;color:var(--muted);margin-top:-4px}
+.badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.small-badge{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:5px 9px;background:#edf5ee;color:#315447;font-size:11px;font-weight:800;line-height:1}
+.small-badge .mini-ico{width:14px;height:14px;display:inline-grid;place-items:center}
+.small-badge .mini-ico svg{width:100%;height:100%}
+.small-badge.session{background:#f3f4ef;color:#55675d}
+.game-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+.game-type-list{display:grid;gap:10px}
+.game-type-row{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(5,minmax(0,.8fr));gap:10px;align-items:center;padding:13px 14px}
+.game-type-head{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:800;background:#f6f7f3}
+.game-type-cell{min-width:0;font-size:13px}
+.game-type-main{display:flex;align-items:center;gap:10px;min-width:0}
+.game-type-main .gico{width:38px;height:30px;flex:0 0 38px}
+.game-type-main b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-type-main small{display:block;color:var(--muted);font-size:11px}
+.game-type-row .amount{justify-self:end}
+.inline-note{font-size:11px;color:var(--muted)}
+@media(max-width:760px){.game-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.game-type-row{grid-template-columns:minmax(0,1.2fr) repeat(2,minmax(0,1fr));grid-template-areas:"main count total" "main wl avg";row-gap:6px}.game-type-row .main{grid-area:main}.game-type-row .count{grid-area:count}.game-type-row .total{grid-area:total}.game-type-row .wl{grid-area:wl}.game-type-row .avg{grid-area:avg}.game-type-row .rate{display:none}.game-type-head{display:none}}
+@media(max-width:440px){.game-grid{grid-template-columns:1fr 1fr}.game-card{min-height:102px;padding:10px 6px}.game-card .glabel{font-size:11px}.mode-card{padding:11px 10px;font-size:13px}.game-type-row{padding:12px 11px}.game-type-main .gico{width:34px;height:28px}}
 </style></head><body><div id="app" class="app"><header class="hero"><div class="top"><div class="brand"><div class="emblem" id="brandSuit"></div><span>Schafkopf<span style="color:#e4c47b">tracker</span></span></div><div class="suite" id="suits"></div></div><h1 id="headerTitle">Servus am Kartentisch!</h1><p id="headerSub">Alle deine Schafkopfabende auf einen Blick.</p></header><main class="main" id="main"></main><nav class="nav" id="nav"></nav><div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><div class="update-text"><b>🃏 Neue Version verfügbar!</b><p>Ein Update ist bereit. Deine gespeicherten Spielabende bleiben erhalten.</p></div><button type="button" class="btn" id="applyUpdate">Aktualisieren</button><button type="button" class="mini-btn" id="dismissUpdate" aria-label="Später aktualisieren" title="Später">✕</button></div></div><script>
 'use strict';
 /* Schafkopftracker v1.5 – keinerlei Fremdserver, Speicherung nur lokal. */
@@ -129,7 +164,60 @@ const icons={heart:'<path d="M50 88 C35 73 9 55 9 33 C9 11 34 2 50 23 C66 2 91 1
 const suit=(name)=>`<svg viewBox="0 0 100 100" aria-label="${{heart:'Herz',leaf:'Blatt',acorn:'Eichel',bell:'Schell'}[name]}" role="img" xmlns="http://www.w3.org/2000/svg">${icons[name]}</svg>`;
 const glyph={home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-8h6v8"/>',history:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>',friends:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M17 16a5 5 0 0 1 4 5"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',plus:'<path d="M12 5v14M5 12h14"/>'};glyph.stats='<path d="M4 20V13M10 20V9M16 20V4M22 20H2"/>';const symbol=(x)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${glyph[x]}</svg>`;
 
-const VERSION='1.5';
+const GAME_TYPES=[
+ {id:'rufspiel',label:'Rufspiel',short:'Rufspiel'},
+ {id:'solo',label:'Solo',short:'Solo'},
+ {id:'wenz',label:'Wenz',short:'Wenz'},
+ {id:'farbwenz',label:'Farb-Wenz',short:'Farb-Wenz'},
+ {id:'geier',label:'Geier',short:'Geier'},
+ {id:'farbgeier',label:'Farb-Geier',short:'Farb-Geier'},
+ {id:'bettel',label:'Bettel',short:'Bettel'},
+ {id:'hochzeit',label:'Hochzeit',short:'Hochzeit'},
+ {id:'ramsch',label:'Ramsch',short:'Ramsch'},
+ {id:'hirsch',label:'Hirsch',short:'Hirsch'},
+ {id:'kreuzrunde',label:'Kreuzrunde',short:'Kreuzrunde'},
+ {id:'bockrunde',label:'Bockrunde',short:'Bockrunde'},
+ {id:'training',label:'Training',short:'Training'},
+ {id:'kurz',label:'Kurzes Blatt',short:'Kurzes Blatt'},
+ {id:'legen',label:'Legen',short:'Legen'},
+ {id:'anderes',label:'Anderes Spiel',short:'Anderes'}
+];
+const GAME_MAP=Object.fromEntries(GAME_TYPES.map(g=>[g.id,g]));
+function gameIcon(id,small=false){
+ const stroke=small?1.9:1.7;
+ const icons={
+  rufspiel:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="6" width="20" height="30" rx="4" transform="rotate(-8 5 6)"/><path d="M13 12h4m-4 6h6m-6 6h5"/><rect x="23" y="5" width="20" height="30" rx="4" transform="rotate(6 23 5)"/><path d="M31 14c2-3 6-3 8 0 2 3-1 5-4 8-3-3-6-5-4-8Z" fill="currentColor" stroke="none" opacity=".75"/></svg>`,
+  solo:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="18" r="8"/><path d="M18 38c2-7 7-11 14-11s12 4 14 11"/><path d="M11 10v8m-4-4h8M53 10v8m-4-4h8" opacity=".55"/></svg>`,
+  wenz:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><path d="M22 34c0-9 5-16 10-22 5 6 10 13 10 22"/><path d="M25 27h14"/><path d="M32 12v22"/></svg>`,
+  farbwenz:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><path d="M22 34c0-9 5-16 10-22 5 6 10 13 10 22"/><path d="M25 27h14"/><path d="M32 12v22"/><path d="M9 22c2-3 6-3 8 0 2 3-1 5-4 8-3-3-6-5-4-8Z" fill="currentColor" stroke="none" opacity=".75"/></svg>`,
+  geier:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><path d="M18 34c2-11 10-18 21-18 7 0 11 4 11 9 0 7-7 11-14 11h-6"/><path d="M39 16c2-4 7-6 13-6-2 4-5 7-10 9"/><circle cx="40" cy="18" r="1.6" fill="currentColor" stroke="none"/><path d="M20 27 8 23l9 10"/></svg>`,
+  farbgeier:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><path d="M18 34c2-11 10-18 21-18 7 0 11 4 11 9 0 7-7 11-14 11h-6"/><path d="M39 16c2-4 7-6 13-6-2 4-5 7-10 9"/><circle cx="40" cy="18" r="1.6" fill="currentColor" stroke="none"/><path d="M20 27 8 23l9 10"/><path d="M11 7c1.6-2.5 4.2-2.5 5.8 0 1.6-2.5 4.2-2.5 5.8 0 1.8 2.8-.7 5.1-5.8 9-5.1-3.9-7.6-6.2-5.8-9Z" fill="#b94e47" stroke="none"/></svg>`,
+  bettel:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><circle cx="31" cy="13" r="6"/><path d="M18 37c2-8 7-12 13-12s11 4 13 12"/><path d="M23 27h17"/><path d="M44 13 55 24"/><path d="M48 11h8v8"/></svg>`,
+  hochzeit:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><circle cx="23" cy="15" r="6"/><circle cx="40" cy="15" r="6"/><path d="M13 35c2-8 7-12 10-12 4 0 8 4 10 12"/><path d="M30 35c2-8 7-12 10-12 4 0 8 4 10 12"/><path d="M31 7h18m-9-4v8"/></svg>`,
+  ramsch:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="22" r="5"/><circle cx="32" cy="16" r="5"/><circle cx="46" cy="22" r="5"/><path d="M11 36c1-5 4-8 7-8s6 3 7 8"/><path d="M25 30c1-5 4-8 7-8s6 3 7 8"/><path d="M39 36c1-5 4-8 7-8s6 3 7 8"/><path d="M26 8l12 16m0-16-12 16"/></svg>`,
+  hirsch:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><path d="M32 34c-6 0-11-5-11-11 0-6 5-11 11-11s11 5 11 11c0 6-5 11-11 11Z"/><path d="M28 13 22 6m1 7-7-2m24 2 6-7m-1 7 7-2"/><path d="M28 35v5m8-5v5"/></svg>`,
+  kreuzrunde:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="12" r="5"/><circle cx="14" cy="22" r="5"/><circle cx="50" cy="22" r="5"/><circle cx="32" cy="33" r="5"/><path d="M32 18v9M20 22h24M18 18l10-6m18 6-10-6m-18 8 10 7m18-7-10 7"/></svg>`,
+  bockrunde:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><path d="M21 17c0-6 5-10 11-10s11 4 11 10v7c0 7-5 13-11 13s-11-6-11-13Z"/><path d="M21 16c-5 0-8-4-8-8 4 0 8 2 10 6m22 2c5 0 8-4 8-8-4 0-8 2-10 6"/><path d="M27 23h0m10 0h0"/><path d="M28 30c2 2 6 2 8 0"/></svg>`,
+  training:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="8" width="36" height="26" rx="4"/><path d="M20 15h24M20 22h17M20 29h13"/><path d="m47 31 5 5"/></svg>`,
+  kurz:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="10" width="18" height="24" rx="4" transform="rotate(-8 7 10)"/><rect x="23" y="10" width="18" height="24" rx="4"/><path d="M12 18h8m-8 6h8M28 18h8m-8 6h8"/><path d="M44 12h10m-5-5v10"/></svg>`,
+  legen:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="10" width="18" height="24" rx="4" transform="rotate(-10 7 10)"/><rect x="23" y="8" width="18" height="24" rx="4"/><rect x="39" y="10" width="18" height="24" rx="4" transform="rotate(10 39 10)"/></svg>`,
+  anderes:`<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"><circle cx="26" cy="22" r="10"/><path d="M33.5 29.5 43 39"/><path d="M26 17v6m0 6h.01"/></svg>`
+ };
+ return icons[id]||icons.anderes;
+}
+function gameLabel(id){return (GAME_MAP[id]||GAME_MAP.anderes).label;}
+function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');const fallbackId='id-'+Date.now().toString(36)+Math.random().toString(36).slice(2);return {
+  id:String(e.id||fallbackId).slice(0,90),
+  date:String(e.date||fallbackDate),
+  amount:Math.round(Number(e.amount||0)*100)/100,
+  place:String(e.place||'').slice(0,80),
+  notes:String(e.notes||'').slice(0,160),
+  kind:e.kind==='game'?'game':'session',
+  gameType:GAME_MAP[e.gameType]?e.gameType:''
+ };}
+function gameEntries(arr=state.entries){return arr.filter(e=>e.kind==='game'&&GAME_MAP[e.gameType]);}
+
+const VERSION='1.6.1';
 /* Der vorhandene LocalStorage-Schlüssel wird absichtlich NICHT verändert. */
 const KEY='schafkopf-tracker-v1';
 const defaultState=()=>({name:'',public:false,entries:[],goalTarget:0,lastBackupAt:'',lastBackupCount:0});
@@ -140,7 +228,7 @@ try{
 }catch(err){console.warn('Lokale Daten konnten nicht gelesen werden.',err);}
 if(!Array.isArray(state.entries))state.entries=[];
 let tab='home',editingId=null,chartRange='all',chartSelected=null;
-let filters={q:'',from:'',to:'',type:'all',sort:'new'};
+let filters={q:'',from:'',to:'',type:'all',kind:'all',gameType:'all',sort:'new'};
 let importCandidate=null;
 const fmtEUR=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
 const euro=v=>(v>0?'+':'')+fmtEUR.format(v);
@@ -156,9 +244,10 @@ const thisYear=()=>new Date().getFullYear();
 const dateValid=s=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(Date.parse(s+'T12:00:00'))&&new Date(s+'T12:00:00').toISOString().slice(0,10)===s;
 const parseAmount=s=>{let v=String(s||'').trim().replace(',','.');return /^\d+(?:\.\d{1,2})?$/.test(v)?Math.round(Number(v)*100)/100:NaN;};
 const monthLabel=m=>new Date(2024,m,1).toLocaleDateString('de-DE',{month:'short'});
-const entryTitle=e=>e.place||'Schafkopfabend';
-const entryFingerprint=e=>JSON.stringify([e.date,Number(e.amount),e.place||'',e.notes||'']);
+const entryTitle=e=>e.kind==='game'?gameLabel(e.gameType):(e.place||'Schafkopfabend');
+const entryFingerprint=e=>JSON.stringify([e.date,Number(e.amount),e.place||'',e.notes||'',e.kind||'session',e.gameType||'']);
 const uniqueID=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+state.entries=state.entries.map(normalizeEntry).filter(e=>dateValid(e.date)&&Number.isFinite(Number(e.amount)));
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch(err){console.error('Lokales Speichern nicht möglich',err);alert('Speichern fehlgeschlagen. Bitte prüfe den verfügbaren Gerätespeicher.');return false;}}
 function years(){return [...new Set([...state.entries.map(e=>Number(e.date.slice(0,4))),thisYear()].filter(Number.isFinite))].sort((a,b)=>b-a);}
 function periodEntries(year){return sorted().filter(e=>e.date.startsWith(String(year)+'-'));}
@@ -215,31 +304,36 @@ function chart(){
  ${points.length?`<label class="scrub-label" for="chartScrub">Spielabend im Diagramm auswählen</label><input id="chartScrub" type="range" min="0" max="${points.length}" value="${chosen}" aria-label="Spielabend im Diagramm auswählen">`: '<div class="help">Trage einen Abend ein, um deine Entwicklung zu sehen.</div>'}`;
 }
 function renderChart(){const target=document.getElementById('chartContainer');if(target)target.innerHTML=chart();}
-function entryrow(e){const date=new Date(e.date+'T12:00:00');return `<div class="card entry"><div class="datebadge">${date.getDate()}<small>${date.toLocaleDateString('de-DE',{month:'short'})}</small></div><div class="entryinfo"><b title="${esc(entryTitle(e))}">${esc(entryTitle(e))}</b><span>${date.toLocaleDateString('de-DE')} ${e.notes?'· '+esc(e.notes):''}</span></div><span class="amount ${amountColor(e.amount)}">${euro(e.amount)}</span><div class="entry-actions"><button class="mini-btn" data-edit="${esc(e.id)}" title="Eintrag bearbeiten" aria-label="Eintrag bearbeiten">✎</button><button class="mini-btn" data-delete="${esc(e.id)}" title="Eintrag löschen" aria-label="Eintrag löschen">×</button></div></div>`;}
+function entryrow(e){const date=new Date(e.date+'T12:00:00');const badges=e.kind==='game'?`<div class="badge-row"><span class="small-badge"><span class="mini-ico">${gameIcon(e.gameType,true)}</span>${esc(gameLabel(e.gameType))}</span></div>`:`<div class="badge-row"><span class="small-badge session">Abend</span></div>`;return `<div class="card entry"><div class="datebadge">${date.getDate()}<small>${date.toLocaleDateString('de-DE',{month:'short'})}</small></div><div class="entryinfo"><b title="${esc(entryTitle(e))}">${esc(entryTitle(e))}</b><span>${date.toLocaleDateString('de-DE')}${e.place?' · '+esc(e.place):''}${e.notes?' · '+esc(e.notes):''}</span>${badges}</div><span class="amount ${amountColor(e.amount)}">${euro(e.amount)}</span><div class="entry-actions"><button class="mini-btn" data-edit="${esc(e.id)}" title="Eintrag bearbeiten" aria-label="Eintrag bearbeiten">✎</button><button class="mini-btn" data-delete="${esc(e.id)}" title="Eintrag löschen" aria-label="Eintrag löschen">×</button></div></div>`;}
 function goalUI(){const year=thisYear(),spent=total(periodEntries(year)),target=Number(state.goalTarget)||0;const p=target?Math.max(0,Math.min(100,spent/target*100)):0;
  return `<div class="goal-header"><div><div class="small">Jahresziel ${year}</div><b class="goal-current ${amountColor(spent)}">${euro(spent)}</b></div><span class="goal-target">${target?`Ziel ${normalEUR(target)}`:'Noch kein Ziel gesetzt'}</span></div><div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p)}"><div style="width:${p}%"></div></div><div class="help">${target?(spent>=target?'Ziel erreicht! 🎉':`${Math.round(p)} % erreicht · Noch ${normalEUR(Math.max(0,target-spent))} bis zum Ziel`):'Setze dir in der Statistik ein freiwilliges Jahresziel.'}</div>`;}
-function home(){const n=state.entries.length,won=state.entries.filter(e=>e.amount>0).length,lost=state.entries.filter(e=>e.amount<0).length;
- return `<section class="card balance"><div class="balancebar"><div><div class="small">Deine Gesamtbilanz</div><strong class="${amountColor(total())}">${euro(total())}</strong><div class="subtle">${n} erfasste Schafkopfabende</div></div><button class="btn" id="newEntry">+ Abend eintragen</button></div></section>
- <div class="section kpis"><div class="card kpi"><span class="small">Ø pro Abend</span><b class="${amountColor(avg())}">${euro(avg())}</b></div><div class="card kpi"><span class="small">Im Plus</span><b>${won}</b></div><div class="card kpi"><span class="small">Im Minus</span><b>${lost}</b></div></div>
+function home(){const n=state.entries.length,won=state.entries.filter(e=>e.amount>0).length,lost=state.entries.filter(e=>e.amount<0).length,games=gameEntries().length;
+ return `<section class="card balance"><div class="balancebar"><div><div class="small">Deine Gesamtbilanz</div><strong class="${amountColor(total())}">${euro(total())}</strong><div class="subtle">${n} erfasste Einträge · ${games} Einzelspiele</div></div><button class="btn" id="newEntry">+ Eintrag</button></div></section>
+ <div class="section kpis"><div class="card kpi"><span class="small">Ø pro Eintrag</span><b class="${amountColor(n?total()/n:0)}">${euro(n?total()/n:0)}</b></div><div class="card kpi"><span class="small">Im Plus</span><b>${won}</b></div><div class="card kpi"><span class="small">Im Minus</span><b>${lost}</b></div></div>
  <div class="dashboardgrid"><section class="section"><div class="sectionhead"><h2>Gewinnentwicklung</h2><span class="subtle">Kumuliert</span></div><div class="card chartcard" id="chartContainer">${chart()}</div></section>
- <section class="section"><div class="sectionhead"><h2>Letzte Spielabende</h2><button class="btn ghost small-button" data-tab="history">Alle ansehen →</button></div><div class="list">${sorted().reverse().slice(0,4).map(entryrow).join('')||`<div class="card empty">${suit('bell')}<p>Trage deinen ersten Schafkopfabend ein.</p></div>`}</div></section></div>
+ <section class="section"><div class="sectionhead"><h2>Letzte Einträge</h2><button class="btn ghost small-button" data-tab="history">Alle ansehen →</button></div><div class="list">${sorted().reverse().slice(0,4).map(entryrow).join('')||`<div class="card empty">${suit('bell')}<p>Trage deinen ersten Abend oder dein erstes Einzelspiel ein.</p></div>`}</div></section></div>
  <section class="section card formcard"><div class="sectionhead"><h2>Dein Jahresziel</h2><button class="btn ghost small-button" data-tab="stats">Statistik →</button></div>${goalUI()}</section>${backupReminder()?`<div class="section notice">${backupReminder()}</div>`:''}`;
 }
-function filterEntries(){const q=filters.q.trim().toLocaleLowerCase('de-DE');let a=state.entries.filter(e=>(!q||`${e.place||''} ${e.notes||''} ${e.date}`.toLocaleLowerCase('de-DE').includes(q))&&(!filters.from||e.date>=filters.from)&&(!filters.to||e.date<=filters.to)&&(filters.type==='all'||(filters.type==='win'?e.amount>0:filters.type==='loss'?e.amount<0:e.amount===0)));
+function filterEntries(){const q=filters.q.trim().toLocaleLowerCase('de-DE');let a=state.entries.filter(e=>(!q||`${e.place||''} ${e.notes||''} ${e.date} ${entryTitle(e)} ${gameLabel(e.gameType||'anderes')}`.toLocaleLowerCase('de-DE').includes(q))&&(!filters.from||e.date>=filters.from)&&(!filters.to||e.date<=filters.to)&&(filters.type==='all'||(filters.type==='win'?e.amount>0:filters.type==='loss'?e.amount<0:e.amount===0))&&(filters.kind==='all'||e.kind===filters.kind)&&(filters.gameType==='all'||(e.kind==='game'&&e.gameType===filters.gameType)));
  a.sort(filters.sort==='old'?datesort:filters.sort==='high'?(x,y)=>y.amount-x.amount||datesort(x,y):filters.sort==='low'?(x,y)=>x.amount-y.amount||datesort(x,y):(x,y)=>datesort(y,x));return a;}
-function historyList(){const matches=filterEntries();return `<div class="sectionhead"><h2>Verlauf (${matches.length}${matches.length!==state.entries.length?' von '+state.entries.length:''})</h2><span class="subtle">Bilanz: ${euro(total(matches))}</span></div><div class="list">${matches.map(entryrow).join('')||'<div class="card empty">Keine passenden Spielabende gefunden.</div>'}</div>`;}
-function history(){return `<div class="content-page"><section class="card formcard" id="entryEditor"><h2>${editingId?'Abend bearbeiten':'Neuen Abend eintragen'}</h2><form id="entryForm" class="stack"><div class="form-grid"><label class="field">Datum<input type="date" id="date" required></label><label class="field">Ergebnis<select id="resultType" aria-label="Gewinn oder Verlust"><option value="1">Gewinn (+)</option><option value="-1">Verlust (−)</option></select></label><label class="field">Betrag (€)<input type="text" inputmode="decimal" id="amount" maxlength="14" placeholder="z. B. 3,50" required></label></div><label class="field">Ort / Runde (optional)<input id="place" maxlength="80" placeholder="z. B. Stammtisch"></label><label class="field">Notiz (optional)<textarea id="notes" maxlength="160" placeholder="Was war heute besonders?"></textarea></label><div class="form-actions"><button type="submit" class="btn">${editingId?'Änderungen speichern':'Abend speichern'}</button>${editingId?'<button type="button" class="btn ghost" id="cancelEdit">Abbrechen</button>':''}</div><p class="help" id="entryError" role="status"></p></form></section>
- <section class="section"><div class="sectionhead"><h2>Suche & Filter</h2><button id="clearFilters" class="btn ghost small-button">Zurücksetzen</button></div><div class="card formcard filters"><label class="field">Suche (Ort, Notiz, Datum)<input id="filterQuery" placeholder="z. B. Stammtisch" value="${esc(filters.q)}"></label><div class="form-grid"><label class="field">Von<input type="date" id="filterFrom" value="${filters.from}"></label><label class="field">Bis<input type="date" id="filterTo" value="${filters.to}"></label></div><div class="form-grid"><label class="field">Ergebnis<select id="filterType"><option value="all">Alle</option><option value="win">Nur Gewinne</option><option value="loss">Nur Verluste</option><option value="tie">Ausgeglichen</option></select></label><label class="field">Sortierung<select id="filterSort"><option value="new">Neueste zuerst</option><option value="old">Älteste zuerst</option><option value="high">Höchster Gewinn</option><option value="low">Größter Verlust</option></select></label></div></div></section>
+function historyList(){const matches=filterEntries();return `<div class="sectionhead"><h2>Verlauf (${matches.length}${matches.length!==state.entries.length?' von '+state.entries.length:''})</h2><span class="subtle">Bilanz: ${euro(total(matches))}</span></div><div class="list">${matches.map(entryrow).join('')||'<div class="card empty">Keine passenden Einträge gefunden.</div>'}</div>`;}
+function gamePicker(selected='rufspiel'){return `<div class="game-grid" id="gamePicker">${GAME_TYPES.map(g=>`<label class="game-option"><input type="radio" name="gameType" value="${g.id}" ${g.id===selected?'checked':''}><span class="game-card"><span class="gico">${gameIcon(g.id)}</span><span class="glabel">${g.label}</span></span></label>`).join('')}</div>`;}
+function history(){return `<div class="content-page"><section class="card formcard" id="entryEditor"><h2>${editingId?'Eintrag bearbeiten':'Neuen Eintrag erfassen'}</h2><form id="entryForm" class="stack"><label class="field">Was möchtest du erfassen?<div class="mode-toggle"><label class="mode-option"><input type="radio" name="entryKind" id="kindSession" value="session" checked><span class="mode-card">Schafkopfabend</span></label><label class="mode-option"><input type="radio" name="entryKind" id="kindGame" value="game"><span class="mode-card">Einzelspiel</span></label></div></label><div id="gameTypeWrap" class="hidden"><label class="field">Spielart auswählen</label>${gamePicker('rufspiel')}<p class="form-hint">Icons im Stil von Schafkopf-Apps – neu gestaltet und nur als Orientierung gedacht.</p></div><div class="form-grid"><label class="field">Datum<input type="date" id="date" required></label><label class="field">Ergebnis<select id="resultType" aria-label="Gewinn oder Verlust"><option value="1">Gewinn (+)</option><option value="-1">Verlust (−)</option></select></label><label class="field">Betrag (€)<input type="text" inputmode="decimal" id="amount" maxlength="14" placeholder="z. B. 3,50" required></label></div><label class="field">Ort / Runde (optional)<input id="place" maxlength="80" placeholder="z. B. Stammtisch"></label><label class="field">Notiz (optional)<textarea id="notes" maxlength="160" placeholder="Was war heute besonders?"></textarea></label><div class="form-actions"><button type="submit" class="btn">${editingId?'Änderungen speichern':'Eintrag speichern'}</button>${editingId?'<button type="button" class="btn ghost" id="cancelEdit">Abbrechen</button>':''}</div><p class="help" id="entryError" role="status"></p></form></section>
+ <section class="section"><div class="sectionhead"><h2>Suche & Filter</h2><button id="clearFilters" class="btn ghost small-button">Zurücksetzen</button></div><div class="card formcard filters"><label class="field">Suche (Ort, Notiz, Datum, Spielart)<input id="filterQuery" placeholder="z. B. Stammtisch oder Wenz" value="${esc(filters.q)}"></label><div class="form-grid"><label class="field">Von<input type="date" id="filterFrom" value="${filters.from}"></label><label class="field">Bis<input type="date" id="filterTo" value="${filters.to}"></label></div><div class="form-grid"><label class="field">Ergebnistyp<select id="filterType"><option value="all">Alle</option><option value="win">Nur Gewinne</option><option value="loss">Nur Verluste</option><option value="tie">Ausgeglichen</option></select></label><label class="field">Eintragsart<select id="filterKind"><option value="all">Alles</option><option value="session">Nur Abende</option><option value="game">Nur Einzelspiele</option></select></label></div><div class="form-grid"><label class="field">Spielart<select id="filterGameType"><option value="all">Alle Spielarten</option>${GAME_TYPES.map(g=>`<option value="${g.id}">${g.label}</option>`).join('')}</select></label><label class="field">Sortierung<select id="filterSort"><option value="new">Neueste zuerst</option><option value="old">Älteste zuerst</option><option value="high">Höchster Gewinn</option><option value="low">Größter Verlust</option></select></label></div></div></section>
  <section class="section" id="historyList">${historyList()}</section></div>`;}
 function updateHistoryList(){const l=document.getElementById('historyList');if(l)l.innerHTML=historyList();}
+function updateKindUI(){const isGame=document.getElementById('kindGame')?.checked;const wrap=document.getElementById('gameTypeWrap');if(wrap)wrap.classList.toggle('hidden',!isGame);const fg=document.getElementById('filterGameType');if(fg){fg.disabled=filters.kind==='session';if(filters.kind==='session')fg.value='all';}}
 function setupHistoryFields(){if(tab!=='history')return;
  const e=editingId?state.entries.find(x=>String(x.id)===String(editingId)):null;
  document.getElementById('date').value=e?e.date:nowISO();
- if(e){document.getElementById('resultType').value=e.amount<0?'-1':'1';document.getElementById('amount').value=Math.abs(e.amount).toFixed(2).replace('.',',');document.getElementById('place').value=e.place||'';document.getElementById('notes').value=e.notes||'';}
- document.getElementById('filterType').value=filters.type;document.getElementById('filterSort').value=filters.sort;
+ if(e){document.getElementById('resultType').value=e.amount<0?'-1':'1';document.getElementById('amount').value=Math.abs(e.amount).toFixed(2).replace('.',',');document.getElementById('place').value=e.place||'';document.getElementById('notes').value=e.notes||'';if(e.kind==='game'){document.getElementById('kindGame').checked=true;const chosen=document.querySelector(`input[name="gameType"][value="${e.gameType||'rufspiel'}"]`);if(chosen)chosen.checked=true;}else document.getElementById('kindSession').checked=true;}
+ document.getElementById('filterType').value=filters.type;document.getElementById('filterSort').value=filters.sort;document.getElementById('filterKind').value=filters.kind;document.getElementById('filterGameType').value=filters.gameType;
+ updateKindUI();
 }
 let selectedYear=thisYear();
 function statCard(label,value,detail='',color=''){return `<div class="card stat-card"><div class="small">${label}</div><b class="${color}">${value}</b>${detail?`<div class="help">${detail}</div>`:''}</div>`;}
+function gameTypeStats(){const games=gameEntries();const groups=GAME_TYPES.map(g=>{const items=games.filter(e=>e.gameType===g.id);const wins=items.filter(e=>e.amount>0).length,losses=items.filter(e=>e.amount<0).length;const amt=total(items);return {id:g.id,label:g.label,count:items.length,wins,losses,amount:amt,avg:items.length?amt/items.length:0,rate:items.length?Math.round(wins/items.length*100):0};}).filter(g=>g.count>0).sort((a,b)=>b.count-a.count||b.amount-a.amount);return groups;}
+function gameTypeRows(rows){if(!rows.length)return `<div class="card empty">Noch keine Einzelspiele mit Spielart erfasst.</div>`;return `<div class="game-type-list"><div class="card game-type-row game-type-head"><div class="game-type-cell">Spielart</div><div class="game-type-cell">Anzahl</div><div class="game-type-cell">Bilanz</div><div class="game-type-cell">S / N</div><div class="game-type-cell">Ø</div><div class="game-type-cell">Quote</div></div>${rows.map(r=>`<div class="card game-type-row"><div class="game-type-cell game-type-main main"><span class="gico">${gameIcon(r.id,true)}</span><div><b>${r.label}</b><small>${r.count===1?'1 Spiel':r.count+' Spiele'}</small></div></div><div class="game-type-cell count"><b>${r.count}</b></div><div class="game-type-cell total amount ${amountColor(r.amount)}">${euro(r.amount)}</div><div class="game-type-cell wl">${r.wins} / ${r.losses}</div><div class="game-type-cell avg amount ${amountColor(r.avg)}">${euro(r.avg)}</div><div class="game-type-cell rate">${r.rate} %</div></div>`).join('')}</div>`;}
 function stats(){
  const yy=years();if(!yy.includes(selectedYear))selectedYear=yy[0];
  const yearData=periodEntries(selectedYear),months=monthlyTotals(selectedYear),records=sessionRecords();
@@ -248,13 +342,20 @@ function stats(){
  const worstM=activeMonths.length?activeMonths.reduce((a,b)=>b.amount<a.amount?b:a):{month:0,amount:0,count:0};
  const maxBar=Math.max(1,...months.map(m=>Math.abs(m.amount)));
  const bars=months.map(m=>{const pct=Math.abs(m.amount)/maxBar*48;return `<div class="month-line"><span>${monthLabel(m.month)}</span><div class="month-track"><div class="midline"></div>${m.count&&m.amount!==0?`<div class="month-bar ${m.amount>0?'up':'down'}" style="width:${Math.max(1.5,pct)}%;${m.amount>0?'left:50%':'right:50%'}"></div>`:''}</div><b class="${amountColor(m.amount)}">${euro(m.amount)}</b></div>`;}).join('');
- const recordsLabel=e=>e?`${new Date(e.date+'T12:00:00').toLocaleDateString('de-DE')}${e.place?' · '+esc(e.place):''}`:'Noch keine Einträge';
+ const recordsLabel=e=>e?`${new Date(e.date+'T12:00:00').toLocaleDateString('de-DE')}${e.place?' · '+esc(e.place):''}${e.kind==='game'&&e.gameType?` · ${gameLabel(e.gameType)}`:''}`:'Noch keine Einträge';
  const goal=Number(state.goalTarget)||0;
+ const gs=gameTypeStats();
+ const games=gameEntries();
+ const mostPlayed=gs[0]||null;
+ const bestType=gs.length?[...gs].sort((a,b)=>b.amount-a.amount||b.count-a.count)[0]:null;
+ const bestAvg=gs.filter(g=>g.count>=2).sort((a,b)=>b.avg-a.avg||b.count-a.count)[0]||null;
+ const worstType=gs.length?[...gs].sort((a,b)=>a.amount-b.amount||b.count-a.count)[0]:null;
  return `<div class="content-page"><section class="sectionhead stats-heading"><h2>Monats- und Jahresbilanz</h2><label class="year-picker">Jahr <select id="statYear" aria-label="Jahr auswählen">${yy.map(y=>`<option value="${y}" ${y===selectedYear?'selected':''}>${y}</option>`).join('')}</select></label></section>
- <div class="kpis year-kpis">${statCard('Jahresbilanz',euro(total(yearData)),yearData.length+' Abende',amountColor(total(yearData)))}${statCard('Bester Monat',bestM.count?euro(bestM.amount):'–',bestM.count?monthLabel(bestM.month):'Keine Abende',amountColor(bestM.amount))}${statCard('Schwächster Monat',worstM.count?euro(worstM.amount):'–',worstM.count?monthLabel(worstM.month):'Keine Abende',amountColor(worstM.amount))}</div>
+ <div class="kpis year-kpis">${statCard('Jahresbilanz',euro(total(yearData)),yearData.length+' Einträge',amountColor(total(yearData)))}${statCard('Bester Monat',bestM.count?euro(bestM.amount):'–',bestM.count?monthLabel(bestM.month):'Keine Einträge',amountColor(bestM.amount))}${statCard('Schwächster Monat',worstM.count?euro(worstM.amount):'–',worstM.count?monthLabel(worstM.month):'Keine Einträge',amountColor(worstM.amount))}</div>
  <section class="section card formcard"><div class="sectionhead"><h2>Monatsübersicht ${selectedYear}</h2><span class="subtle">€ pro Monat</span></div><div class="months">${bars}</div><div class="help">Rechts von der Mittellinie: Gewinn · Links: Verlust.</div></section>
- <section class="section card formcard"><h2>Jahresvergleich</h2><div class="year-rows">${yy.map(y=>`<div class="year-line"><b>${y}</b><span>${periodEntries(y).length} Abende</span><strong class="${amountColor(total(periodEntries(y)))}">${euro(total(periodEntries(y)))}</strong></div>`).join('')}</div></section>
- <section class="section"><h2>Persönliche Rekorde</h2><div class="record-grid">${statCard('Höchster Gewinn',records.best?euro(records.best.amount):'–',recordsLabel(records.best),'positive')}${statCard('Größter Verlust',records.worst?euro(records.worst.amount):'–',recordsLabel(records.worst),'negative')}${statCard('Längste Gewinnserie',String(records.bestRun)+' Abende','Direkt aufeinanderfolgende Gewinnabende')}${statCard('Längste Verlustserie',String(records.bestLossRun)+' Abende','Direkt aufeinanderfolgende Verlustabende')}${statCard('Aktuelle Serie',records.current?String(records.current)+' Abende':'Keine',records.currentType==='win'?'Gewinnserie':records.currentType==='loss'?'Verlustserie':'Aktuell keine Serie')}</div></section>
+ <section class="section card formcard"><h2>Jahresvergleich</h2><div class="year-rows">${yy.map(y=>`<div class="year-line"><b>${y}</b><span>${periodEntries(y).length} Einträge</span><strong class="${amountColor(total(periodEntries(y)))}">${euro(total(periodEntries(y)))}</strong></div>`).join('')}</div></section>
+ <section class="section"><h2>Persönliche Rekorde</h2><div class="record-grid">${statCard('Höchster Gewinn',records.best?euro(records.best.amount):'–',recordsLabel(records.best),'positive')}${statCard('Größter Verlust',records.worst?euro(records.worst.amount):'–',recordsLabel(records.worst),'negative')}${statCard('Längste Gewinnserie',String(records.bestRun)+' Einträge','Direkt aufeinanderfolgende Gewinne')}${statCard('Längste Verlustserie',String(records.bestLossRun)+' Einträge','Direkt aufeinanderfolgende Verluste')}${statCard('Aktuelle Serie',records.current?String(records.current)+' Einträge':'Keine',records.currentType==='win'?'Gewinnserie':records.currentType==='loss'?'Verlustserie':'Aktuell keine Serie')}</div></section>
+ <section class="section card formcard"><div class="sectionhead"><h2>Spielarten-Statistik</h2><span class="subtle">Einzelspiele</span></div><div class="game-stats-grid">${statCard('Erfasste Spiele',String(games.length),gs.length?gs.length+' verschiedene Spielarten':'Noch keine Spielart')} ${statCard('Häufigste Spielart',mostPlayed?mostPlayed.label:'–',mostPlayed?mostPlayed.count+' Spiele':'Noch keine Daten')} ${statCard('Beste Spielart',bestType?euro(bestType.amount):'–',bestType?bestType.label:'Noch keine Daten',bestType?amountColor(bestType.amount):'')} ${statCard('Bester Ø / Spiel',bestAvg?euro(bestAvg.avg):'–',bestAvg?bestAvg.label+' · mind. 2 Spiele':'Mindestens 2 Spiele nötig',bestAvg?amountColor(bestAvg.avg):'')}</div>${worstType?`<p class="inline-note">Schwächste Spielart bislang: <b>${worstType.label}</b> mit ${euro(worstType.amount)}.</p>`:''}${gameTypeRows(gs)}</section>
  <section class="section card formcard stack"><h2>Dein persönliches Ziel</h2>${goalUI()}<form id="goalForm" class="goal-form"><label class="field">Gewinnziel für ${thisYear()} (€)<input type="text" inputmode="decimal" id="goalAmount" maxlength="14" placeholder="z. B. 50,00" value="${goal?goal.toFixed(2).replace('.',','):''}"></label><div class="form-actions"><button class="btn" type="submit">Ziel speichern</button>${goal?'<button class="btn ghost" id="clearGoal" type="button">Ziel entfernen</button>':''}</div></form><p class="help">Optional. Gemessen wird deine Bilanz im laufenden Kalenderjahr. Keine Einsätze oder Wetten.</p></section></div>`;
 }
 function friends(){return `<div class="content-page"><div class="notice"><b>Vorschau – noch nicht online.</b> Die Rangliste enthält fiktive Beispieldaten. Niemand kann deine lokalen Spielabende sehen. Für echte Freundesvergleiche benötigen wir später eine Online-Datenbank.</div><section class="section"><div class="sectionhead"><h2>So könnte eure Rangliste aussehen</h2><span class="badge">Demo</span></div><div class="ranking">${[['Lena',42.8],['Max',21.4],['Jonas',-3.2],['Tobi',-15.6]].map(([name,am],i)=>`<div class="card rank"><div class="ranknum">${i+1}.</div><div class="avatar" style="width:42px;height:42px;font-size:17px">${name[0]}</div><div class="rankname">${name}</div><span class="amount ${amountColor(am)}">${euro(am)}</span></div>`).join('')}</div></section><section class="section card formcard"><h2>Geplante Privatsphäre</h2><p class="help">Später entscheidest du zwischen öffentlich, nur Freunde oder privat. Momentan werden niemals Daten hochgeladen – unabhängig vom Profil-Schalter.</p></section></div>`;}
@@ -273,8 +374,8 @@ function render(){
  document.getElementById('app').classList.toggle('is-subpage',tab!=='home');
  document.getElementById('brandSuit').innerHTML=suit('acorn');
  document.getElementById('suits').innerHTML=['bell','acorn','leaf','heart'].map(x=>`<span class="suit">${suit(x)}</span>`).join('');
- document.getElementById('headerTitle').textContent=tab==='home'?'Servus '+(state.name?state.name+'!':'am Kartentisch!'):({history:'Deine Spielabende',stats:'Deine Statistik',friends:'Freunde & Rangliste',profile:'Mein Profil'}[tab]);
- document.getElementById('headerSub').textContent=({home:'Alle deine Schafkopfabende auf einen Blick.',history:'Erfassen, bearbeiten und durchsuchen.',stats:'Monate, Rekorde und deine persönlichen Ziele.',friends:'Gemeinsam spielen, Erfolge vergleichen.',profile:'Dein Kartentisch, deine Regeln.'}[tab]);
+ document.getElementById('headerTitle').textContent=tab==='home'?'Servus '+(state.name?state.name+'!':'am Kartentisch!'):({history:'Deine Einträge',stats:'Deine Statistik',friends:'Freunde & Rangliste',profile:'Mein Profil'}[tab]);
+ document.getElementById('headerSub').textContent=({home:'Alle deine Schafkopfabende auf einen Blick.',history:'Abende und Einzelspiele erfassen, bearbeiten und durchsuchen.',stats:'Monate, Spielarten, Rekorde und Ziele.',friends:'Gemeinsam spielen, Erfolge vergleichen.',profile:'Dein Kartentisch, deine Regeln.'}[tab]);
  document.getElementById('main').innerHTML=({home,history,stats,friends,profile})[tab]();
  document.getElementById('nav').innerHTML=[['home','Dashboard','home'],['history','Abende','history'],['stats','Statistik','stats'],['friends','Freunde','friends'],['profile','Profil','user']].map(([id,label,ico])=>`<button data-tab="${id}" class="${id===tab?'active':''}" aria-label="${label}" ${id===tab?'aria-current="page"':''}>${symbol(ico)}${label}</button>`).join('');
  if(tab==='history')setupHistoryFields();
@@ -285,15 +386,19 @@ function readEditor(){const raw=document.getElementById('amount').value,am=parse
  if(!Number.isFinite(am)||am<0)throw new Error('Bitte einen gültigen Betrag eingeben, z. B. 3,50.');
  if(!dateValid(date))throw new Error('Bitte ein gültiges Datum auswählen.');
  const multiplier=Number(document.getElementById('resultType').value);
- return {date,amount:Math.round(am*multiplier*100)/100,place:document.getElementById('place').value.trim().slice(0,80),notes:document.getElementById('notes').value.trim().slice(0,160)};
+ const kind=document.querySelector('input[name="entryKind"]:checked')?.value==='game'?'game':'session';
+ const selected=document.querySelector('input[name="gameType"]:checked');
+ const gameType=kind==='game'?(selected?.value||'rufspiel'):'';
+ return normalizeEntry({date,amount:Math.round(am*multiplier*100)/100,place:document.getElementById('place').value.trim().slice(0,80),notes:document.getElementById('notes').value.trim().slice(0,160),kind,gameType});
 }
+
 function normalizeBackup(data){
  const incoming=data&&typeof data==='object'?(data.profile||data):null;
  if(!incoming||!Array.isArray(incoming.entries)||incoming.entries.length>20000)throw new Error('Kein unterstütztes Schafkopf-Backup.');
  const entries=incoming.entries.map((e,i)=>{
   if(!e||typeof e.date!=='string'||!dateValid(e.date)||!Number.isFinite(Number(e.amount))||Math.abs(Number(e.amount))>1e7)throw new Error('Ungültiger Spielabend an Position '+(i+1));
   const v=Math.round(Number(e.amount)*100)/100;
-  return {id:String(e.id||'import-'+i).slice(0,90),date:e.date,amount:v,place:String(e.place||'').slice(0,80),notes:String(e.notes||'').slice(0,160)};
+  return normalizeEntry({id:String(e.id||'import-'+i).slice(0,90),date:e.date,amount:v,place:String(e.place||'').slice(0,80),notes:String(e.notes||'').slice(0,160),kind:e.kind,gameType:e.gameType});
  });
  return {name:String(incoming.name||'').slice(0,40),public:!!incoming.public,goalTarget:Number.isFinite(Number(incoming.goalTarget))&&Number(incoming.goalTarget)>0?Number(incoming.goalTarget):0,entries};
 }
@@ -315,7 +420,7 @@ function applyImport(mode){if(!importCandidate)return;
   for(const e of incoming.entries){const fp=entryFingerprint(e);if(fps.has(fp))continue;const item={...e,id:ids.has(e.id)?uniqueID():e.id};ids.add(item.id);fps.add(fp);state.entries.push(item);}
  }
  if(!persist())return;
- importCandidate=null;editingId=null;render();alert('Import erfolgreich. '+state.entries.length+' Abende sind jetzt gespeichert.');
+ importCandidate=null;editingId=null;render();alert('Import erfolgreich. '+state.entries.length+' Einträge sind jetzt gespeichert.');
 }
 function exportBackup(){
  const exported=new Date().toISOString(),payload={version:2,appVersion:VERSION,exported,profile:{...state}};
@@ -345,7 +450,7 @@ document.addEventListener('click',async e=>{
  const edit=target.closest('[data-edit]');if(edit){beginEdit(edit.dataset.edit);return;}
  const del=target.closest('[data-delete]');if(del){if(confirm('Diesen Schafkopfabend wirklich löschen?')){state.entries=state.entries.filter(x=>String(x.id)!==del.dataset.delete);if(String(editingId)===del.dataset.delete)editingId=null;persist();render();}return;}
  if(target.closest('#cancelEdit')){editingId=null;render();return;}
- if(target.closest('#clearFilters')){filters={q:'',from:'',to:'',type:'all',sort:'new'};render();return;}
+ if(target.closest('#clearFilters')){filters={q:'',from:'',to:'',type:'all',kind:'all',gameType:'all',sort:'new'};render();return;}
  if(target.closest('#saveName')){state.name=document.getElementById('profileName').value.trim();persist();render();return;}
  if(target.closest('#visibility')){state.public=!state.public;persist();render();return;}
  if(target.closest('#clearGoal')){state.goalTarget=0;persist();render();return;}
@@ -381,7 +486,10 @@ document.addEventListener('change',async e=>{
  if(id==='chartScrub'){chartSelected=Number(e.target.value);renderChart();return;}
  if(id==='filterFrom'){filters.from=e.target.value;updateHistoryList();return;}
  if(id==='filterTo'){filters.to=e.target.value;updateHistoryList();return;}
+ if(id==='kindSession'||id==='kindGame'){updateKindUI();return;}
  if(id==='filterType'){filters.type=e.target.value;updateHistoryList();return;}
+ if(id==='filterKind'){filters.kind=e.target.value;if(filters.kind==='session')filters.gameType='all';updateKindUI();updateHistoryList();return;}
+ if(id==='filterGameType'){filters.gameType=e.target.value;updateHistoryList();return;}
  if(id==='filterSort'){filters.sort=e.target.value;updateHistoryList();return;}
  if(id==='statYear'){selectedYear=Number(e.target.value);render();return;}
  if(id==='import'){

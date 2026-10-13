@@ -1,13 +1,11 @@
-/* Schafkopf Tracker – Offline-Cache v1.5 */
-const CACHE='schafkopf-v1.5';
+/* Schafkopf Tracker – Offline-Cache v1.6.1 */
+const CACHE='schafkopf-v1.6.1';
 const ASSETS=['./','./index.html','./icon.svg','./manifest.webmanifest'];
 const PREFIX='schafkopf-';
 self.addEventListener('install',event=>{
  event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
   await cache.addAll(ASSETS);
-  // Bei bestehender Installation wird erst nach Zustimmung aktiviert.
-  // Frühere Erstversion v1.1 kann ohne Meldung direkt aktualisiert werden.
   const keys=await caches.keys();
   if(keys.includes('schafkopf-v1'))await self.skipWaiting();
  })());
@@ -19,9 +17,7 @@ self.addEventListener('activate',event=>{
   await self.clients.claim();
  })());
 });
-self.addEventListener('message',event=>{
- if(event.data&&event.data.type==='SKIP_WAITING')self.skipWaiting();
-});
+self.addEventListener('message',event=>{if(event.data&&event.data.type==='SKIP_WAITING')self.skipWaiting();});
 self.addEventListener('fetch',event=>{
  const request=event.request;
  if(request.method!=='GET')return;
