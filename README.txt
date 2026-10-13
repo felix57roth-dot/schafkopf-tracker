@@ -1,24 +1,34 @@
-SCHAFKOPFTRACKER – VERSION 1.6.1
-=============================
+SCHAFKOPFTRACKER – VERSION 1.7
+================================
 
-NEU
-- Farb-Geier als neue Spielart mit eigenem Icon ergaenzt; erscheint in Auswahl, Filtern und Statistiken.
-- Startfehler bei der Uebernahme gespeicherter Daten aus v1.6 behoben.
-- Einzelspiele koennen jetzt zusaetzlich zu normalen Schafkopfabenden erfasst werden.
-- Spielarten-Auswahl mit eigenen Icon-Karten: Rufspiel, Solo, Wenz, Farb-Wenz, Geier, Farb-Geier, Bettel, Hochzeit, Ramsch, Hirsch, Kreuzrunde, Bockrunde, Training, Kurzes Blatt, Legen und Anderes Spiel.
-- Neue Spielarten-Statistik: Anzahl, Bilanz, Siege/Niederlagen, Durchschnitt pro Spiel, haeufigste und beste Spielart.
-- Suche und Filter koennen jetzt auch nach Eintragsart und Spielart filtern.
-- Bestehende lokale Daten bleiben kompatibel; bisherige Abende werden als normale Abende weitergefuehrt.
-- Version und Offline-Cache auf v1.6.1 erhoeht.
+DAS IST NEU
+- Unten 5 Reiter: Übersicht, Abende, Spiele, Statistik, Profil.
+- Abende und Einzelspiele haben komplett getrennte Eingabe und getrennte Verlaeufe.
+- Spiele schnell mit Icon, Gewinn/Verlust und Schnellbetrag erfassen.
+- Die 8 wichtigsten Spielarten sind sofort sichtbar; weitere ueber „Weitere Spielarten“.
+- Optionales Datum und Notiz verbergen sich unter „Datum und Notiz“.
+- Eigene Statistiken fuer Abende und Einzelspiele, ohne doppelte Summierung.
+- Suche und Filter aus der Oberflaeche entfernt.
+- Ziele werden nur noch angezeigt, wenn Nutzer sie im Profil einschalten.
+- Die bisherige Freunde-Demo ist fuer eine uebersichtliche 5-Reiter-Navigation
+  vorlaeufig durch den neuen Spiele-Reiter ersetzt.
+- Version und Offline-Cache auf 1.7 erhoeht.
 
-UPDATE
-1. Vorher in der alten App unter Profil > Daten exportieren ein Backup anlegen.
-2. ZIP entpacken und die fuenf Dateien aus diesem Ordner in dasselbe GitHub-Repository (Root) hochladen.
-3. Nach GitHub-Pages-Bereitstellung die installierte App online oeffnen.
-4. Wenn ein Update-Hinweis erscheint, auf Aktualisieren tippen; ggf. App ganz schliessen und erneut starten.
+HINWEISE ZUR DATENUEBERNAHME
+- Es wird WEITER derselbe localStorage-Schluessel genutzt: schafkopf-tracker-v1.
+- Alte Schafkopfabende ohne Kennzeichnung werden dem Reiter „Abende“ zugeordnet.
+- Einzelspiele aus v1.6/1.6.1 bleiben im Reiter „Spiele“ erhalten.
+- Abende und Spiele werden in der Bilanz NICHT zusammenaddiert, um bei
+  doppelter Erfassung eines Abends keine falsche Summe anzuzeigen.
+- Beim Export/Import werden BEIDE Arten von Eintraegen gesichert.
 
-HINWEISE
-- Der lokale Speicher-Schluessel bleibt unveraendert: schafkopf-tracker-v1
-- Bereits gespeicherte Spielabende werden nicht absichtlich geloescht.
-- Jeder Nutzer speichert seine Daten weiterhin nur lokal auf dem eigenen Geraet.
-- Fuer die Spielarten-Statistik zaehlen nur Eintraege, die als Einzelspiel mit Spielart erfasst wurden.
+INSTALLATION
+1. WICHTIG: Profil -> Daten exportieren (Sicherung erstellen).
+2. ZIP entpacken und ALLE FUENF Dateien direkt im GitHub-Repository
+   „schafkopf-tracker“ hochladen und vorhandene Dateien ueberschreiben.
+3. GitHub Pages stellt die neue Version bereit.
+4. Die installierte App bei bestehender Verbindung oeffnen und bei Bedarf
+   auf „Aktualisieren“ tippen oder vollstaendig schliessen und neu starten.
+5. Im Profil sollte „Version 1.7“ stehen.
+
+Die App ist weiterhin kostenlos, offline und speichert lokal auf dem jeweiligen Geraet.
