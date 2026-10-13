@@ -1,23 +1,39 @@
-SCHAFKOPF TRACKER – PROTOTYP 1.0
+SCHAFKOPF TRACKER – VERSION 1.2
+================================
 
-Funktionsumfang:
-- Spielabend mit Datum, Betrag, Ort und Notiz eintragen, löschen
-- Dashboard mit kumuliertem Gewinn, Durchschnitt, Gewinn- und Verlustabenden, Diagramm
-- Spielername und Sichtbarkeits-Schalter
-- Backup-Export und -Import als JSON
-- Vier selbst gezeichnete bayerische Kartensymbole (Schell, Eichel, Blatt, Herz)
-- Installierbare Progressive Web App mit Offline-Cache
-- Die Freundes-Rangliste zeigt ausdrücklich nur erfundene Demo-Einträge
+NEU:
+- Lange Rundennamen werden auf dem Handy korrekt abgeschnitten.
+- Gewinn/Verlust steht unter dem Namen, statt rechts aus dem Bildschirm zu ragen.
+- Responsive Ansicht und Schutz vor horizontalem Scrollen.
+- Update-Benachrichtigung („Aktualisieren“ / „Später“).
+- Profil > App-Updates > „Auf Updates prüfen“.
+- Offline-Cache verwendet Netzwerk-zuerst + lokale Sicherung bei fehlendem Internet.
+- Alter Cache wird nach Aktivierung der neuen Version entfernt.
 
-WICHTIG ZU PRIVATSPHÄRE UND FREUNDEN:
-Alle echten Einträge bleiben in diesem Prototyp ausschließlich im localStorage des jeweiligen Browsers. Das Sichtbarkeits-Setting wird ebenfalls nur lokal gespeichert; es gibt keine Online-Veröffentlichung, keine Verbindung zu Freunden und noch keinen Account. Für echte öffentliche/private Freundesprofile benötigen wir eine Authentifizierung und eine Cloud-Datenbank mit sicheren Zugriffsregeln. Standardmäßig privat.
+WICHTIG ZU DEINEN DATEN:
+- Die lokale Datenbank nutzt WEITERHIN den bestehenden Schlüssel
+  'schafkopf-tracker-v1' im localStorage des Browsers.
+- Kein Zurücksetzen und keine Löschung deiner eingetragenen Spielabende.
+- Vor dem Update zur Sicherheit Profil > Daten exportieren verwenden.
+- Cache löschen heißt NICHT: Browserdaten/Sitedaten löschen!
 
-SO STARTEN:
-Option 1: Inhalt des Ordners auf statischem HTTPS-Hosting veröffentlichen (z.B. GitHub Pages oder Netlify Free). Link öffnen und auf Handy zum Startbildschirm hinzufügen.
-Option 2: Zum lokalen Test im Projektordner `python -m http.server 8000` ausführen und http://localhost:8000 aufrufen. Die PWA-Installation braucht regulär HTTPS oder localhost.
+UPDATE BEI GITHUB PAGES:
+1. Auf GitHub dein Repository schafkopf-tracker öffnen.
+2. Im Hauptverzeichnis: Add file > Upload files.
+3. index.html, sw.js, manifest.webmanifest, icon.svg, README.txt
+   aus DIESEM Ordner auswählen. Keine ZIP und keinen übergeordneten Ordner hochladen.
+4. Commit changes anklicken.
+5. Warten, bis GitHub Pages den Commit veröffentlicht hat.
+6. Die installierte App bei Internetverbindung vollständig schließen und neu öffnen.
+   Beim einmaligen Upgrade von 1.1 auf 1.2 kann ein zweites Öffnen nötig sein.
+   Ab zukünftigen Versionswechseln erscheint in der App eine Update-Meldung.
 
-SICHERUNG:
-Daten sind geräte- und browsergebunden. Bitte regelmäßig unter Profil > Daten exportieren sichern. Löschen von Browser-Daten kann die Einträge entfernen.
+OFFLINE-TEST:
+- App einmal online öffnen und laden lassen.
+- Danach Flugmodus aktivieren, App schließen und neu öffnen.
+- Bereits gespeicherte Abende müssen weiterhin verfügbar sein.
 
-NÄCHSTE AUSBAUSTUFE:
-Login, Cloud-Synchronisierung, Kontakte/Freundesliste, durch Serverregeln geprüfte Sichtbarkeit (privat/Freunde/öffentlich), echte Ranglisten, Datenlöschung/Datenschutzhinweise.
+HINWEIS:
+- Freunden stehen Änderungen nach einer Aktualisierung über die gleiche URL
+  ebenfalls zur Verfügung, wenn sie online gehen.
+- Veröffentlichung und Hosting über GitHub Pages im Free-Tarif.
