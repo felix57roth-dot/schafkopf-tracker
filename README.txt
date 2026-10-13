@@ -1,39 +1,32 @@
-SCHAFKOPF TRACKER – VERSION 1.2
+SCHAFKOPF TRACKER – VERSION 1.3
 ================================
 
 NEU:
-- Lange Rundennamen werden auf dem Handy korrekt abgeschnitten.
-- Gewinn/Verlust steht unter dem Namen, statt rechts aus dem Bildschirm zu ragen.
-- Responsive Ansicht und Schutz vor horizontalem Scrollen.
-- Update-Benachrichtigung („Aktualisieren“ / „Später“).
-- Profil > App-Updates > „Auf Updates prüfen“.
-- Offline-Cache verwendet Netzwerk-zuerst + lokale Sicherung bei fehlendem Internet.
-- Alter Cache wird nach Aktivierung der neuen Version entfernt.
+- Gewinnentwicklung zeigt links eine automatisch berechnete Euro-Skala.
+- Auch bei ausschließlich negativen Beträgen wird die Null-Linie dargestellt.
+- Skala passt sich automatisch an alle eingetragenen Spielabende an.
+- Gut lesbare helle Überschriften in der grünen Kopfzeile für alle Reiter.
+- Keine dunklen, schlecht lesbaren doppelten Überschriften mehr.
+- Verbesserte Darstellung auf schmalen Smartphones.
+- Cache-Version 1.3; die bestehende Update-Benachrichtigung bleibt aktiv.
 
-WICHTIG ZU DEINEN DATEN:
-- Die lokale Datenbank nutzt WEITERHIN den bestehenden Schlüssel
-  'schafkopf-tracker-v1' im localStorage des Browsers.
-- Kein Zurücksetzen und keine Löschung deiner eingetragenen Spielabende.
-- Vor dem Update zur Sicherheit Profil > Daten exportieren verwenden.
-- Cache löschen heißt NICHT: Browserdaten/Sitedaten löschen!
+WICHTIG – GESPEICHERTE SPIELABENDE:
+- Der bestehende lokale Datenspeicher bleibt UNVERÄNDERT.
+- Der Schlüssel im localStorage ist weiterhin 'schafkopf-tracker-v1'.
+- Durch das Aktualisieren der App-Dateien werden die Einträge nicht gelöscht.
+- Trotzdem vor jedem Update eine Sicherung im Profil exportieren.
+- NICHT die Website-/App-Daten in den Android-Einstellungen löschen!
 
-UPDATE BEI GITHUB PAGES:
-1. Auf GitHub dein Repository schafkopf-tracker öffnen.
-2. Im Hauptverzeichnis: Add file > Upload files.
-3. index.html, sw.js, manifest.webmanifest, icon.svg, README.txt
-   aus DIESEM Ordner auswählen. Keine ZIP und keinen übergeordneten Ordner hochladen.
-4. Commit changes anklicken.
-5. Warten, bis GitHub Pages den Commit veröffentlicht hat.
-6. Die installierte App bei Internetverbindung vollständig schließen und neu öffnen.
-   Beim einmaligen Upgrade von 1.1 auf 1.2 kann ein zweites Öffnen nötig sein.
-   Ab zukünftigen Versionswechseln erscheint in der App eine Update-Meldung.
+SO SPIELST DU DAS UPDATE EIN:
+1. In deiner installierten App: Profil > Daten exportieren.
+2. Dieses ZIP entpacken. Den darin liegenden Ordner öffnen.
+3. GitHub > Repository schafkopf-tracker > Add file > Upload files.
+4. Alle fünf Dateien direkt ins Hauptverzeichnis des Repositorys ziehen.
+5. GitHub-Änderung per Commit changes bestätigen.
+6. Warten, bis GitHub Pages neu veröffentlicht hat.
+7. App mit Internetverbindung öffnen. Bei der Update-Meldung auf
+   „Aktualisieren“ tippen; ggf. App schließen und erneut öffnen.
+8. Unter Profil > App-Updates steht danach „Version 1.3“.
 
-OFFLINE-TEST:
-- App einmal online öffnen und laden lassen.
-- Danach Flugmodus aktivieren, App schließen und neu öffnen.
-- Bereits gespeicherte Abende müssen weiterhin verfügbar sein.
-
-HINWEIS:
-- Freunden stehen Änderungen nach einer Aktualisierung über die gleiche URL
-  ebenfalls zur Verfügung, wenn sie online gehen.
-- Veröffentlichung und Hosting über GitHub Pages im Free-Tarif.
+Deine Freunde erhalten das Update über die gleiche App-Adresse.
+Die App selbst benötigt weiterhin keine Online-Datenbank.
