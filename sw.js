@@ -1,5 +1,5 @@
-/* Schafkopf Tracker – Offline-Cache v1.8.1 */
-const CACHE='schafkopf-v1.8.1';
+/* Schafkopf Tracker – Offline-Cache v1.9 */
+const CACHE='schafkopf-v1.9';
 const ASSETS=['./','./index.html','./icon.svg','./manifest.webmanifest'];
 const PREFIX='schafkopf-';
 self.addEventListener('install',event=>{

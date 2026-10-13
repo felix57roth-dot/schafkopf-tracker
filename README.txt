@@ -1,24 +1,26 @@
-SCHAFKOPFTRACKER – VERSION 1.8.1
+SCHAFKOPFTRACKER – VERSION 1.9
 ================================
 
 NEU
-- Schneider und Schwarz werden automatisch aus den Punkten der Verliererpartei berechnet.
-- Schneider: Verliererpartei 0–29 Punkte (+10 Cent). Schwarz: genau 0 Punkte (+10 Cent ZUSÄTZLICH zu Schneider).
-- Beim Rufspiel/anderen Punktespielen Ansager oder Gegner auswählbar: Ansager 61 zum Sieg, Gegner 60 zum Sieg.
-- Beispiel: Rufspiel 0,10 + Schneider 0,10 + 3 Läufer 0,30; 1 Klopfer (×2) = 1,00 Euro.
-- Hochzeit 0,20; Kreuzrunde 0,20; Bockrunde verdoppelt, ebenso Kontra/Re/Hirsch mit ×2/×4/×8.
-- Bettel 0,50: Ansager muss stichfrei bleiben. Ramsch 0,10: Jungfrauen verdoppeln jeweils.
-- Tout: Solo-Grundtarif + Läufer ×2, ohne Schneider/Schwarz. Gegnerstiche entscheiden Sieg/Niederlage.
-- Sie: 4 × Solopreis + 8 Läufer, anschließend ×2 (Hausregel-Voreinstellung).
-- Bestehende Einträge und die lokale Offline-Speicherung bleiben erhalten.
+- Automatische Abend-Bilanz aus allen getrackten Einzelspielen eines Tages.
+- Im Reiter „Abende“ erscheint pro Datum eine automatisch berechnete Abendzeile (inklusive Anzahl Spiele).
+- Manuell eingetragene Abende bleiben unverändert möglich.
+- Falls ein manueller Abend am gleichen Datum existiert, hat dieser Vorrang in der Abendbilanz, damit dieselben Spiele nicht doppelt zählen.
+- Beim manuellen Speichern eines Datums mit getrackten Spielen wird darauf hingewiesen und vor dem Speichern gefragt.
+- Automatische Abend-Einträge ändern sich sofort, wenn Einzelspiele bearbeitet, gelöscht oder importiert werden.
+- Automatische Abend-Einträge lassen sich nicht direkt bearbeiten oder löschen: Einzelspiele im Reiter „Spiele“ bearbeiten.
+- Dashboard, Gewinnkurve, Monats-/Jahresbilanz, Rekorde und Jahresziel verwenden die automatische+manuelle Abendbilanz.
+- Der App-Name, die Spielarten, Regeln und die lokalen gespeicherten Daten bleiben unverändert.
 
-INSTALLATION
-1. In der bisherigen App unter Profil > Daten exportieren ein Backup erstellen.
-2. Die fünf Dateien aus diesem Ordner in das GitHub-Repository-Hauptverzeichnis hochladen.
-3. Nach der Veröffentlichung die installierte App online öffnen und Aktualisieren wählen.
+DATEN UND SICHERHEIT
+- Automatische Abend-Einträge werden aus den Einzelspielen live berechnet und NICHT als zusätzliche Kopien im lokalen Speicher abgelegt.
+- Dadurch entstehen beim Update, Import, Bearbeiten oder Neustart keine doppelten automatischen Abende.
+- Backup weiterhin über Profil > Daten exportieren: sichert Original-Einzelspiele und manuelle Abende; automatische Abende werden daraus nach dem Import neu berechnet.
+- LocalStorage-Schlüssel unverändert: schafkopf-tracker-v1.
+- Daten weiterhin nur lokal; offline nach Installation nutzbar.
 
-WICHTIG
-- Der lokale Speicherschlüssel bleibt schafkopf-tracker-v1.
-- Die Abendbilanz und die Einzelspielbilanz werden weiterhin getrennt angezeigt.
-- Bei bereits gespeicherten Einzelspielen bleibt die berechnete Summe erhalten. Änderungen/Neuberechnungen gelten für neu erfasste oder neu bearbeitete Spiele.
-- Die Abrechnung von Sie, Hochzeit, Kreuzrunde und Hirsch kann je nach Kartentisch abweichen; hier sind die vorgegebenen Tarife umgesetzt.
+UPDATE
+1. VOR DEM UPDATE in der laufenden App: Profil > Daten exportieren.
+2. ZIP entpacken; die 5 Dateien aus dem Ordner im Hauptverzeichnis des GitHub-Repositories hochladen und ersetzen.
+3. Nach GitHub-Pages-Bereitstellung die App mit Internetverbindung starten und Update übernehmen.
+4. Version unter Profil > App-Updates kontrollieren.
