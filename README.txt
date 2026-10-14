@@ -1,23 +1,30 @@
-SCHAFKOPFTRACKER – VERSION 2.0
+SCHAFKOPFTRACKER – VERSION 2.0.1
 ================================
 
-NEU:
-- Läufergrenzen je Spielart: Rufspiel 14 (ab 3 oder optional ab 4), Solo 8, Wenz/Geier 4, Farb-Wenz/Farb-Geier 8.
-- Neue Spielarten-Icons jetzt im Einzelspielverlauf und in der Statistik sichtbar.
-- Tarifkonfiguration unter Profil: Grundpreise für Rufspiel, Soli, Bettel, Hochzeit, Kreuzrunde, Ramsch und Zuschläge für Schneider, Schwarz, Läufer in Cent.
-- Optionale Regeln für Schuss (jeder verdoppelt) und Kontra / Re / Hirsch; im Profil ein- und ausschaltbar.
-- Spielartenstatistik: Anzahl, Siege, Niederlagen, beobachtete Gewinnquote, Durchschnitt und Bilanz je Spielart.
-- Vorhandene Abend- und Spieldaten bleiben getrennt; automatische Abendbilanz funktioniert weiterhin.
+ÄNDERUNGEN
+- Training und Legen aus der AUSWAHL der Spielarten entfernt. 
+  Leger/Klopfer stehen weiterhin als Verdopplungsregel zur Verfügung.
+- Alte gespeicherte Spiele mit Spielart "Training" oder "Legen" bleiben
+  im Verlauf, in Backups und in der Statistik lesbar; es erfolgt kein Löschen.
+- Sie-Abrechnung an die Hausregel angepasst:
+  Preis pro Gegner = (Solo-Grundpreis + 8 × Läuferzuschlag) × 4
+  Danach Verdopplung für jeden Klopfer/Leger (und ggf. aktivierte Zusatzregeln).
+  Keine Schneider-/Schwarz-Zuschläge beim Sie.
+- Persönlicher Gesamtgewinn beim Sie = Preis pro Gegner × 3.
+  Standardtarif: (0,50 € + 8 × 0,10 €) × 4 = 5,20 € pro Gegner,
+  insgesamt +15,60 €; ein Leger = 10,40 € pro Gegner, +31,20 € gesamt.
+- Im Spielpreis-Feld des Sie wird "Preis pro Gegner" angezeigt.
 
-WICHTIG:
-- Bestehende gespeicherte Ergebnisse werden beim Tarifwechsel NICHT nachträglich verändert.
-- Bearbeitete Spiele werden mit den dann aktiven Tarifen neu berechnet.
-- Gewinnquote = bisherige Siege / entschiedene Spiele, keine zuverlässige Vorhersage für zukünftige Spiele.
-- Bei Rufspiel zählen Läufer weiterhin ab 3 (standardmäßig), über Profil kann auf 4 umgestellt werden.
-- Offline-Cache und Version auf 2.0 erhöht; LocalStorage-Schlüssel bleibt unverändert.
+WICHTIG
+- Gespeicherte Ergebnisse werden NICHT rückwirkend neu berechnet.
+- Wenn du einen bisherigen Sie-Eintrag bearbeitest und neu speicherst,
+  wird die neue Formel angewendet. Alte Daten vorher exportieren.
+- LocalStorage-Schlüssel unverändert: schafkopf-tracker-v1.
+- Offline-Cache auf v2.0.1 aktualisiert.
 
-UPDATE:
-1. In deiner bisherigen App unter Profil > Daten exportieren eine Sicherung erstellen.
-2. ZIP entpacken; die fünf darin enthaltenen Dateien in das Hauptverzeichnis deines GitHub-Repositorys hochladen.
-3. Nach dem GitHub-Pages-Update die App online öffnen und eine eventuelle Update-Meldung übernehmen.
-4. Bei Bedarf vollständig schließen und neu öffnen. Nicht deinstallieren und keine Browserdaten löschen, bevor ein Backup vorhanden ist.
+UPDATE
+1. In der bisherigen App unter Profil > Daten exportieren ein Backup erstellen.
+2. ZIP entpacken und die fünf Dateien aus dem enthaltenen Ordner
+   in das Hauptverzeichnis des GitHub-Repositorys hochladen.
+3. GitHub Pages Veröffentlichung abwarten, App online öffnen,
+   Aktualisieren bestätigen oder App vollständig schließen und neu öffnen.
