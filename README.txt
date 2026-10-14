@@ -1,22 +1,32 @@
-SCHAFKOPFTRACKER – VERSION 2.4
-==============================
+SCHAFKOPFTRACKER – VERSION 2.5
+=============================
 
-NEU IN 2.4
-- Trainingsmodus mit Ramsch: Live-Auswertung der Augen und Stichanzahl je Sitzposition (VH, MH, HH, Geber).
-- Bei Ramsch: Hinweise zum punktstaerksten Spieler, zur Anzahl Jungfrauen (Spieler ohne Stich) und zu nicht entschiedenen Gleichstaenden.
-- Bettel als Trainings-Spielart: Ansager gewinnt nur mit null Stichen.
-- Sitzposition "Ich sitze auf" und Spieler-Auswertung im Trainingsarchiv.
-- Replay: gespeicherte Partien Stich fuer Stich durchgehen und Zwischenstaende ansehen.
-- Trainingsanalyse: Anzahl Partien und Stiche, Trumpfkarten, durchschnittliche Stichaugen, Spielarten, Erfolgsquote aus entscheidbaren archivierten Partien.
-- Keine automatische Eintragung in die Geldbilanz. Alte Eintraege, Spielabende und Backups bleiben kompatibel.
+NEU
+- Einmalige, feste Sitzordnung für vier Personen (Tischgrafik: oben, rechts, unten, links im Uhrzeigersinn).
+- Einen ersten Geber bestimmen. Vorhand, Mittelhand und Hinterhand werden daraus automatisch abgeleitet.
+- Nach jeder vollständig erfassten und archivierten Partie rückt der Geber im Uhrzeigersinn zum nächsten Platz.
+- "Geber weiter" erlaubt eine manuelle Anpassung, etwa falls eine Partie nicht getrackt wurde.
+- Spielernamen werden mit jeder Trainingspartie gespeichert; alte Archive bleiben beim Wechsel der Sitzordnung unverändert.
+- Beim Rufspiel wird der Ansagerpartner automatisch anhand des ausgespielten Ruf-Asses erkannt.
+- Vor dem Ruf-Ass zeigt die App Augen pro Spielerposition und weist danach auch frühere Stiche dem Team zu.
+- Eigene Trainingsstatistik im Reiter Statistik: Gewinnquote, Augenentwicklung und Spielartenverteilung als Grafiken.
+- Bestehende Einzelspiele, Abende, Gewinnstatistiken und Offline-Kartenzähler bleiben unverändert.
 
-INSTALLATION
-1. In der bisherigen App unter Profil > Daten exportieren sichern.
-2. Alle 6 Dateien direkt im GitHub-Repository ersetzen, wie gewohnt.
-3. Online neu oeffnen und PWA-Update uebernehmen.
+DATEN UND DATENSICHERUNG
+- Die Sitzordnung liegt nur lokal unter dem Schlüssel schafkopf-tisch-v1.
+- Das normale Backup enthält jetzt auch die Sitzordnung und Trainingspartien.
+- Beim Import "Alle Daten ersetzen" wird eine im Backup vorhandene Tischkonfiguration wiederhergestellt.
+- Alte Backups ohne Tischkonfiguration bleiben kompatibel.
+- Läuft bereits eine Partie, gilt eine geänderte Sitzordnung erst für die nächste Partie.
+
+UPDATE ÜBER GITHUB
+1. Zuerst Profil > Daten exportieren.
+2. Die sechs Dateien (index.html, icon.png, icon.svg, manifest.webmanifest, sw.js, README.txt)
+   aus dem ZIP-Ordner direkt ins Root des vorhandenen GitHub-Repositories hochladen.
+3. Auf die GitHub-Pages-Veröffentlichung warten und die installierte App online öffnen.
+4. Update-Hinweis bestätigen bzw. App komplett schließen und neu öffnen.
 
 WICHTIG
-- Fuer die automatische Sitz-/Punktezuordnung die korrekte Spielart, Sitzposition und den richtigen Ansager / Partner einstellen.
-- Gleichstand im Ramsch wird angezeigt, ohne eigenmaechtig eine Hausregel zu entscheiden.
-- Aeltere Trainingspartien ohne Spielerposition werden weiterhin angezeigt. Sitzstatistiken werden nur aus Partien mit Positionsdaten errechnet.
-- Daten weiterhin ausschliesslich lokal gespeichert.
+- Der Geber rotiert nach archivierten Partien; bei übersprungenen Spielen bitte "Geber weiter" wählen.
+- Pro Stich werden die vier Karten in der Reihenfolge ihrer Ausspielposition eingegeben.
+- Training sollte mit Einverständnis der Mitspieler erfolgen; die Stichübersicht ist kein unerlaubtes Hilfsmittel für reguläre Wettbewerbe.
