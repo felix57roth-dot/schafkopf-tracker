@@ -372,6 +372,22 @@ html,body{max-width:100%;overflow-x:clip}
 .stitch-archive-detail h3{margin:0;font-size:16px}.stitch-helper{font-size:11px;color:#6c8071;line-height:1.45}
 @media(max-width:360px){.stitch-head{padding:12px}.stitch-active{padding:11px}.stitch-slot{min-height:93px}.stitch-slot .playing-card{width:42px}.stitch-mini-card{width:32px}.stitch-card-panel{padding:10px 7px}.stitch-card-panel .counter-suit-section{padding:6px}.stitch-card-panel .playing-card{width:min(100%,33px)}}
 @media(min-width:750px){.stitch-layout{max-width:890px;margin:0 auto}.stitch-head{padding:22px}.stitch-slot{min-height:126px}.stitch-slot .playing-card{width:60px}.stitch-card-panel .playing-card{width:min(100%,60px)}}
+
+/* v2.3: automatische Stichentscheidung und Sitzpositionen */
+.stitch-setup-note{font-size:11px;line-height:1.55;color:#536f5c;background:#edf5ed;border-radius:12px;padding:10px 12px;margin-top:-2px}
+.stitch-auto-prompt{border:1px solid #c1d9c4;background:#f0f7ef}
+.stitch-auto-result{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.stitch-auto-result strong{font-size:16px;color:#204a38}
+.stitch-auto-result b{font-size:13px}
+.stitch-auto-prompt>small{font-size:11px;color:#688171}
+.stitch-auto-prompt>.btn{width:100%;margin-top:2px}
+.stitch-override{border-top:1px solid #d5e4d7;padding-top:8px}
+.stitch-override summary{font-size:12px;font-weight:700;color:#456a55;cursor:pointer}
+.stitch-override .field{margin-top:9px}
+.stitch-mini-card{height:auto;aspect-ratio:auto;display:flex;flex-direction:column;align-items:center;gap:2px}
+.stitch-mini-card small{font-size:10px;font-weight:800;color:#42604d;line-height:1.1}
+.stitch-mini-card svg{width:100%;aspect-ratio:90/142;height:auto}
+@media(max-width:375px){.stitch-setup-note{padding:8px 10px}.stitch-config{gap:6px}.stitch-auto-result strong{font-size:14px}}
 </style></head><body><div id="app" class="app"><header class="hero"><div class="top"><div class="brand"><div class="emblem" id="brandSuit"></div><span>Schafkopf<span style="color:#e4c47b">tracker</span></span></div><div class="suite" id="suits"></div></div><h1 id="headerTitle">Servus am Kartentisch!</h1><p id="headerSub">Alle deine Schafkopfabende auf einen Blick.</p></header><main class="main" id="main"></main><nav class="nav" id="nav"></nav><div id="toast" class="hidden" role="status" aria-live="polite"></div><div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><div class="update-text"><b>🃏 Neue Version verfügbar!</b><p>Ein Update ist bereit. Deine gespeicherten Spielabende bleiben erhalten.</p></div><button type="button" class="btn" id="applyUpdate">Aktualisieren</button><button type="button" class="mini-btn" id="dismissUpdate" aria-label="Später aktualisieren" title="Später">✕</button></div></div><script>
 'use strict';
 /* Schafkopftracker v1.7 – Offline und nur lokal. */
@@ -466,7 +482,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='2.2';
+const VERSION='2.3';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -792,7 +808,62 @@ function trumpSort(a,b){
 /* Stichprotokoll – separat vom einfachen Zaehler und vom Geld-Tracker. */
 const STITCH_KEY='schafkopf-stichverlauf-v1';
 const STITCH_TYPES=COUNTER_TYPES.filter(t=>!['ramsch','bettel'].includes(t[0]));
-const stitchDefaults=()=>({type:'rufspiel',trumpSuit:'herz',role:'declarer',started:new Date().toISOString(),current:[],tricks:[],archive:[]});
+const STITCH_SEATS=[['vh','VH'],['mh','MH'],['hh','HH'],['g','Geber']];
+const STITCH_SEAT_IDS=STITCH_SEATS.map(s=>s[0]);
+const STITCH_SUIT_ORDER=['eichel','gras','herz','schell'];
+const STITCH_CARD_ORDER=['A','10','K','O','U','9','8','7'];
+const partneredStitch=type=>['rufspiel','hochzeit','kreuzrunde'].includes(type);
+const stitchSeatLabel=id=>STITCH_SEATS.find(s=>s[0]===id)?.[1]||'–';
+const validStitchSeat=id=>STITCH_SEAT_IDS.includes(id);
+function stitchSeatOptions(selected,exclude=''){return STITCH_SEATS.filter(([id])=>id!==exclude).map(([id,label])=>`<option value="${id}" ${id===selected?'selected':''}>${label}</option>`).join('');}
+function stitchPositionFromLeader(leader,index){return STITCH_SEAT_IDS[(STITCH_SEAT_IDS.indexOf(leader)+index)%4];}
+function stitchPartnerOf(seat){return STITCH_SEAT_IDS[(STITCH_SEAT_IDS.indexOf(seat)+2)%4];}
+function stitchIsTrumpFor(c,type,suit){
+ if(type==='bettel')return false;
+ if(type==='wenz')return c.rank==='U';
+ if(type==='geier')return c.rank==='O';
+ if(type==='farbwenz')return c.rank==='U'||c.suit===suit;
+ if(type==='farbgeier')return c.rank==='O'||c.suit===suit;
+ if(type==='solo'||type==='tout')return c.rank==='O'||c.rank==='U'||c.suit===suit;
+ return c.rank==='O'||c.rank==='U'||c.suit==='herz';
+}
+function stitchTrumpStrength(c,type,suit){
+ if(!stitchIsTrumpFor(c,type,suit))return Infinity;
+ const core=(type==='wenz'||type==='farbwenz')?['U']:(type==='geier'||type==='farbgeier')?['O']:['O','U'];
+ if(core.includes(c.rank))return core.indexOf(c.rank)*4+STITCH_SUIT_ORDER.indexOf(c.suit);
+ const other=STITCH_CARD_ORDER.filter(r=>!core.includes(r));
+ return core.length*4+other.indexOf(c.rank);
+}
+/* Kleinerer Wert gewinnt: Trumpf schlaegt Farbe; sonst fuehrt die erste Karte. */
+function stitchWinnerIndex(cards,type,suit){
+ if(!Array.isArray(cards)||cards.length!==4||cards.some(id=>!CARD_MAP[id]))return -1;
+ const four=cards.map(id=>CARD_MAP[id]),lead=four[0];
+ function power(c){
+  if(stitchIsTrumpFor(c,type,suit))return [0,stitchTrumpStrength(c,type,suit)];
+  if(!stitchIsTrumpFor(lead,type,suit)&&c.suit===lead.suit)return [1,STITCH_CARD_ORDER.indexOf(c.rank)];
+  return [2,100];
+ }
+ let winner=0,score=power(lead);
+ four.forEach((c,i)=>{const rank=power(c);if(rank[0]<score[0]||(rank[0]===score[0]&&rank[1]<score[1])){winner=i;score=rank;}});
+ return winner;
+}
+function stitchTeamForSeat(seat,game=stitch){
+ const declarerTeam=[game.declarerSeat];
+ if(partneredStitch(game.type))declarerTeam.push(game.partnerSeat);
+ const isDeclarer=declarerTeam.includes(seat);
+ return (game.role==='declarer')===isDeclarer?'us':'them';
+}
+function stitchNextLeader(game=stitch){return game.tricks.at(-1)?.winnerSeat||game.firstSeat;}
+function stitchIsLegacy(game=stitch){return game.tricks.some(t=>!t.winnerSeat);}
+function stitchPrediction(game=stitch){
+ if(game.current.length!==4||stitchIsLegacy(game))return null;
+ const index=stitchWinnerIndex(game.current,game.type,game.trumpSuit);
+ if(index<0)return null;
+ const seat=stitchPositionFromLeader(stitchNextLeader(game),index);
+ return {index,seat,winner:stitchTeamForSeat(seat,game)};
+}
+
+const stitchDefaults=()=>({type:'rufspiel',trumpSuit:'herz',role:'declarer',firstSeat:'vh',declarerSeat:'vh',partnerSeat:'hh',overrideSeat:'',started:new Date().toISOString(),current:[],tricks:[],archive:[]});
 function stitchNormalize(raw){
  const d=stitchDefaults(),data=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
  const normTricks=(list)=>{
@@ -801,7 +872,7 @@ function stitchNormalize(raw){
   for(const t of list.slice(0,8)){
    if(!t||!Array.isArray(t.cards)||t.cards.length!==4||!['us','them'].includes(t.winner))break;
    const ids=t.cards.map(String);if(ids.some(id=>!CARD_MAP[id]||seen.has(id))||new Set(ids).size!==4)break;
-   ids.forEach(id=>seen.add(id));valid.push({cards:ids,winner:t.winner,eyes:ids.reduce((v,id)=>v+CARD_MAP[id].eyes,0)});
+   ids.forEach(id=>seen.add(id));valid.push({cards:ids,winner:t.winner,eyes:ids.reduce((v,id)=>v+CARD_MAP[id].eyes,0),leaderSeat:validStitchSeat(t.leaderSeat)?t.leaderSeat:null,winnerSeat:validStitchSeat(t.winnerSeat)?t.winnerSeat:null});
   }
   return valid;
  };
@@ -812,9 +883,11 @@ function stitchNormalize(raw){
   if(ts.length!==8||ts.reduce((n,t)=>n+t.eyes,0)!==120)continue;
   const t=STITCH_TYPES.find(y=>y[0]===x.type)?.[0]||'rufspiel';
   const iso=typeof x.started==='string'&&!isNaN(Date.parse(x.started))?x.started:new Date().toISOString();
-  archives.push({id:String(x.id||uid()).slice(0,80),type:t,trumpSuit:CARD_SUITS.some(y=>y.id===x.trumpSuit)?x.trumpSuit:'herz',role:x.role==='defender'?'defender':'declarer',started:iso,finished:typeof x.finished==='string'?x.finished:iso,tricks:ts,linkedGameId:x.linkedGameId?String(x.linkedGameId).slice(0,90):null});
+  archives.push({id:String(x.id||uid()).slice(0,80),type:t,trumpSuit:CARD_SUITS.some(y=>y.id===x.trumpSuit)?x.trumpSuit:'herz',role:x.role==='defender'?'defender':'declarer',firstSeat:validStitchSeat(x.firstSeat)?x.firstSeat:'vh',declarerSeat:validStitchSeat(x.declarerSeat)?x.declarerSeat:'vh',partnerSeat:validStitchSeat(x.partnerSeat)&&x.partnerSeat!==x.declarerSeat?x.partnerSeat:'hh',started:iso,finished:typeof x.finished==='string'?x.finished:iso,tricks:ts,linkedGameId:x.linkedGameId?String(x.linkedGameId).slice(0,90):null});
  }
- return {type:STITCH_TYPES.find(t=>t[0]===data.type)?.[0]||'rufspiel',trumpSuit:CARD_SUITS.some(t=>t.id===data.trumpSuit)?data.trumpSuit:'herz',role:data.role==='defender'?'defender':'declarer',started:typeof data.started==='string'&&!isNaN(Date.parse(data.started))?data.started:d.started,current,tricks,archive:archives};
+ const declarerSeat=validStitchSeat(data.declarerSeat)?data.declarerSeat:'vh';
+ const partnerSeat=validStitchSeat(data.partnerSeat)&&data.partnerSeat!==declarerSeat?data.partnerSeat:stitchPartnerOf(declarerSeat);
+ return {type:STITCH_TYPES.find(t=>t[0]===data.type)?.[0]||'rufspiel',trumpSuit:CARD_SUITS.some(t=>t.id===data.trumpSuit)?data.trumpSuit:'herz',role:data.role==='defender'?'defender':'declarer',firstSeat:validStitchSeat(data.firstSeat)?data.firstSeat:'vh',declarerSeat,partnerSeat,overrideSeat:validStitchSeat(data.overrideSeat)?data.overrideSeat:'',started:typeof data.started==='string'&&!isNaN(Date.parse(data.started))?data.started:d.started,current,tricks,archive:archives};
 }
 let trainingView='simple',stitchArchiveOpen=null,pendingStitchArchive=null,stitch=stitchDefaults();
 try{stitch=stitchNormalize(JSON.parse(localStorage.getItem(STITCH_KEY)||'null'));}catch(e){console.warn('Stichverlauf konnte nicht gelesen werden',e);}
@@ -823,25 +896,27 @@ function stitchTotals(tricks=stitch.tricks){return tricks.reduce((p,t)=>{p[t.win
 function stitchUsed(){return new Set(stitch.tricks.flatMap(t=>t.cards));}
 function stitchTypeName(type){return COUNTER_TYPES.find(t=>t[0]===type)?.[1]||'Rufspiel';}
 function stitchUsesColor(type=stitch.type){return ['solo','farbwenz','farbgeier','tout'].includes(type);}
-function stitchIsTrump(c){const type=stitch.type;if(type==='wenz')return c.rank==='U';if(type==='geier')return c.rank==='O';if(type==='farbwenz')return c.rank==='U'||c.suit===stitch.trumpSuit;if(type==='farbgeier')return c.rank==='O'||c.suit===stitch.trumpSuit;if(['solo','tout'].includes(type))return c.rank==='O'||c.rank==='U'||c.suit===stitch.trumpSuit;return c.rank==='O'||c.rank==='U'||c.suit==='herz';}
+function stitchIsTrump(c){return stitchIsTrumpFor(c,stitch.type,stitch.trumpSuit);}
 function stitchCardButton(c,used){const played=used.has(c.id),active=stitch.current.includes(c.id);return `<button type="button" class="training-card ${played?'is-fallen':''} ${active?'in-current':''} ${stitchIsTrump(c)?'is-trump':''}" data-stitch-card="${c.id}" ${played?'disabled':''} aria-label="${c.name}${played?', gefallen':active?', aktueller Stich':''}" aria-pressed="${active}"><span class="playing-card">${cardSVG(c)}<span class="gone-overlay" aria-hidden="true"><span>✓</span></span></span></button>`;}
-function stitchMiniCards(cards){return `<div class="stitch-mini">${cards.map(id=>`<span class="stitch-mini-card" title="${CARD_MAP[id].name}">${cardSVG(CARD_MAP[id])}</span>`).join('')}</div>`;}
-function stitchHistoryRow(t,i,editable=false){return `<div class="stitch-history-item"><div class="stitch-history-top"><b>Stich ${i+1} · ${t.eyes} Augen</b><span class="${t.winner==='us'?'positive':'negative'}">${t.winner==='us'?'Mein Team':'Gegner'}</span></div>${stitchMiniCards(t.cards)}${editable?`<button type="button" class="text-button" data-stitch-rewind="${i}">Ab hier korrigieren ↶</button>`:''}</div>`;}
+function stitchMiniCards(cards,leaderSeat=null){return `<div class="stitch-mini">${cards.map((id,i)=>`<span class="stitch-mini-card" title="${CARD_MAP[id].name}${leaderSeat?' · '+stitchSeatLabel(stitchPositionFromLeader(leaderSeat,i)):''}">${leaderSeat?`<small>${stitchSeatLabel(stitchPositionFromLeader(leaderSeat,i))}</small>`:''}${cardSVG(CARD_MAP[id])}</span>`).join('')}</div>`;}
+function stitchHistoryRow(t,i,editable=false){return `<div class="stitch-history-item"><div class="stitch-history-top"><b>Stich ${i+1} · ${t.eyes} Augen</b><span class="${t.winner==='us'?'positive':'negative'}">${t.winnerSeat?stitchSeatLabel(t.winnerSeat)+' · ':''}${t.winner==='us'?'Mein Team':'Gegner'}</span></div>${stitchMiniCards(t.cards,t.leaderSeat)}${editable?`<button type="button" class="text-button" data-stitch-rewind="${i}">Ab hier korrigieren ↶</button>`:''}</div>`;}
 function stitchUI(){
  const t=stitch.tricks,tot=stitchTotals(),used=stitchUsed(),curr=stitch.current.map(id=>CARD_MAP[id]),pendingEyes=curr.reduce((n,c)=>n+c.eyes,0),played=t.length*4,completed=t.length===8;
+ const legacy=stitchIsLegacy(),leadSeat=stitchNextLeader(),pred=stitchPrediction(),chosenSeat=stitch.overrideSeat||pred?.seat||'',chosenTeam=chosenSeat?stitchTeamForSeat(chosenSeat):'',paired=partneredStitch(stitch.type);
  const selectable=STITCH_TYPES.map(([id,name])=>`<option value="${id}" ${stitch.type===id?'selected':''}>${name}</option>`).join('');
  const suits=CARD_SUITS.map(s=>`<option value="${s.id}" ${stitch.trumpSuit===s.id?'selected':''}>${s.label}</option>`).join('');
  const a=stitch.archive.find(x=>x.id===stitchArchiveOpen);
  return `<div class="stitch-layout">
  <section class="card stitch-head"><div class="sectionhead"><h2>Stichverlauf live</h2><span class="badge">Stich ${Math.min(t.length+1,8)} / 8</span></div><p>Tippe vier ausgespielte Karten an und ordne den Stich dem Gewinnerteam zu. Die Augen werden automatisch addiert. Training nur nach Vereinbarung mit der Runde.</p>
- <div class="stitch-config"><label class="field">Spielart<select id="stitchType">${selectable}</select></label>${stitchUsesColor()?`<label class="field">Trumpffarbe<select id="stitchSuit">${suits}</select></label>`:'<div class="stitch-helper" style="align-self:end">Trumpf wird passend zur Spielart markiert.</div>'}<label class="field">Meine Rolle<select id="stitchRole"><option value="declarer" ${stitch.role==='declarer'?'selected':''}>Ansagerpartei</option><option value="defender" ${stitch.role==='defender'?'selected':''}>Gegnerpartei</option></select></label></div>
+ <div class="stitch-config"><label class="field">Spielart<select id="stitchType">${selectable}</select></label>${stitchUsesColor()?`<label class="field">Trumpffarbe<select id="stitchSuit">${suits}</select></label>`:'<div class="stitch-helper" style="align-self:end">Trumpf wird passend zur Spielart markiert.</div>'}<label class="field">Meine Rolle<select id="stitchRole"><option value="declarer" ${stitch.role==='declarer'?'selected':''}>Ansagerpartei</option><option value="defender" ${stitch.role==='defender'?'selected':''}>Gegnerpartei</option></select></label><label class="field">Ansager sitzt auf<select id="stitchDeclarerSeat">${stitchSeatOptions(stitch.declarerSeat)}</select></label>${paired?`<label class="field">Partner des Ansagers<select id="stitchPartnerSeat">${stitchSeatOptions(stitch.partnerSeat,stitch.declarerSeat)}</select></label>`:''}<label class="field">Erster Ausspieler<select id="stitchFirstSeat">${stitchSeatOptions(stitch.firstSeat)}</select></label></div>
+ <div class="stitch-setup-note">Reihenfolge: <b>VH → MH → HH → Geber</b>. ${paired?'Ansager und Partner bilden eine Partei.':'Der Ansager spielt allein gegen die drei anderen.'} Der Gewinner des letzten Stichs spielt als Nächstes aus. <b>Aktueller Ausspieler: ${stitchSeatLabel(leadSeat)}.</b>${legacy?' <b>Ältere laufende Partie: Stichgewinner bitte weiter manuell zuordnen. Für die automatische Erkennung eine neue Partie beginnen.</b>':''}</div>
  <div class="stitch-scores" aria-live="polite"><div class="stitch-score"><small>Mein Team</small><strong id="stitchUsScore">${tot.us}</strong><span>Augen</span></div><div class="stitch-score other"><small>Gegner</small><strong id="stitchThemScore">${tot.them}</strong><span>Augen</span></div></div>
  <div class="stitch-bar"><span class="ours" style="width:${tot.us/120*100}%"></span><span class="theirs" style="width:${tot.them/120*100}%"></span></div>
  <div class="stitch-metrics"><span>${t.length} abgeschlossene Stiche</span><span>${120-tot.us-tot.them} Augen noch offen</span></div>
  </section>
  <section class="card stitch-active"><div class="sectionhead"><h2>Aktueller Stich</h2><span class="stitch-active-amount">${curr.length}/4 Karten · ${pendingEyes} Augen</span></div>
- <div class="stitch-current-cards">${[0,1,2,3].map(i=>curr[i]?`<button type="button" class="stitch-slot has-card" data-stitch-remove="${i}" aria-label="${curr[i].name} aus dem Stich entfernen"><span class="playing-card">${cardSVG(curr[i])}</span><span class="slot-number">${i+1}. Karte · entfernen</span></button>`:`<div class="stitch-slot">${i+1}. Karte</div>`).join('')}</div>
- ${curr.length===4?`<div class="stitch-winner-prompt"><span>Wer hat die ${pendingEyes} Augen gewonnen?</span><div class="stitch-winner-buttons"><button id="stitchWinUs">Mein Team</button><button id="stitchWinThem" class="other">Gegner</button></div></div>`:completed?'<p class="help">Alle acht Stiche sind erfasst. Du kannst das Spiel abschließen.</p>':'<p class="help">Wähle die vier Karten unten in Ausspielreihenfolge aus. Bereits verwendete Karten bleiben grau.</p>'}
+ <div class="stitch-current-cards">${[0,1,2,3].map(i=>curr[i]?`<button type="button" class="stitch-slot has-card" data-stitch-remove="${i}" aria-label="${curr[i].name} aus dem Stich entfernen"><span class="playing-card">${cardSVG(curr[i])}</span><span class="slot-number">${stitchSeatLabel(stitchPositionFromLeader(leadSeat,i))} · entfernen</span></button>`:`<div class="stitch-slot">${stitchSeatLabel(stitchPositionFromLeader(leadSeat,i))}</div>`).join('')}</div>
+ ${curr.length===4?(legacy?`<div class="stitch-winner-prompt"><span>Ältere Partie: Wer hat die ${pendingEyes} Augen gewonnen?</span><div class="stitch-winner-buttons"><button id="stitchWinUs">Mein Team</button><button id="stitchWinThem" class="other">Gegner</button></div></div>`:`<div class="stitch-winner-prompt stitch-auto-prompt"><span>Automatisch erkannt · ${pendingEyes} Augen</span><div class="stitch-auto-result"><strong>${stitchSeatLabel(chosenSeat)} gewinnt den Stich</strong><b class="${chosenTeam==='us'?'positive':'negative'}">${chosenTeam==='us'?'Mein Team':'Gegner'}</b></div>${stitch.overrideSeat?'<small>Manuell korrigierter Stichgewinner</small>':'<small>Trumpf und Farbe werden automatisch berücksichtigt</small>'}<button type="button" class="btn" id="stitchConfirm">✓ Stich übernehmen</button><details class="stitch-override"><summary>Stichgewinner korrigieren</summary><label class="field">Gewinnerposition<select id="stitchWinnerOverride"><option value="">Automatisch bestimmen</option>${STITCH_SEATS.map(([id,name])=>`<option value="${id}" ${stitch.overrideSeat===id?'selected':''}>${name}</option>`).join('')}</select></label></details></div>`):completed?'<p class="help">Alle acht Stiche sind erfasst. Du kannst das Spiel abschließen.</p>':'<p class="help">Wähle die vier Karten unten in Ausspielreihenfolge aus. Bereits verwendete Karten bleiben grau. Die App prüft die Kartenstärke, nicht die Handkartenpflicht.</p>'}
  <div class="stitch-undo-actions"><button type="button" class="btn secondary" id="stitchUndoCard" ${curr.length?'':'disabled'}>↶ Letzte Karte</button><button type="button" class="btn ghost" id="stitchUndoTrick" ${t.length?'':'disabled'}>Letzten Stich korrigieren</button><button type="button" class="btn ghost" id="stitchReset">Neue Partie</button></div></section>
  ${completed?`<section class="stitch-complete"><h2>Spiel vollständig erfasst</h2><p>120 Augen verteilt auf acht Stiche: <b>${tot.us} : ${tot.them}</b>. Speichere den Verlauf, damit du ihn später wieder aufrufen kannst.</p><button type="button" class="btn" id="stitchFinish">✓ Spielverlauf speichern</button></section>`:''}
  <section class="card stitch-card-panel"><h2>Alle Karten</h2><p class="help">Goldrand: Trumpf · Grau: ausgespielt · Grün: aktueller Stich</p>
@@ -852,8 +927,12 @@ function stitchUI(){
  </div>`;
 }
 function refreshStitch(){if(tab!=='games'||gamesSubtab!=='counter'||trainingView!=='stitch')return;const el=document.querySelector('.stitch-layout');if(el)el.outerHTML=stitchUI();}
-function resetStitchKeepOptions(){stitch={...stitchDefaults(),type:stitch.type,trumpSuit:stitch.trumpSuit,role:stitch.role,archive:stitch.archive};saveStitch();refreshStitch();}
-function recordStitch(winner){if(stitch.current.length!==4||stitch.tricks.length>=8)return;const cards=[...stitch.current];stitch.tricks.push({cards,winner,eyes:cards.reduce((sum,id)=>sum+CARD_MAP[id].eyes,0)});stitch.current=[];saveStitch();refreshStitch();}
+function resetStitchKeepOptions(){stitch={...stitchDefaults(),type:stitch.type,trumpSuit:stitch.trumpSuit,role:stitch.role,firstSeat:stitch.firstSeat,declarerSeat:stitch.declarerSeat,partnerSeat:stitch.partnerSeat,archive:stitch.archive};saveStitch();refreshStitch();}
+function recordStitch(winner,seat=null){if(stitch.current.length!==4||stitch.tricks.length>=8)return;
+ const cards=[...stitch.current],leaderSeat=seat?stitchNextLeader():null;
+ stitch.tricks.push({cards,winner,eyes:cards.reduce((sum,id)=>sum+CARD_MAP[id].eyes,0),leaderSeat,winnerSeat:seat});
+ stitch.current=[];stitch.overrideSeat='';saveStitch();refreshStitch();}
+function confirmAutoStitch(){const prediction=stitchPrediction();if(!prediction)return;const seat=stitch.overrideSeat||prediction.seat;recordStitch(stitchTeamForSeat(seat),seat);}
 function handleStitchClick(t){
  const mode=t.closest('[data-training-view]');if(mode){trainingView=mode.dataset.trainingView;render();return true;}
  if(trainingView!=='stitch'||gamesSubtab!=='counter'||tab!=='games')return false;
@@ -862,24 +941,35 @@ function handleStitchClick(t){
  if(t.closest('#stitchUndoCard')){stitch.current.pop();saveStitch();refreshStitch();return true;}
  if(t.closest('#stitchWinUs')){recordStitch('us');return true;}
  if(t.closest('#stitchWinThem')){recordStitch('them');return true;}
- const rewind=t.closest('[data-stitch-rewind]');if(rewind){const i=Number(rewind.dataset.stitchRewind);if(!Number.isInteger(i)||i<0||i>=stitch.tricks.length)return true;if(i<stitch.tricks.length-1&&!confirm(`Stich ${i+1} und alle folgenden Stiche korrigieren?`))return true;stitch.current=[...stitch.tricks[i].cards];stitch.tricks=stitch.tricks.slice(0,i);saveStitch();refreshStitch();return true;}
- if(t.closest('#stitchUndoTrick')){if(stitch.current.length&&!confirm('Aktuelle Kartenauswahl verwerfen und letzten Stich korrigieren?'))return true;const last=stitch.tricks.pop();if(last){stitch.current=[...last.cards];saveStitch();refreshStitch();}return true;}
+ if(t.closest('#stitchConfirm')){confirmAutoStitch();return true;}
+ const rewind=t.closest('[data-stitch-rewind]');if(rewind){const i=Number(rewind.dataset.stitchRewind);if(!Number.isInteger(i)||i<0||i>=stitch.tricks.length)return true;if(i<stitch.tricks.length-1&&!confirm(`Stich ${i+1} und alle folgenden Stiche korrigieren?`))return true;stitch.current=[...stitch.tricks[i].cards];stitch.tricks=stitch.tricks.slice(0,i);stitch.overrideSeat='';saveStitch();refreshStitch();return true;}
+ if(t.closest('#stitchUndoTrick')){if(stitch.current.length&&!confirm('Aktuelle Kartenauswahl verwerfen und letzten Stich korrigieren?'))return true;const last=stitch.tricks.pop();if(last){stitch.current=[...last.cards];stitch.overrideSeat='';saveStitch();refreshStitch();}return true;}
  if(t.closest('#stitchReset')){if((stitch.tricks.length||stitch.current.length)&&!confirm('Aktuelle Partie verwerfen und neu beginnen? Abgeschlossene Trainingsspiele bleiben gespeichert.'))return true;resetStitchKeepOptions();return true;}
- if(t.closest('#stitchFinish')){const z=stitchTotals();if(stitch.tricks.length!==8||stitch.current.length||z.us+z.them!==120){alert('Es müssen genau acht vollständige Stiche mit zusammen 120 Augen erfasst sein.');return true;}const rec={id:uid(),type:stitch.type,trumpSuit:stitch.trumpSuit,role:stitch.role,started:stitch.started,finished:new Date().toISOString(),tricks:stitch.tricks.map(t=>({...t,cards:[...t.cards]})),linkedGameId:null};stitch.archive.push(rec);stitchArchiveOpen=rec.id;resetStitchKeepOptions();flash('Spielverlauf gespeichert ✓');return true;}
+ if(t.closest('#stitchFinish')){const z=stitchTotals();if(stitch.tricks.length!==8||stitch.current.length||z.us+z.them!==120){alert('Es müssen genau acht vollständige Stiche mit zusammen 120 Augen erfasst sein.');return true;}const rec={id:uid(),type:stitch.type,trumpSuit:stitch.trumpSuit,role:stitch.role,firstSeat:stitch.firstSeat,declarerSeat:stitch.declarerSeat,partnerSeat:stitch.partnerSeat,started:stitch.started,finished:new Date().toISOString(),tricks:stitch.tricks.map(t=>({...t,cards:[...t.cards]})),linkedGameId:null};stitch.archive.push(rec);stitchArchiveOpen=rec.id;resetStitchKeepOptions();flash('Spielverlauf gespeichert ✓');return true;}
  const archive=t.closest('[data-stitch-archive]');if(archive){stitchArchiveOpen=stitchArchiveOpen===archive.dataset.stitchArchive?null:archive.dataset.stitchArchive;refreshStitch();return true;}
  if(t.closest('#stitchDeleteArchive')){if(!stitchArchiveOpen||!confirm('Diesen gespeicherten Trainingsverlauf löschen? Ein eventuell übernommenes Einzelspiel bleibt bestehen.'))return true;stitch.archive=stitch.archive.filter(x=>x.id!==stitchArchiveOpen);stitchArchiveOpen=null;saveStitch();refreshStitch();return true;}
  if(t.closest('#stitchTransfer')){const a=stitch.archive.find(x=>x.id===stitchArchiveOpen);if(!a||(a.linkedGameId&&state.entries.some(e=>e.id===a.linkedGameId)))return true;const accepted=['rufspiel','solo','wenz','farbwenz','geier','farbgeier'];if(!accepted.includes(a.type))return true;const points=stitchTotals(a.tricks).us;quickType=a.type;draft={...gameDraft(),points,role:a.role,date:new Date(a.started).toLocaleDateString('sv-SE'),notes:'Aus dem Stichverlauf übernommen'};if(!validDate(draft.date))draft.date=nowISO();pendingStitchArchive=a.id;editId=null;gamesSubtab='entry';render();flash('Punkte übernommen – Spielpreis prüfen und speichern');return true;}
  return false;
 }
 function stitchChange(target){if(trainingView!=='stitch'||gamesSubtab!=='counter'||tab!=='games')return false;
- if(target.id==='stitchType'||target.id==='stitchSuit'||target.id==='stitchRole'){
-  if((target.id==='stitchType'||target.id==='stitchSuit')&&(stitch.tricks.length||stitch.current.length)){
-   if(!confirm('Spielart oder Trumpffarbe ändern? Die aktuelle, noch nicht gespeicherte Partie muss dann neu beginnen.')){refreshStitch();return true;}
-   stitch.tricks=[];stitch.current=[];stitch.started=new Date().toISOString();
+ if(target.id==='stitchWinnerOverride'){
+  stitch.overrideSeat=validStitchSeat(target.value)?target.value:'';
+  saveStitch();refreshStitch();return true;
+ }
+ if(['stitchType','stitchSuit','stitchRole','stitchDeclarerSeat','stitchPartnerSeat','stitchFirstSeat'].includes(target.id)){
+  if(stitch.tricks.length||stitch.current.length){
+   if(!confirm('Diese Einstellung ändern? Die laufende Partie wird neu begonnen. Bereits gespeicherte Trainingsspiele bleiben erhalten.')){refreshStitch();return true;}
+   stitch.tricks=[];stitch.current=[];stitch.overrideSeat='';stitch.started=new Date().toISOString();
   }
   if(target.id==='stitchType'&&STITCH_TYPES.some(t=>t[0]===target.value))stitch.type=target.value;
   if(target.id==='stitchSuit'&&CARD_SUITS.some(t=>t.id===target.value))stitch.trumpSuit=target.value;
   if(target.id==='stitchRole')stitch.role=target.value==='defender'?'defender':'declarer';
+  if(target.id==='stitchDeclarerSeat'&&validStitchSeat(target.value)){
+   stitch.declarerSeat=target.value;
+   if(stitch.partnerSeat===stitch.declarerSeat)stitch.partnerSeat=stitchPartnerOf(stitch.declarerSeat);
+  }
+  if(target.id==='stitchPartnerSeat'&&validStitchSeat(target.value)&&target.value!==stitch.declarerSeat)stitch.partnerSeat=target.value;
+  if(target.id==='stitchFirstSeat'&&validStitchSeat(target.value))stitch.firstSeat=target.value;
   saveStitch();refreshStitch();return true;
  }return false;
 }
