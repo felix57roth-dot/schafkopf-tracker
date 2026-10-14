@@ -1,17 +1,22 @@
-SCHAFKOPFTRACKER – VERSION 2.3
-================================
-NEU
-- Automatische Ermittlung des Stichgewinners durch Trumpfrangfolge, ausgespielte Farbe und Kartenrang.
-- Sitzfolge VH → MH → HH → Geber und jeweils neuer Ausspieler: Gewinner des vorherigen Stichs.
-- Ansagerposition und Partner (bei Partnerschaftsspielen) werden vor der Partie zugeordnet.
-- Mein Team entspricht wahlweise Ansagerpartei oder Gegenpartei.
-- Manueller Korrekturmodus für den automatisch ermittelten Stichgewinner.
-- Im Stichverlauf werden Gewinnerposition und Kartenpositionen gespeichert und auch im Archiv angezeigt.
-- Laufende, aus Version 2.2 übernommene Partien können weiter manuell beendet werden; neue Partien verwenden die Automatik.
-- Karten-Handpflicht kann nicht ohne Kenntnis der einzelnen Spielerhände überprüft werden.
-- Offline-Cache auf 2.3 aktualisiert, bisherige Spieltage, Einzelspiele, Tarife und Trainingsarchiv bleiben erhalten.
+SCHAFKOPFTRACKER – VERSION 2.4
+==============================
 
-UPDATE
-1. Vorher in der installierten App unter Profil > Daten exportieren ein Backup anlegen.
-2. ZIP entpacken, sechs Dateien aus dem enthaltenen Ordner in das GitHub-Repository Root hochladen.
-3. Pages-Deployment abwarten, App online öffnen, Update annehmen und erneut starten.
+NEU IN 2.4
+- Trainingsmodus mit Ramsch: Live-Auswertung der Augen und Stichanzahl je Sitzposition (VH, MH, HH, Geber).
+- Bei Ramsch: Hinweise zum punktstaerksten Spieler, zur Anzahl Jungfrauen (Spieler ohne Stich) und zu nicht entschiedenen Gleichstaenden.
+- Bettel als Trainings-Spielart: Ansager gewinnt nur mit null Stichen.
+- Sitzposition "Ich sitze auf" und Spieler-Auswertung im Trainingsarchiv.
+- Replay: gespeicherte Partien Stich fuer Stich durchgehen und Zwischenstaende ansehen.
+- Trainingsanalyse: Anzahl Partien und Stiche, Trumpfkarten, durchschnittliche Stichaugen, Spielarten, Erfolgsquote aus entscheidbaren archivierten Partien.
+- Keine automatische Eintragung in die Geldbilanz. Alte Eintraege, Spielabende und Backups bleiben kompatibel.
+
+INSTALLATION
+1. In der bisherigen App unter Profil > Daten exportieren sichern.
+2. Alle 6 Dateien direkt im GitHub-Repository ersetzen, wie gewohnt.
+3. Online neu oeffnen und PWA-Update uebernehmen.
+
+WICHTIG
+- Fuer die automatische Sitz-/Punktezuordnung die korrekte Spielart, Sitzposition und den richtigen Ansager / Partner einstellen.
+- Gleichstand im Ramsch wird angezeigt, ohne eigenmaechtig eine Hausregel zu entscheiden.
+- Aeltere Trainingspartien ohne Spielerposition werden weiterhin angezeigt. Sitzstatistiken werden nur aus Partien mit Positionsdaten errechnet.
+- Daten weiterhin ausschliesslich lokal gespeichert.
