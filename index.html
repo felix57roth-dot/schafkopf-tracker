@@ -588,7 +588,85 @@ body.cards-fs-open{overflow:hidden}
 .mentor-learn-list{gap:10px}.mentor-learn-item{background:#fbf1dc}
 @media(max-width:430px){.mentor-hero{grid-template-columns:104px 1fr;padding:12px}.mentor-hero img{width:104px;height:118px}.mentor-bubble{font-size:13px;padding:12px 13px}.mentor-scene{min-height:392px}.mentor-table-card{width:70px}.mentor-card-left{left:28px;top:169px}.mentor-card-right{right:28px;top:169px}.mentor-card-bottom{top:214px}.mentor-seat-bottom{bottom:90px}.mentor-played-banner{bottom:18px}.mentor-hand-wrap{padding:11px 10px 13px}.mentor-hand-card{width:42px;margin-left:-11px}}
 
-</style></head><body><div id="app" class="app"><header class="hero"><div class="top"><div class="brand"><div class="emblem" id="brandSuit"></div><span>Schafkopf<span style="color:#e4c47b">tracker</span></span></div><div class="suite" id="suits"></div></div><h1 id="headerTitle">Servus am Kartentisch!</h1><p id="headerSub">Alle deine Schafkopfabende auf einen Blick.</p></header><main class="main" id="main"></main><nav class="nav" id="nav"></nav><div id="toast" class="hidden" role="status" aria-live="polite"></div><div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><div class="update-text"><b>🃏 Neue Version verfügbar!</b><p>Ein Update ist bereit. Deine gespeicherten Spielabende bleiben erhalten.</p></div><button type="button" class="btn" id="applyUpdate">Aktualisieren</button><button type="button" class="mini-btn" id="dismissUpdate" aria-label="Später aktualisieren" title="Später">✕</button></div></div><script>
+</style>
+<style id="v32-theme-override">
+:root{--bg:#071a14;--bg2:#0d2b20;--surface:#0e2d23;--surface-2:#12392c;--panel:#f6ead1;--panel-2:#fff6e5;--ink:#f5ead7;--ink-dark:#1f261d;--muted:#b9c6b9;--green:#1e8f49;--green-2:#0f6536;--gold:#d6af58;--gold-soft:#e7c777;--red:#9d2f23;--orange:#d87b20;--line:rgba(234,218,182,.18);--shadow:0 10px 24px rgba(0,0,0,.24);}
+body{background:radial-gradient(circle at top,rgba(44,92,66,.35),transparent 35%),linear-gradient(180deg,#05130f,#0b2018 28%,#0a1b16 100%);color:var(--ink);}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.015),rgba(255,255,255,.015)),radial-gradient(circle at 20% 0%,rgba(214,175,88,.04),transparent 22%);mix-blend-mode:screen;}
+.app{max-width:1180px;padding-bottom:110px;}
+.hero{background:linear-gradient(180deg,#0d281f,#113327 75%,#0e281e);color:#f7eedc;border-bottom:1px solid rgba(214,175,88,.28);box-shadow:0 14px 40px rgba(0,0,0,.18);background-image:linear-gradient(180deg,rgba(214,175,88,.03),rgba(214,175,88,.01)),radial-gradient(circle at 20% 0%,rgba(214,175,88,.08),transparent 25%),radial-gradient(circle at 90% 0%,rgba(57,122,89,.35),transparent 26%);} 
+.hero p,#headerSub{color:#d7ddcc;}
+.brand{font-size:21px;color:#fff7e4}.eyebrow{color:#d7c694}.emblem{background:#f3e2bb;border:2px solid var(--gold);box-shadow:0 8px 18px rgba(0,0,0,.18)}
+#settingsGear{border:none;background:linear-gradient(180deg,#0e3a2d,#0d281f);color:#f4e7c8;width:44px;height:44px;border-radius:14px;font-size:22px;box-shadow:inset 0 0 0 1px rgba(214,175,88,.25),0 8px 18px rgba(0,0,0,.2)}
+.main{padding:0 16px;margin-top:-44px}
+.card,.formcard,.chartcard,.settings-panel,.workspace-option,.quick-action,.mentor-home,.listrow,.row,.tile,.training-card,.workspace-back,.capture-tip,.import-preview,.empty,.session-card,.record-card{background:linear-gradient(180deg,#103126,#0d271f)!important;border:1px solid rgba(214,175,88,.16)!important;border-radius:24px!important;box-shadow:var(--shadow)!important;color:var(--ink)!important}
+.balance-v3{background:linear-gradient(180deg,#11392c,#102d24)!important;border:1px solid rgba(214,175,88,.24)!important}
+.balance-v3 strong{color:#fff6e3}.small,.subtle,.help,.balance-counters span,.mentor-head-sub,.field small,.workspace-option small,.quick-action small{color:#c5d1c5!important}
+.section h2,.sectionhead h2,.settings-heading h2,.mentor-title h2{color:#fff1d5}
+.btn{background:linear-gradient(180deg,#1b984e,#167e41);border:1px solid rgba(255,255,255,.09);color:#fff;border-radius:18px;box-shadow:0 8px 16px rgba(11,52,28,.32)}
+.btn.secondary{background:linear-gradient(180deg,#f5eddc,#ebdfc5);color:#1a2a1f;border:1px solid #cfb374}
+.btn.ghost,.small-button,.workspace-back{background:linear-gradient(180deg,#15352a,#10271f)!important;color:#f1e8d0!important;border:1px solid rgba(214,175,88,.22)!important}
+.quick-grid,.kpis{gap:14px}.quick-action,.workspace-option{padding:18px}.workspace-icon,.quick-action svg{color:#f6e6c2}
+.capture-tip{padding:18px 20px;background:linear-gradient(180deg,#4f351f,#432818)!important;border-color:rgba(214,175,88,.18)!important}.capture-tip p{color:#f5dfc4}
+.segmented-v3,.mentor-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 16px}
+.segmented-v3 button,.mentor-tabs button{border:none;border-radius:18px;padding:12px 16px;background:linear-gradient(180deg,#14372c,#10291f);color:#e7e0cb;border:1px solid rgba(214,175,88,.16);box-shadow:0 8px 16px rgba(0,0,0,.12)}
+.segmented-v3 button.active,.mentor-tabs button.active{background:linear-gradient(180deg,#1a9a4f,#166f3d);color:#fff;border-color:rgba(255,255,255,.16)}
+.bottomnav,.nav,.app nav{background:rgba(8,22,17,.92)!important;backdrop-filter:blur(12px);border-top:1px solid rgba(214,175,88,.18)}
+nav button,#nav button{color:#d4dccf}#nav button.active{color:#fff}.settings-panel summary{background:linear-gradient(180deg,#14352a,#10291f);border-radius:22px;color:#fff0d0}.settings-body{background:linear-gradient(180deg,#0e2d23,#0c241d)}
+input,select,textarea{background:#f5edd9;color:#1f261d;border:1px solid #c7b183;border-radius:14px}.field{color:#f0e8d7}
+.home-v3 .section,.content-page .section{margin-top:16px}.content-page{color:#f7ecd8}
+.notice{background:linear-gradient(180deg,#4b3522,#3c281b)!important}
+.listrow,.history-card,.session-card,.record-card,.row,.mentor-game-row{background:linear-gradient(180deg,#123227,#0d241d)!important;color:#fff1d6!important;border:1px solid rgba(214,175,88,.14)!important}
+.badge,.mentor-tag{background:#e8f1e3;color:#153321;border-radius:999px;padding:6px 10px;font-weight:700}
+.mentor-tag.warn{background:#f4dec2;color:#6b310f}
+.wastl-v3{display:flex;flex-direction:column;gap:18px}
+.wastl-tavern{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:center;padding:18px 18px 18px 14px;border-radius:28px;background:linear-gradient(180deg,#5f3b24,#4c2d1d);border:1px solid rgba(214,175,88,.28);box-shadow:var(--shadow)}
+.wastl-tavern img{width:120px;height:120px;object-fit:cover;border-radius:22px;border:3px solid #d8b565;background:#f0e0bc;box-shadow:0 10px 24px rgba(0,0,0,.24)}
+.wastl-overline{display:inline-block;color:#f0d28b;font-weight:800;letter-spacing:1.2px;font-size:12px;margin-bottom:4px}.wastl-tavern h2{margin:0 0 6px;font-size:30px;line-height:1.02;color:#fff2d6}.wastl-tavern p{margin:0;color:#f3e2c5}
+.mentor-view .mentor-back{margin-bottom:12px}
+.mentor-stage{background:linear-gradient(180deg,#092017,#102d22);padding:12px;border-radius:28px;border:1px solid rgba(214,175,88,.16);overflow:hidden}
+.mentor-speech{display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:center;margin-bottom:14px}
+.mentor-speech img{width:92px;height:92px;object-fit:cover;border-radius:22px;border:3px solid #d8b565;background:#f2e2be}
+.mentor-bubble{position:relative;background:#fff6e5;border:2px solid #ead6ae;color:#2a241b;padding:16px 18px;border-radius:22px;font-size:22px;line-height:1.35;font-weight:550;box-shadow:0 8px 18px rgba(0,0,0,.12)}
+.mentor-bubble::before{content:'';position:absolute;left:-18px;top:28px;border-width:12px 18px 12px 0;border-style:solid;border-color:transparent #fff6e5 transparent transparent;filter:drop-shadow(-2px 0 0 #ead6ae)}
+.mentor-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 14px}.mentor-summary .sum{background:#fff3dd;border:1px solid #dcc189;border-radius:18px;padding:12px;color:#403725}.mentor-summary b{color:#123523;font-size:20px}
+.mentor-overview-layout{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mentor-panel,.mentor-advice-box,.mentor-note-box{background:#fff6e7;color:#2a241b;border:1px solid #dbc291;border-radius:24px;padding:16px 18px;box-shadow:0 8px 18px rgba(0,0,0,.08)}
+.mentor-panel h3,.mentor-advice-box h4,.mentor-note-box h4{margin:0 0 12px;color:#1f251d;font-size:28px;line-height:1.02;font-family:Georgia,serif}
+.mentor-note{display:flex;gap:12px;align-items:flex-start;background:#fffaf0;border:1px solid #ecdab5;border-radius:16px;padding:12px;margin-bottom:10px;color:#2d2419}.mentor-note .dot{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;font-weight:800;background:#1f9c4a;color:white;flex:none}.mentor-note.warn .dot{background:#db7a20}.mentor-note p{margin:4px 0 0;color:#4f473d}
+.mentor-table-shell{background:transparent;border:none;box-shadow:none}
+.mentor-table-head{background:linear-gradient(180deg,#0d2c22,#11372a);border:1px solid rgba(214,175,88,.18);border-radius:18px;padding:12px 14px;margin-bottom:10px}.mentor-table-head h3{font-size:22px;color:#fff0d0}
+.mentor-nav{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;font-size:20px}
+.mentor-wood{padding:10px;border-radius:24px;background:linear-gradient(180deg,#6b452b,#5a3622);border:1px solid rgba(214,175,88,.25);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.mentor-scene{position:relative;min-height:430px;border-radius:20px;background:linear-gradient(180deg,#6d472b,#5b3622);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.mentor-seat-chip{background:#2e1f16;padding:8px 12px;border-radius:16px;color:#fff7e2;min-width:74px}.mentor-seat-bottom{background:#12663c}.mentor-seat-chip small{color:#e6d6c0}.mentor-seat-left,.mentor-seat-right{min-width:48px}.mentor-seat-left b,.mentor-seat-right b{font-size:12px}
+.mentor-played-banner{position:absolute;left:50%;transform:translateX(-50%);bottom:26px;background:linear-gradient(180deg,#113c2f,#0f3025);color:#fff;border:1px solid rgba(214,175,88,.2);border-radius:18px;padding:12px 18px;box-shadow:0 8px 18px rgba(0,0,0,.18)}.mentor-played-banner small{color:#d8e1d8}
+.mentor-table-card{width:96px;filter:drop-shadow(0 14px 16px rgba(0,0,0,.22))}.mentor-card-bottom{bottom:88px}.mentor-card-top{top:72px}.mentor-card-left{left:88px}.mentor-card-right{right:88px}
+.mentor-hand-wrap{margin-top:12px;padding:14px;border-radius:24px;background:linear-gradient(180deg,#102d22,#0d221b);border:1px solid rgba(214,175,88,.18)}.mentor-hand-title{display:flex;justify-content:space-between;gap:12px;align-items:center;color:#fff1d4;margin-bottom:10px}.mentor-hand-row{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.mentor-hand-card{display:inline-flex;padding:6px;border-radius:18px;background:transparent;border:2px solid transparent}.mentor-hand-card.suggested{background:rgba(214,175,88,.16);border-color:#d6af58;box-shadow:0 0 0 3px rgba(214,175,88,.16)}
+.mentor-card-frame{display:block;border-radius:18px;overflow:visible;line-height:0}.mentor-card-frame svg{display:block;width:100%;height:auto}
+.mentor-alt-strip{display:grid;grid-template-columns:100px 1fr;gap:12px;align-items:center;margin-top:12px;padding:12px;background:#fffaf0;border:1px solid #eadcb7;border-radius:18px}.mentor-alt-card{width:86px}
+.mentor-choice-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.mentor-choice-actions button{border:none;border-radius:18px;padding:14px 12px;font-weight:800;color:#fff;box-shadow:0 10px 16px rgba(0,0,0,.12)}.mentor-choice-actions .good{background:linear-gradient(180deg,#1f964d,#167740)}.mentor-choice-actions .bad{background:linear-gradient(180deg,#9e4725,#82331b)}
+.mentor-insight-grid.twocol{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-top:12px}
+.mentor-rule{margin-top:12px;padding:14px 16px;border-radius:18px;background:#f2dfbc;color:#523822;border:1px solid #debf81}
+.mentor-learn-list{display:flex;flex-direction:column;gap:12px}.mentor-learn-item{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;background:#fff7eb;border:1px solid #e8d8b2;color:#2e271d;border-radius:20px;padding:14px}.mentor-learn-item .mentor-learn-icon{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:22px;font-weight:800}.mentor-learn-item.good .mentor-learn-icon{background:#1f964d}.mentor-learn-item.warn .mentor-learn-icon,.mentor-learn-item.tip .mentor-learn-icon{background:#db7a20}
+.training-card .playing-card{background:transparent}.training-card{padding:8px;background:#0f291f!important}.training-card .card-eyes{color:#f0dfbc}
+.playing-card,.mentor-table-card,.mentor-hand-card,.mentor-alt-card{line-height:0}
+.training-card.is-trump{box-shadow:0 0 0 2px rgba(214,175,88,.18),0 12px 22px rgba(0,0,0,.24)!important}
+.training-card.is-fallen{opacity:.5}
+@media (max-width:760px){
+ .main{padding:0 12px}.hero{padding:20px 18px 70px}.brand{font-size:18px}.balance strong{font-size:38px}
+ .wastl-tavern,.mentor-speech{grid-template-columns:72px 1fr}.wastl-tavern img,.mentor-speech img{width:72px;height:72px;border-radius:18px}
+ .mentor-bubble{font-size:18px;padding:14px 16px}
+ .mentor-overview-layout,.mentor-insight-grid.twocol{grid-template-columns:1fr}
+ .mentor-table-card{width:76px}.mentor-card-left{left:52px}.mentor-card-right{right:52px}.mentor-card-top{top:84px}.mentor-card-bottom{bottom:100px}.mentor-scene{min-height:360px}
+ .mentor-hand-row{gap:6px}.mentor-alt-strip{grid-template-columns:80px 1fr}.mentor-summary{grid-template-columns:1fr 1fr 1fr}
+}
+@media (max-width:480px){
+ .mentor-seat-left,.mentor-seat-right{top:46%}.mentor-seat-left{left:4px}.mentor-seat-right{right:4px}
+ .mentor-seat-chip{padding:6px 8px;min-width:58px}.mentor-card-left{left:42px}.mentor-card-right{right:42px}.mentor-table-card{width:66px}.mentor-card-bottom{bottom:102px}.mentor-scene{min-height:332px}
+ .mentor-panel h3,.mentor-advice-box h4,.mentor-note-box h4{font-size:24px}.mentor-bubble{font-size:16px}
+}
+</style>
+</head><body><div id="app" class="app"><header class="hero"><div class="top"><div class="brand"><div class="emblem" id="brandSuit"></div><span>Schafkopf<span style="color:#e4c47b">tracker</span></span></div><div class="suite" id="suits"></div></div><h1 id="headerTitle">Servus am Kartentisch!</h1><p id="headerSub">Alle deine Schafkopfabende auf einen Blick.</p></header><main class="main" id="main"></main><nav class="nav" id="nav"></nav><div id="toast" class="hidden" role="status" aria-live="polite"></div><div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><div class="update-text"><b>🃏 Neue Version verfügbar!</b><p>Ein Update ist bereit. Deine gespeicherten Spielabende bleiben erhalten.</p></div><button type="button" class="btn" id="applyUpdate">Aktualisieren</button><button type="button" class="mini-btn" id="dismissUpdate" aria-label="Später aktualisieren" title="Später">✕</button></div></div><script>
 'use strict';
 /* Schafkopftracker v3.0 – Navigation und Design überarbeitet, weiterhin offline. */
 const icons={heart:'<path d="M50 88 C35 73 9 55 9 33 C9 11 34 2 50 23 C66 2 91 11 91 33 C91 55 65 73 50 88Z" fill="#c94f4a"/>',leaf:'<path d="M23 69 C13 39 38 15 82 12 C78 52 58 78 23 69Z" fill="#31906a"/><path d="M18 84 Q43 54 75 26" fill="none" stroke="#175b43" stroke-width="6" stroke-linecap="round"/><path d="M40 57 L26 37 M53 45 L64 58" stroke="#175b43" stroke-width="4" fill="none"/>',acorn:'<path d="M33 37 C18 52 27 80 50 89 C73 80 82 52 67 37Z" fill="#956038"/><path d="M22 38 Q28 12 50 17 Q72 12 78 38 Q52 52 22 38Z" fill="#315a3b"/><path d="M50 18 L54 8" stroke="#315a3b" stroke-width="6" stroke-linecap="round"/><path d="M34 30 Q50 24 66 30" stroke="#8ca67b" fill="none" stroke-width="4"/>',bell:'<path d="M50 11 C60 11 64 20 64 28 C64 39 79 49 80 66 L20 66 C21 49 36 39 36 28 C36 20 40 11 50 11Z" fill="#d5a439" stroke="#966b20" stroke-width="3"/><path d="M26 67 Q50 79 74 67" fill="none" stroke="#94651e" stroke-width="6" stroke-linecap="round"/><circle cx="50" cy="78" r="9" fill="#bc8b2b"/><path d="M44 24 Q50 18 56 24" stroke="#f6dfa0" stroke-width="5" stroke-linecap="round" fill="none"/>'};
@@ -682,7 +760,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='3.1.1';
+const VERSION='3.2';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1711,6 +1789,84 @@ document.addEventListener('click',e=>{
  }
 },true);
 
+
+
+/* v3.2 – Komplettes Redesign für Karten und Wastl im grün-goldenen Stil */
+function suitMark(suit,x,y,scale=1){
+ let content='';
+ if(suit==='herz')content='<path d="M12 22C7.2 18 2 13.6 2 8.6C2 3.8 7.6 1.6 12 6.1C16.4 1.6 22 3.8 22 8.6C22 13.6 16.8 18 12 22Z" fill="#d51f1f" stroke="#a71616" stroke-width="0.9"/>';
+ else if(suit==='gras')content='<path d="M12 21C2.2 17.5 2.9 6.2 12 3.2C21.1 6.2 21.8 17.5 12 21Z" fill="#2c9b4b" stroke="#1f6d35" stroke-width="0.9"/><path d="M12 20V7" stroke="#14562a" stroke-width="1.4" stroke-linecap="round"/><path d="M12 12 8 16M12 10l4 4" stroke="#14562a" stroke-width="1.2" stroke-linecap="round"/>';
+ else if(suit==='eichel')content='<path d="M6.5 10.4c-2.9 4.1-1.4 10.5 5.5 11.6c7-.9 8.4-7.5 5.5-11.6Z" fill="#b17325" stroke="#744514" stroke-width="1"/><path d="M4.5 10.6C6.1 5 9 3.4 12 4.3c3-.9 5.9.7 7.5 6.3c-4.8 2-10.2 2-15 0Z" fill="#cf8c2a" stroke="#84521a" stroke-width="0.8"/><path d="M12 4 14.2 1.6" stroke="#6f4317" stroke-width="1.3" stroke-linecap="round"/>';
+ else content='<path d="M8 5.2 6 15.2Q5 20.2 12 21.2q7-1 6-6L16 5.2Z" fill="#f3c02e" stroke="#9d6d17" stroke-width="1"/><path d="M6.2 9.5h11.6M7.2 15h9.6" stroke="#cc2525" stroke-width="2.4"/><path d="M12 5V2.3" stroke="#80561c" stroke-width="1.5" stroke-linecap="round"/>';
+ return `<g transform="translate(${x} ${y}) scale(${scale})">${content}</g>`;
+}
+function facePalette(suit){return ({eichel:{coat:'#2f8a45',accent:'#dfc67c',hat:'#1a6f35',strap:'#b63d2d'},gras:{coat:'#2f8a45',accent:'#dfc67c',hat:'#1a6f35',strap:'#b63d2d'},herz:{coat:'#c64735',accent:'#f0d38d',hat:'#b7492c',strap:'#175aa4'},schell:{coat:'#c64735',accent:'#f0d38d',hat:'#b7492c',strap:'#175aa4'}})[suit];}
+function pipLayout(rank){return ({'7':[[45,34],[45,53],[25,71],[65,71],[25,89],[65,89],[45,108]],'8':[[25,34],[65,34],[25,53],[65,53],[25,79],[65,79],[25,105],[65,105]],'9':[[45,28],[25,46],[65,46],[25,64],[65,64],[45,82],[25,100],[65,100],[45,118]],'10':[[25,26],[65,26],[25,43],[65,43],[25,60],[65,60],[25,77],[65,77],[25,94],[65,94]]})[rank]||[];}
+function royalFigure(rank,suit){
+ const p=facePalette(suit), king=rank==='K', ober=rank==='O';
+ const hair='<path d="M25 33c2-11 8-18 19-18c11 0 17 7 19 18v10H25Z" fill="#e9efe9"/><path d="M30 20c4-4 8-6 14-6c6 0 10 2 14 6" fill="none" stroke="#7a7a7a" stroke-width="2" stroke-linecap="round"/>';
+ const crown=king?'<path d="M25 24 31 15 39 23 45 12 52 23 59 15 65 24v6H25Z" fill="#efcc5d" stroke="#9c7224" stroke-width="1.2"/><circle cx="39" cy="20" r="1.8" fill="#cb3636"/><circle cx="52" cy="20" r="1.8" fill="#2a8b54"/>':'';
+ const hat=!king?`<path d="M23 28c4-11 13-17 23-17c11 0 18 4 24 15v10H23Z" fill="${p.hat}" stroke="#6b4123" stroke-width="1.2"/><path d="M38 13c10-2 18 0 26 6" fill="none" stroke="#f4e3b5" stroke-width="2.4" stroke-linecap="round"/><path d="M27 27H70" stroke="#6b4123" stroke-width="1.4"/><rect x="45" y="11" width="4" height="8" rx="2" fill="#dfe8d9"/>`:'';
+ const face='<path d="M30 35c0-12 6-19 15-19s15 7 15 19l-4 16H34Z" fill="#f0c49d" stroke="#67422f" stroke-width="1.2"/><circle cx="39" cy="38" r="1.2" fill="#2a1f18"/><circle cx="51" cy="38" r="1.2" fill="#2a1f18"/><path d="M40 45c4 3 7 3 11 0" fill="none" stroke="#83573f" stroke-width="1.3"/><path d="M33 32c0-8 5-13 12-14c8 1 13 6 15 14" fill="none" stroke="#7d7d7d" stroke-width="3.6" stroke-linecap="round"/>';
+ const body=`<path d="M18 111c-1-25 2-41 9-52l16-10l16 10c8 9 11 27 10 52Z" fill="${p.coat}" stroke="#2c2c21" stroke-width="1.4"/><path d="M45 51v58" stroke="${p.accent}" stroke-width="4"/><path d="M27 85h36M24 99h42" stroke="#f6ebc8" stroke-width="1.8" opacity=".9"/><path d="M18 111c6-4 12-8 19-11l8 11l9-11c7 3 13 7 18 11" fill="${p.strap}" opacity=".36"/>`;
+ const staff=king?'<path d="M63 31v66" stroke="#8c6120" stroke-width="3.3"/><circle cx="63" cy="28" r="4.2" fill="#e4c45d" stroke="#9c7224" stroke-width="1.2"/>':'<path d="M64 34 72 96" stroke="#8c6120" stroke-width="2.6"/><path d="M72 93 78 102 68 102Z" fill="#c7d4d0" stroke="#708783" stroke-width="1.2"/>';
+ const sign=ober?'<path d="M14 68c9 1 18-4 25-12" fill="none" stroke="#f4e3b5" stroke-width="3" stroke-linecap="round"/>':'<path d="M19 73c5-4 10-8 16-8c6 0 11 4 16 8" fill="none" stroke="#f4e3b5" stroke-width="3" stroke-linecap="round"/>';
+ return `<g transform="translate(8 14)">${body}${hair}${crown}${hat}${face}${staff}${sign}${suitMark(suit,29,76,.95)}</g>`;
+}
+function aceArt(suit){
+ return `<g><path d="M45 29c-17 12-25 28-20 44c5 14 11 24 20 36c9-12 15-22 20-36c5-16-3-32-20-44Z" fill="#fef8ea" stroke="#d9c8a6" stroke-width="1.3"/><path d="M32 109c8 2 18 2 26 0" fill="none" stroke="#d9c8a6" stroke-width="1.2"/>${suitMark(suit,21,48,1.95)}</g>`;
+}
+function cardIllustration(c){ if(['K','O','U'].includes(c.rank))return royalFigure(c.rank,c.suit); if(c.rank==='A')return aceArt(c.suit); return pipLayout(c.rank).map(([x,y])=>suitMark(c.suit,x-8,y,.86)).join(''); }
+function cardSVG(c){
+ const rankColor=c.suit==='herz'?'#c91e1e':c.suit==='gras'?'#1f8a41':c.suit==='eichel'?'#8c5b1f':'#ab7a0e';
+ return `<svg class="training-face" viewBox="0 0 90 142" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+ <defs><filter id="cardDrop" x="-30%" y="-20%" width="160%" height="170%"><feDropShadow dx="0" dy="3" stdDeviation="2.4" flood-color="#000" flood-opacity=".18"/></filter></defs>
+ <rect x="2.3" y="2.3" width="85.4" height="137.4" rx="9.5" fill="#fffdfa" stroke="#2d2b26" stroke-width="1.3" filter="url(#cardDrop)"/>
+ <rect x="5" y="5" width="80" height="132" rx="7" fill="#fffdf7" stroke="#d4c8b1" stroke-width="1"/>
+ <text x="8" y="16" font-family="Georgia,serif" font-size="12.5" font-weight="700" fill="${rankColor}">${c.rank}</text>
+ ${suitMark(c.suit,5.5,18,.46)}
+ <g transform="translate(90 142) rotate(180)"><text x="8" y="16" font-family="Georgia,serif" font-size="12.5" font-weight="700" fill="${rankColor}">${c.rank}</text>${suitMark(c.suit,5.5,18,.46)}</g>
+ ${cardIllustration(c)}</svg>`;
+}
+function mentorSpeech(message){return `<div class="mentor-speech"><img class="mentor-portrait" src="wastl.png" alt="Wastl, dein fiktiver Schafkopf-Mentor"><div class="mentor-bubble">${esc(message)}</div></div>`;}
+function mentorHint(t){return `<div class="mentor-note ${t.type==='warn'?'warn':''}"><span class="dot">${t.type==='good'?'✓':t.type==='tip'?'!':t.type==='warn'?'!':'•'}</span><div><strong>${esc(t.heading)}</strong><p>${esc(t.detail)}</p></div></div>`;}
+function mentorLearnCard(item){const icon=item.type==='good'?'✓':'!';return `<div class="mentor-learn-item ${item.type==='good'?'good':'tip'}"><div class="mentor-learn-icon">${icon}</div><div><h4>${esc(item.heading)}</h4><p>${esc(item.detail)}</p></div><div>›</div></div>`;}
+function mentorHandCards(ids,suggestedId=''){return `<div class="mentor-hand-row">${ids.map(id=>`<span class="mentor-hand-card ${id===suggestedId?'suggested':''}"><span class="mentor-card-frame">${cardSVG(CARD_MAP[id])}</span></span>`).join('')}</div>`;}
+function mentorTableScene(game,trickInfo,step,state){
+ const trick=trickInfo.raw, altId=trickInfo.alternative?.cardId||'', after=state?.after||null;
+ const positions=['top','right','bottom','left'];
+ const seatOrder=[stitchPositionFromLeader(trick.leaderSeat,0),stitchPositionFromLeader(trick.leaderSeat,1),stitchPositionFromLeader(trick.leaderSeat,2),stitchPositionFromLeader(trick.leaderSeat,3)];
+ const cardsHtml=seatOrder.map((seat,i)=>`<div class="mentor-table-card mentor-card-${positions[i]} ${seat===game.mySeat?'own-card':''}">${cardSVG(CARD_MAP[trick.cards[i]])}</div>`).join('');
+ const top=stitchPositionFromLeader(game.mySeat,2), left=stitchPositionFromLeader(game.mySeat,3), right=stitchPositionFromLeader(game.mySeat,1), bottom=game.mySeat;
+ const seatChip=(seat,pos)=>`<div class="mentor-seat-chip mentor-seat-${pos}"><b>${esc(mentorSeatNameShort(seat,game))}</b><small>${esc(mentorSeatRole(seat,game))}</small></div>`;
+ const notesLead=validStitchSeat(trick.leaderSeat)?`Ausspiel: ${mentorSeatNameShort(trick.leaderSeat,game)} (${CARD_MAP[trick.cards[0]].name})`:'Ausspiel unbekannt';
+ const notesWin=validStitchSeat(trick.winnerSeat)?`Stichgewinner: ${mentorSeatNameShort(trick.winnerSeat,game)}`:'Stichgewinner: offen';
+ const afterMine=after?.[game.mySeat]||[];
+ return `<div class="mentor-table-shell"><div class="mentor-table-head"><div><h3>Stich ${step+1} von ${game.tricks.length}</h3><div class="mentor-head-sub">${esc(stitchTypeName(game.type))} · ${trickInfo.eye} Augen</div></div><div class="pager"><button class="mentor-nav" type="button" data-mentor-step="${step-1}" ${step===0?'disabled':''}>‹</button><button class="mentor-nav" type="button" data-mentor-step="${step+1}" ${step>=game.tricks.length-1?'disabled':''}>›</button></div></div><div class="mentor-wood"><div class="mentor-scene">${seatChip(top,'top')}${seatChip(left,'left')}${seatChip(right,'right')}${seatChip(bottom,'bottom')}${cardsHtml}<div class="mentor-played-banner"><b>${esc(notesWin)}</b><small>${esc(notesLead)}</small></div></div></div><div class="mentor-hand-wrap"><div class="mentor-hand-title"><b>Deine übrigen Karten nach diesem Stich</b><span>${afterMine.length} Karten</span></div>${afterMine.length?mentorHandCards(afterMine,altId):'<p class="help" style="color:#d8eadf">Nach dem letzten Stich sind keine Karten mehr auf deiner Hand.</p>'}</div></div>`;
+}
+function mentorUI(){
+ const g=mentorSelected();
+ if(!g)return `<div class="content-page mentor-view">${mentorSpeech(stitch.archive.length?'Servus! Such dir eine Partie aus – dann schau ma gemeinsam drauf.':'Track zuerst a vollständige Trainingspartie. Danach red ma über deine Züge.')}<div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${stitch.archive.length} Partien</span></div><div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small></span><span>→</span></button>`).join('')||'<div class="card empty">Noch kein archivierter Stichverlauf. Unter Erfassen → Karten tracken → Mit Stichverlauf kannst du die erste Partie erfassen.</div>'}</div><p class="mentor-rule">Wastl ist ein lokaler, kostenloser Lernbegleiter – keine Online-KI. Er verwendet nur deine eigenen Spielaufzeichnungen und gespeicherte Regeln.</p></div>`;
+ const info=mentorGeneral(g), analysis=mentorStichEvidence(g), n=Math.max(0,Math.min(g.tricks.length-1,mentorStep)), status=info.valid.ready?'vollständig analysierbar':'eingeschränkt';
+ const tabs=[['overview','Überblick'],['tricks','Stich für Stich'],['learn','Lernpunkte']];
+ const header=`<div class="mentor-title"><h2>${esc(stitchTypeName(g.type))}</h2><span class="mentor-tag ${info.valid.ready?'':'warn'}">${status}</span></div><p class="help">${new Date(g.started).toLocaleDateString('de-DE')} · ${g.tricks.length} Stiche · ${info.eyes} Augen</p>`;
+ let content='';
+ if(mentorTab==='overview'){
+  content=`<div class="mentor-stage">${mentorSpeech(info.valid.ready?'Servus Felix! Schauen ma uns dein Spiel gemeinsam an. I zeig dir, was gut war und wo no a bisserl Luft nach oben is.':'Servus! I schau gern drüber – aber da fehlen noch a paar Daten. Ich sag dir ehrlich, was ich sicher beurteilen kann.')}<div class="mentor-summary"><div class="sum"><small>Stiche</small><b>${g.tricks.length}/8</b></div><div class="sum"><small>Augen erfasst</small><b>${info.eyes}</b></div><div class="sum"><small>Trümpfe</small><b>${info.trumps}</b></div></div><div class="mentor-overview-layout"><div class="mentor-panel"><h3>Das war richtig gut!</h3>${info.good.map(x=>mentorHint({type:'good',heading:'Starker Punkt',detail:x})).join('')||'<p class="help">Noch keine verlässlichen positiven Befunde.</p>'}</div><div class="mentor-panel"><h3>Hier gibt\'s Potenzial</h3>${info.tip.map(x=>mentorHint({type:'tip',heading:'Wastls Hinweis',detail:x})).join('')||'<p class="help">Derzeit keine zusätzlichen Hinweise.</p>'}</div></div><button type="button" class="btn" data-mentor-tab="tricks" style="width:100%;margin-top:14px">Jetzt Stich für Stich analysieren →</button></div>`;
+ } else if(mentorTab==='tricks'){
+  const t=analysis.tricks[n], handState=mentorHandState(g,n);
+  if(!t)content='<div class="mentor-panel"><p>Für dieses Spiel sind noch keine Stiche hinterlegt.</p></div>';
+  else {
+   const primary=t.notes[0], alt=t.alternative, otherNotes=t.notes.filter((_,i)=>i!==0);
+   content=`<div class="mentor-stage">${mentorSpeech('Du sitzt unten am Tisch. In der Mitte siehst du den aktuellen Stich – und darunter nur noch deine übrigen Karten. So bleibt\'s schön übersichtlich.')} ${mentorTableScene(g,t,n,handState)}<div class="mentor-insight-grid twocol"><div class="mentor-advice-box"><h4>${esc(primary?.heading||'Wastls Einschätzung')}</h4><p>${esc(primary?.detail||'Zu diesem Stich habe ich noch keinen besonderen Kommentar.')}</p>${alt?`<div class="mentor-alt-strip"><div class="mentor-alt-card"><span class="mentor-card-frame">${cardSVG(CARD_MAP[alt.cardId])}</span></div><div><b>Alternative Überlegung</b><p>${esc(alt.reason)}</p></div></div>`:''}<div class="mentor-choice-actions"><button type="button" class="good">${alt?'War eine gute Entscheidung':'War eine gute Entscheidung'}</button><button type="button" class="bad">${alt?'Alternative wäre besser gewesen':'Weitere Option denkbar'}</button></div></div><div class="mentor-note-box"><h4>Lernpunkte</h4>${otherNotes.length?otherNotes.map(mentorHint).join(''):'<p class="help">Keine weiteren Auffälligkeiten in diesem Stich.</p>'}</div></div><div class="mentor-rule">Wastl rekonstruiert deine Handkarten aus dem vollständig gespeicherten Verlauf. Gold markiert ist eine plausible Alternative, die nach diesem Stich noch auf deiner Hand geblieben wäre.</div></div>`;
+  }
+ } else {
+  const tips=[...info.good.map(x=>({type:'good',heading:'Das hat gepasst',detail:x})),...info.tip.map(x=>({type:'tip',heading:'Zum Weiterüben',detail:x}))];
+  content=`<div class="mentor-stage">${mentorSpeech('I hab dir aus deiner Partie ein paar Lernpunkte zusammengestellt. Nimm am besten ein oder zwei Sachen mit in die nächste Runde.')}<div class="mentor-learn-list">${tips.length?tips.map(mentorLearnCard).join(''):'<div class="mentor-panel"><p class="help">Noch keine sicheren Lernpunkte für diese Partie.</p></div>'}</div><div class="mentor-rule">Wastl bewertet lokale Situationen regelbasiert und kostenlos direkt auf deinem Gerät. Er ersetzt keinen perfekten Solver, hilft dir aber beim strukturierten Nachdenken über deine Züge.</div></div>`;
+ }
+ return `<div class="content-page mentor-view"><button type="button" class="btn ghost mentor-back" id="mentorBack">← Andere Partie auswählen</button>${header}<div class="mentor-tabs" role="tablist" aria-label="Wastl-Analyse">${tabs.map(([id,label])=>`<button type="button" data-mentor-tab="${id}" class="${mentorTab===id?'active':''}" aria-selected="${mentorTab===id}">${label}</button>`).join('')}</div>${content}</div>`;
+}
+function wastlV3(){return `<div class="wastl-v3"><div class="wastl-tavern"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><span class="wastl-overline">DEIN SCHAFKOPF-MENTOR</span><h2>Servus! I bin da Wastl.</h2><p>Dein uriger Schafkopf-Begleiter: locker, hilfreich und Schritt für Schritt an deiner Seite.</p></div></div>${mentorUI()}</div>`;}
 
 render();
 
