@@ -1,20 +1,23 @@
-SCHAFKOPFTRACKER v2.7 – MENTOR WASTL
+SCHAFKOPFTRACKER – VERSION 3.0
+=============================
 
-NEU
-- Lokaler regelbasierter Lernmentor Wastl: freundlicher urig-bayerischer Begleiter.
-- Unter Statistik → Schafkopf-Mentor: archivierte Stichverläufe öffnen.
-- Überprüfung und Rückblick auf jeden Stich, rekonstruierte eigene Handkarten, einfache Bedienpflicht-Prüfung.
-- Beobachtungen mit Belegen, vorsichtige Hinweise und persönliche Lernpunkte.
-- Kein Modelltraining, keine KI-API, keine Kosten und keine Übertragung von Spielverläufen.
-- Foto/Illustration von Wastl speziell für dieses Projekt neu erzeugt.
-- Bestehende Abende, Einzelspiele, Training, Archiv, Einstellungen und Backups unverändert.
+NEU: Vier Hauptbereiche Start, Erfassen, Statistik und Wastl.
+- Profil und Einstellungen über das Zahnrad oben rechts
+- Erfassen ist ein Auswahlbereich mit Abend, Einzelspiel und Karten-Tracking
+- Statistiken sind gegliedert in Finanzen, Spielarten und Training
+- Wastl hat einen eigenen Bereich mit warmem Kartentisch-Look
+- Die bestehenden Berechnungen und Speicherschlüssel sind unverändert
+- Der Offline-Cache wurde auf v3.0 angehoben
 
 WICHTIG
-- Kein vollwertiger Schafkopf-Solver: strategische Empfehlungen sind Heuristiken, keine optimale Spieltheorie.
-- Für eine rechtlich/sportlich korrekte Einschätzung spezifischer Hausregeln sind weitere Regeln nötig.
-- Ältere oder unvollständig getrackte Partien werden vorsichtig und eingeschränkt bewertet.
+Dies ist ein Struktur-/Design-Update. Die geplante direkte Verknüpfung der
+Fair-Play-Stichaufzeichnung mit einer Geldbuchung folgt erst mit v3.1.
 
 INSTALLATION
-1. In der App unter Profil → Daten exportieren eine Sicherung erstellen.
-2. Die Dateien aus dem ZIP in das Root des GitHub-Pages-Repositories hochladen.
-3. Online die App öffnen und Update bestätigen, ggf. neu starten.
+1. Bestehende Daten unter Einstellungen/Profil > Daten exportieren sichern.
+2. Dateien aus diesem Ordner im GitHub-Repository-Hauptverzeichnis ersetzen.
+3. Alle sieben Dateien hochladen, committen und die PWA online neu laden.
+
+DATEN
+Die gespeicherten Abende und Einzelspiele sowie die lokalen Trainingsarchive
+werden nicht gelöscht oder automatisch neu bewertet.
