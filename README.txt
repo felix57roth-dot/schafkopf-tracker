@@ -1,23 +1,25 @@
-SCHAFKOPFTRACKER – VERSION 3.0
-=============================
+SCHAFKOPFTRACKER – VERSION 3.3 | 32 echte Bildkarten
 
-NEU: Vier Hauptbereiche Start, Erfassen, Statistik und Wastl.
-- Profil und Einstellungen über das Zahnrad oben rechts
-- Erfassen ist ein Auswahlbereich mit Abend, Einzelspiel und Karten-Tracking
-- Statistiken sind gegliedert in Finanzen, Spielarten und Training
-- Wastl hat einen eigenen Bereich mit warmem Kartentisch-Look
-- Die bestehenden Berechnungen und Speicherschlüssel sind unverändert
-- Der Offline-Cache wurde auf v3.0 angehoben
+NEU:
+* Alle 32 Karten direkt aus den vier bereitgestellten Bildtafeln ausgeschnitten.
+* 32 eigenständige WebP-Dateien in cards/ (4 Farben × 8 Werte).
+* Überall dasselbe Kartendesign: einfacher Kartenzähler, Stichmodus, Verlauf, Wastl.
+* Alte selbstgezeichnete SVG-Ansichten durch die konkreten Bildkarten ersetzt.
+* Helles, gut lesbares UI der Version 3.2.2 beibehalten.
+* PWA-Manifest, Service Worker und Offline-Cache wieder vollständig enthalten.
+* Speicherformate und Berechnungen unverändert.
 
-WICHTIG
-Dies ist ein Struktur-/Design-Update. Die geplante direkte Verknüpfung der
-Fair-Play-Stichaufzeichnung mit einer Geldbuchung folgt erst mit v3.1.
+WICHTIG: ALLE Dateien einschließlich des Ordners cards/ hochladen.
+Wenn du beim GitHub-Upload nur index.html ersetzt, fehlen die 32 Bilder!
 
-INSTALLATION
-1. Bestehende Daten unter Einstellungen/Profil > Daten exportieren sichern.
-2. Dateien aus diesem Ordner im GitHub-Repository-Hauptverzeichnis ersetzen.
-3. Alle sieben Dateien hochladen, committen und die PWA online neu laden.
+INSTALLATION:
+1. Vorher in der alten App Profil → Daten exportieren.
+2. ZIP entpacken.
+3. Im GitHub-Repository im Hauptverzeichnis alle Dateien hochladen.
+4. Im Hauptverzeichnis zusätzlich den Ordner cards mit 32 .webp-Dateien anlegen/hochladen.
+5. GitHub Pages abwarten; dann App mit Internet öffnen und aktualisieren.
+6. Einmal online laden – danach liegen die 32 Bilder auch offline im Cache.
 
-DATEN
-Die gespeicherten Abende und Einzelspiele sowie die lokalen Trainingsarchive
-werden nicht gelöscht oder automatisch neu bewertet.
+HINWEIS: Karten wurden direkt aus den bereitgestellten KI-generierten Bildertafeln
+extrahiert. Etwaige Ungenauigkeiten der Originalillustrationen (z.B. Zahlenbild)
+werden nicht neu erfunden oder stillschweigend verändert.

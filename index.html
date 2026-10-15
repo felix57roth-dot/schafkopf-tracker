@@ -559,7 +559,7 @@ body.cards-fs-open{overflow:hidden}
 @media(max-width:430px){.mentor-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.mentor-summary .sum{padding:8px}.mentor-summary b{font-size:16px}.mentor-stage{border-radius:22px}.mentor-scene{min-height:382px}.mentor-table-card{width:62px}.mentor-card-left{left:30px;top:171px}.mentor-card-right{right:30px;top:171px}.mentor-card-top{top:70px}.mentor-card-bottom{top:220px}.mentor-seat-top{top:8px}.mentor-seat-left{left:3px}.mentor-seat-right{right:3px}.mentor-played-banner{left:8px;right:8px;bottom:64px;padding:9px 11px}.mentor-seat-chip{min-width:66px;padding:5px 7px}.mentor-seat-left,.mentor-seat-right{min-width:38px}.mentor-hand-wrap{padding:9px 10px 12px}.mentor-hand-row{justify-content:flex-start;overflow:auto;padding-bottom:6px}.mentor-hand-card{width:39px;margin-left:-8px}.mentor-choice-actions{grid-template-columns:1fr}.mentor-tabs button{font-size:12px;padding:10px 8px}}
 
 
-/* v3.1.1 – Kartenstil & Wastl-Ansicht näher am Referenzscreen */
+/* v3.2.2 – Kartenstil & Wastl-Ansicht näher am Referenzscreen */
 .training-card .playing-card{border-radius:12px;overflow:hidden}
 .training-face{display:block;width:100%;height:auto}
 .mentor-stage{padding:10px;background:linear-gradient(180deg,#0c3026,#16503d)}
@@ -587,6 +587,22 @@ body.cards-fs-open{overflow:hidden}
 .mentor-alt-strip{align-items:flex-start}.mentor-alt-card{width:50px}
 .mentor-learn-list{gap:10px}.mentor-learn-item{background:#fbf1dc}
 @media(max-width:430px){.mentor-hero{grid-template-columns:104px 1fr;padding:12px}.mentor-hero img{width:104px;height:118px}.mentor-bubble{font-size:13px;padding:12px 13px}.mentor-scene{min-height:392px}.mentor-table-card{width:70px}.mentor-card-left{left:28px;top:169px}.mentor-card-right{right:28px;top:169px}.mentor-card-bottom{top:214px}.mentor-seat-bottom{bottom:90px}.mentor-played-banner{bottom:18px}.mentor-hand-wrap{padding:11px 10px 13px}.mentor-hand-card{width:42px;margin-left:-11px}}
+
+
+/* v3.3: Einheitliche originalgetreue Kartenassets auf ALLEN Ansichten. */
+.training-face{display:block;width:100%;height:100%;object-fit:fill;border:0;background:transparent;user-select:none;-webkit-user-drag:none;image-rendering:auto}
+.playing-card{overflow:visible;background:transparent;box-shadow:none;border-radius:5px}
+.stitch-mini-card img,.stitch-mini-card .training-face,.mentor-table-card img,.mentor-card-frame img,.stitch-card img{width:100%;height:100%;display:block;object-fit:contain}
+.mentor-card-frame{overflow:visible!important;background:transparent}
+.mentor-hand-row{padding-top:14px!important;padding-bottom:10px!important;overflow-x:auto;overflow-y:visible}
+.mentor-hand-card,.mentor-hand-card.current,.mentor-hand-card.suggested{overflow:visible}
+.mentor-hand-card.suggested{transform:translateY(-5px)}
+.mentor-hand-card.suggested .mentor-card-frame{box-shadow:0 0 0 2.5px #e7bd54,0 7px 14px rgba(0,0,0,.22);border-radius:7px}
+.mentor-table-card{overflow:visible}
+.mentor-table-card.own-card::after{inset:-3px;border-radius:8px}
+.training-card .playing-card{display:block;overflow:visible}
+/* Gleichmäßige Kartenverhältnisse; maximaler Kontrast auf der hellen Kartenvorderseite. */
+.training-card .training-face,.stitch-mini-card .training-face{aspect-ratio:320/500}
 
 </style></head><body><div id="app" class="app"><header class="hero"><div class="top"><div class="brand"><div class="emblem" id="brandSuit"></div><span>Schafkopf<span style="color:#e4c47b">tracker</span></span></div><div class="suite" id="suits"></div></div><h1 id="headerTitle">Servus am Kartentisch!</h1><p id="headerSub">Alle deine Schafkopfabende auf einen Blick.</p></header><main class="main" id="main"></main><nav class="nav" id="nav"></nav><div id="toast" class="hidden" role="status" aria-live="polite"></div><div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><div class="update-text"><b>🃏 Neue Version verfügbar!</b><p>Ein Update ist bereit. Deine gespeicherten Spielabende bleiben erhalten.</p></div><button type="button" class="btn" id="applyUpdate">Aktualisieren</button><button type="button" class="mini-btn" id="dismissUpdate" aria-label="Später aktualisieren" title="Später">✕</button></div></div><script>
 'use strict';
@@ -682,7 +698,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='3.1.1';
+const VERSION='3.3';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -986,15 +1002,9 @@ function cardIllustration(c){
  return pipLayout(c.rank).map(([x,y])=>suitMark(c.suit,x-8,y,.82)).join('');
 }
 function cardSVG(c){
- const rankColor=c.suit==='herz'?'#bf3f45':c.suit==='gras'?'#2d7d4f':c.suit==='eichel'?'#6b5230':'#936b23';
- return `<svg class="training-face" viewBox="0 0 90 142" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
- <defs><filter id="shadowSm" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="1.6" flood-color="#000" flood-opacity=".15"/></filter></defs>
- <rect x="2" y="2" width="86" height="138" rx="8" fill="#fffdf8" stroke="#67625a" stroke-width="1.8" filter="url(#shadowSm)"/>
- <rect x="5.6" y="5.6" width="78.8" height="130.8" rx="5.5" fill="#fffefb" stroke="#d7cab0" stroke-width="1"/>
- <text x="8.5" y="16.5" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="800" fill="${rankColor}">${c.rank}</text>
- ${suitMark(c.suit,7.2,18,.54)}
- <g transform="translate(90 142) rotate(180)"><text x="8.5" y="16.5" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="800" fill="${rankColor}">${c.rank}</text>${suitMark(c.suit,7.2,18,.54)}</g>
- ${cardIllustration(c)}</svg>`;
+ // Original-Karten aus den freigestellten Benutzer-Vorlagen; keine generierten SVG-Figuren.
+ // Alle 32 Assets liegen im Ordner cards/ und sind auch offline verfügbar.
+ return `<img class="training-face" src="./cards/${c.id}.webp" alt="${esc(c.name)}" width="320" height="500" draggable="false" loading="eager" decoding="async">`;
 }
 function counterCardButton(c){const gone=counter.fallen.includes(c.id),conceal=counter.fairPlay&&!counter.fairFinished;const eyes=counter.showEyes&&!conceal?`<span class="card-eyes">${c.eyes} Augen</span>`:'';return `<button type="button" class="training-card${!conceal&&gone?' is-fallen':''}${!conceal&&isTrump(c)?' is-trump':''}" data-counter-card="${c.id}" aria-pressed="${conceal?'false':String(gone)}" aria-label="${c.name}${conceal?'':gone?', gefallen':', noch offen'}">
  <span class="playing-card">${cardSVG(c)}<span class="gone-overlay" aria-hidden="true"><span>✓</span></span></span>${eyes}</button>`;}
