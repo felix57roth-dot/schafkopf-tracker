@@ -1,32 +1,14 @@
-SCHAFKOPFTRACKER – VERSION 2.5
-=============================
+SCHAFKOPFTRACKER – VERSION 2.6
 
-NEU
-- Einmalige, feste Sitzordnung für vier Personen (Tischgrafik: oben, rechts, unten, links im Uhrzeigersinn).
-- Einen ersten Geber bestimmen. Vorhand, Mittelhand und Hinterhand werden daraus automatisch abgeleitet.
-- Nach jeder vollständig erfassten und archivierten Partie rückt der Geber im Uhrzeigersinn zum nächsten Platz.
-- "Geber weiter" erlaubt eine manuelle Anpassung, etwa falls eine Partie nicht getrackt wurde.
-- Spielernamen werden mit jeder Trainingspartie gespeichert; alte Archive bleiben beim Wechsel der Sitzordnung unverändert.
-- Beim Rufspiel wird der Ansagerpartner automatisch anhand des ausgespielten Ruf-Asses erkannt.
-- Vor dem Ruf-Ass zeigt die App Augen pro Spielerposition und weist danach auch frühere Stiche dem Team zu.
-- Eigene Trainingsstatistik im Reiter Statistik: Gewinnquote, Augenentwicklung und Spielartenverteilung als Grafiken.
-- Bestehende Einzelspiele, Abende, Gewinnstatistiken und Offline-Kartenzähler bleiben unverändert.
+Neue Funktionen:
+- Infobereiche für den einfachen Kartenzähler und den Stichverlauf.
+- Optionales Karten-Vollbild in beiden Modi, mit Querformat-Anfrage (browserabhängig).
+- Fair-Play-Modus je Zählart: alte Karten bleiben während der Partie visuell neutral. Restkarten- und Historienhinweise bleiben verborgen.
+- Im einfachen Zählmodus kann die Runde ausdrücklich abgeschlossen werden; erst dann werden alle Markierungen und Auswertungen eingeblendet.
+- Umschaltung nur zu Beginn einer neuen Zählrunde, damit Fair Play nicht nachträglich abgeschaltet werden kann.
+- Alte Speicher-/Backup-Schlüssel und Trainingsarchive bleiben kompatibel.
 
-DATEN UND DATENSICHERUNG
-- Die Sitzordnung liegt nur lokal unter dem Schlüssel schafkopf-tisch-v1.
-- Das normale Backup enthält jetzt auch die Sitzordnung und Trainingspartien.
-- Beim Import "Alle Daten ersetzen" wird eine im Backup vorhandene Tischkonfiguration wiederhergestellt.
-- Alte Backups ohne Tischkonfiguration bleiben kompatibel.
-- Läuft bereits eine Partie, gilt eine geänderte Sitzordnung erst für die nächste Partie.
+UPDATE:
+Vor dem Hochladen Backup unter Profil > Daten exportieren erstellen. Alle sechs Dateien direkt im GitHub-Repository-Root ersetzen. Nach der Veröffentlichung das Update in der App übernehmen.
 
-UPDATE ÜBER GITHUB
-1. Zuerst Profil > Daten exportieren.
-2. Die sechs Dateien (index.html, icon.png, icon.svg, manifest.webmanifest, sw.js, README.txt)
-   aus dem ZIP-Ordner direkt ins Root des vorhandenen GitHub-Repositories hochladen.
-3. Auf die GitHub-Pages-Veröffentlichung warten und die installierte App online öffnen.
-4. Update-Hinweis bestätigen bzw. App komplett schließen und neu öffnen.
-
-WICHTIG
-- Der Geber rotiert nach archivierten Partien; bei übersprungenen Spielen bitte "Geber weiter" wählen.
-- Pro Stich werden die vier Karten in der Reihenfolge ihrer Ausspielposition eingegeben.
-- Training sollte mit Einverständnis der Mitspieler erfolgen; die Stichübersicht ist kein unerlaubtes Hilfsmittel für reguläre Wettbewerbe.
+Hinweise: Eine feste Querformat-Sperre unterstützen nicht alle Android-/iOS-Browser; dann Smartphone manuell drehen. Fair Play ist eine unterstützende Ansicht, keine technische Schiedsrichterlösung.
