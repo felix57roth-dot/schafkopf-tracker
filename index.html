@@ -638,6 +638,54 @@ body.cards-fs-open{overflow:hidden}
 .details-spacer{height:10px}.mentor-more-card{margin-top:12px}.mentor-more-card details{border:none}.mentor-more-card summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between}.mentor-more-card summary::-webkit-details-marker{display:none}.mentor-more-card .more-body{padding-top:10px;display:grid;gap:10px}.mentor-note{background:#fff;border-radius:16px;border:1px solid #ece2c8}
 @media(max-width:430px){.wastl-single-intro{grid-template-columns:78px 1fr;gap:12px;padding:14px}.mentor-analysis-top{flex-wrap:wrap}.mentor-analysis-top .btn{width:100%}.mentor-table-card{width:70px!important}.mentor-scene{min-height:340px}.mentor-seat-left,.mentor-seat-right{min-width:38px}.mentor-alt-panel{grid-template-columns:60px 1fr}.mentor-alt-card{width:60px}}
 
+
+/* v3.5: isolierter Wastl-Vollbild-Kartentisch, ohne Scrollen. */
+html:has(.ws-fullscreen), body:has(.ws-fullscreen){overflow:hidden!important; overscroll-behavior:none!important}
+.ws-fullscreen{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:100000;overflow:hidden!important;overscroll-behavior:contain;background:#0b2d24;color:#f8edcf;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:grid;grid-template-rows:52px minmax(0,1fr);box-sizing:border-box;isolation:isolate}
+.ws-fullscreen *{box-sizing:border-box}
+.ws-topbar{background:#0c2b23;display:grid;grid-template-columns:46px minmax(0,1fr) 100px;align-items:center;gap:6px;padding:4px 10px;border-bottom:1px solid #b89a62;box-shadow:0 2px 12px #0002;z-index:3}
+.ws-topbar button{border:none;cursor:pointer;background:#2a5647;color:#fff9e9;border-radius:11px;font-size:23px;font-weight:700;width:40px;height:40px;display:grid;place-items:center}
+.ws-topbar .ws-step-label{text-align:center;min-width:0}.ws-step-label strong{display:block;font-size:16px;line-height:1.1}.ws-step-label small{display:block;color:#d1dfd3;font-size:11px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;margin-top:2px}
+.ws-nav{display:flex;gap:6px;justify-content:flex-end}.ws-nav button:disabled{opacity:.3;cursor:default}
+.ws-board{min-height:0;display:grid;grid-template-rows:clamp(70px,15%,98px) minmax(0,1fr) clamp(112px,26%,205px);gap:0;background:repeating-linear-gradient(2deg,transparent 0 17px,rgba(41,18,6,.13) 18px 19px),linear-gradient(90deg,#6f4428,#855331 38%,#6e4228 70%,#815031);position:relative;overflow:hidden}
+.ws-guide{display:grid;grid-template-columns:clamp(54px,13vw,83px) minmax(0,1fr);gap:10px;align-items:center;padding:7px 12px;background:linear-gradient(180deg,rgba(37,24,11,.4),rgba(34,18,6,.12));border-bottom:1px solid rgba(244,214,145,.22);position:relative;z-index:2;min-height:0}
+.ws-portrait{width:100%;height:min(78px,100%);object-fit:cover;object-position:50% 15%;border-radius:14px;border:2px solid #eccb83;box-shadow:0 3px 9px #1e100c55}
+.ws-speech{height:100%;max-height:80px;min-height:0;position:relative;padding:8px 28px 8px 12px;display:flex;align-items:center;background:#fdf1d9;border:1px solid #eed8ab;border-radius:16px;color:#2c3025;font-size:clamp(12px,3.1vw,15px);font-weight:600;line-height:1.27;box-shadow:0 4px 10px #23110822}
+.ws-speech::before{content:'';position:absolute;left:-5px;top:calc(50% - 5px);width:10px;height:10px;background:#fdf1d9;border-left:1px solid #eed8ab;border-bottom:1px solid #eed8ab;transform:rotate(45deg)}
+.ws-speech-copy{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:normal}
+.ws-speech-more{position:absolute;right:2px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:25px;height:36px;border:0;background:transparent;color:#226646;font-size:20px;cursor:pointer;z-index:1}
+.ws-felt{position:relative;min-height:0;margin:5px 12px 0;border-radius:18px;background:radial-gradient(ellipse at 50% 28%,rgba(247,203,131,.14),transparent 65%),linear-gradient(115deg,rgba(38,15,3,.13),transparent 50%),#784b2e;border:2px solid rgba(234,187,105,.36);box-shadow:inset 0 4px 18px #36190455,inset 0 0 0 7px #f0c0790d;overflow:hidden}
+.ws-felt::before{content:'';inset:0;position:absolute;pointer-events:none;opacity:.13;background:repeating-linear-gradient(0deg,transparent 0 12px,#40260d 13px 14px),repeating-linear-gradient(90deg,transparent 0 44px,#bd8e54 46px 47px)}
+.ws-spot{position:absolute;display:flex;align-items:center;gap:3px;flex-direction:column;pointer-events:none;z-index:2}
+.ws-spot>span{color:#fff2ce;background:#2f2018e9;border:1px solid #ad8966;border-radius:999px;font-weight:750;padding:3px 7px;font-size:clamp(10px,2.8vw,13px);max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ws-spot img.training-face{width:clamp(52px,17vw,94px)!important;height:auto!important;aspect-ratio:320/500;object-fit:contain;filter:drop-shadow(0px 4px 5px #26120660);border-radius:7px}
+.ws-spot.top{top:3px;left:50%;transform:translateX(-50%)}
+.ws-spot.left{top:52%;left:8%;transform:translateY(-50%) rotate(-8deg)}
+.ws-spot.right{top:52%;right:8%;transform:translateY(-50%) rotate(8deg)}
+.ws-spot.bottom{bottom:0;left:50%;transform:translateX(-50%)}
+.ws-spot.bottom img.training-face{width:clamp(48px,15vw,88px)!important}
+.ws-spot.mine img{outline:2px solid #24c785;outline-offset:2px}
+.ws-winner{position:absolute;top:10px;right:8px;max-width:36%;min-width:70px;text-align:right;background:#0c3b2fdd;border:1px solid #d2ae67a8;color:#fff7dd;padding:5px 7px;border-radius:10px;z-index:3;font-size:clamp(9px,2.5vw,12px);line-height:1.2}
+.ws-winner b{display:block;color:#f6d78a}.ws-winner span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ws-hand{min-height:0;display:grid;grid-template-rows:24px minmax(0,1fr);background:linear-gradient(180deg,rgba(31,14,4,.02),rgba(33,11,4,.21));border-top:1px solid #b78a58ad;overflow:hidden;position:relative;padding:3px 10px 0}
+.ws-hand-caption{color:#fff1cf;font-weight:750;text-align:center;font-size:clamp(11px,3vw,14px)}
+.ws-fan{min-height:0;position:relative;display:flex;align-items:flex-start;justify-content:center;gap:0;overflow:visible;padding:4px 4px 12px;align-items:flex-end}
+.ws-fan-card{flex:none;width:clamp(43px,12.7vw,78px);position:relative;transform-origin:50% 130%;transform:translateY(var(--lift,0px)) rotate(var(--tilt,0deg));margin-left:calc(-1 * clamp(10px,4.2vw,29px));filter:drop-shadow(1px 3px 3px #130a0555);z-index:var(--z,1)}
+.ws-fan-card:first-child{margin-left:0}
+.ws-fan-card img.training-face{width:100%!important;height:auto!important;display:block;border-radius:7px}
+.ws-fan-card.highlight img{outline:3px solid #f0ce63;outline-offset:1px}
+.ws-empty-hand{color:#fff1da;font-size:14px;text-align:center;margin:auto;max-width:240px}
+.ws-detail-scrim{position:absolute;inset:0;background:#0b1a15aa;z-index:15;display:flex;align-items:end;justify-content:center;padding:12px}
+.ws-detail-scrim[hidden]{display:none}
+.ws-detail-sheet{position:relative;width:min(100%,640px);max-height:76%;overflow:auto;background:#fff7e9;color:#263b2d;border-radius:20px;padding:20px 18px;box-shadow:0 15px 60px #0005;overscroll-behavior:contain}
+.ws-detail-sheet h3{font-size:19px;margin:0 36px 10px 0;color:#123e2e}.ws-detail-sheet p{margin:8px 0;line-height:1.45;font-size:14px;color:#374235}.ws-detail-sheet .mentor-note{color:#25372c;background:#fff;border-radius:12px;margin:10px 0}
+.ws-detail-close{position:absolute;right:11px;top:10px;width:36px;height:36px;border:0;border-radius:12px;background:#dcdfd4;color:#1d3d30;font-size:23px;cursor:pointer}
+.ws-detail-alt{display:grid;grid-template-columns:65px 1fr;gap:12px;align-items:center;padding:10px;border:1px solid #e2cf97;border-radius:12px}.ws-detail-alt img{width:65px}
+.ws-speech-link{margin-top:10px;display:inline-flex;align-items:center;gap:4px;padding:7px 11px;border-radius:12px;border:0;background:#146b4c;color:#fff;font-weight:700;cursor:pointer}
+@media(max-width:360px){.ws-topbar{grid-template-columns:42px 1fr 84px;padding:4px 6px}.ws-nav{gap:3px}.ws-topbar button{width:35px;height:36px}.ws-guide{gap:6px;padding:5px 8px}.ws-speech{padding:5px 25px 5px 10px;font-size:12px}.ws-felt{margin:4px 7px 0}.ws-spot.left{left:4%}.ws-spot.right{right:4%}.ws-winner{max-width:39%}}
+@media(max-height:670px){.ws-fullscreen{grid-template-rows:44px minmax(0,1fr)}.ws-topbar button{height:34px}.ws-board{grid-template-rows:64px minmax(0,1fr) clamp(92px,23%,130px)}.ws-guide{padding:4px 8px}.ws-portrait{height:54px;width:54px}.ws-speech{max-height:57px;font-size:12px}.ws-hand{grid-template-rows:19px minmax(0,1fr)}.ws-hand-caption{font-size:11px}.ws-spot img.training-face{width:clamp(42px,14vw,67px)!important}.ws-spot.bottom img.training-face{width:clamp(40px,13vw,62px)!important}.ws-spot>span{font-size:10px;padding:2px 6px}}
+@media(orientation:landscape) and (max-height:510px){.ws-fullscreen{grid-template-rows:40px minmax(0,1fr)}.ws-board{grid-template-columns:145px minmax(0,1fr) 160px;grid-template-rows:minmax(0,1fr)}.ws-guide{display:flex;flex-direction:column;gap:6px;padding:7px 5px;align-items:center;justify-content:start}.ws-portrait{width:58px;height:58px;flex:none}.ws-speech{max-height:calc(100% - 62px);height:auto;min-height:90px;font-size:12px}.ws-felt{margin:5px 2px 5px}.ws-hand{display:flex;flex-direction:column;padding:6px 5px}.ws-hand-caption{font-size:12px}.ws-fan{flex:1;align-items:center}.ws-fan-card{width:38px;margin-left:-24px}.ws-spot img.training-face{width:clamp(45px,8vw,66px)!important}.ws-spot.bottom img.training-face{width:clamp(42px,8vw,62px)!important}}
+
 </style></head><body><div id="app" class="app"><header class="hero"><div class="top"><div class="brand"><div class="emblem" id="brandSuit"></div><span>Schafkopf<span style="color:#e4c47b">tracker</span></span></div><div class="suite" id="suits"></div></div><h1 id="headerTitle">Servus am Kartentisch!</h1><p id="headerSub">Alle deine Schafkopfabende auf einen Blick.</p></header><main class="main" id="main"></main><nav class="nav" id="nav"></nav><div id="toast" class="hidden" role="status" aria-live="polite"></div><div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><div class="update-text"><b>🃏 Neue Version verfügbar!</b><p>Ein Update ist bereit. Deine gespeicherten Spielabende bleiben erhalten.</p></div><button type="button" class="btn" id="applyUpdate">Aktualisieren</button><button type="button" class="mini-btn" id="dismissUpdate" aria-label="Später aktualisieren" title="Später">✕</button></div></div><script>
 'use strict';
 /* Schafkopftracker v3.0 – Navigation und Design überarbeitet, weiterhin offline. */
@@ -732,7 +780,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='3.4';
+const VERSION='3.5';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1703,20 +1751,75 @@ function mentorTableScene(game,trickInfo,step,state){
  const afterMine=after?.[game.mySeat]||[];
  return `<div class="mentor-table-shell"><div class="mentor-table-head"><div><h3>Stich ${step+1} von ${game.tricks.length}</h3><div class="mentor-head-sub">${esc(stitchTypeName(game.type))} · ${trickInfo.eye} Augen</div></div><div class="pager"><button class="mentor-nav" type="button" data-mentor-step="${step-1}" ${step===0?'disabled':''}>‹</button><button class="mentor-nav" type="button" data-mentor-step="${step+1}" ${step>=game.tricks.length-1?'disabled':''}>›</button></div></div><div class="mentor-wood"><div class="mentor-scene">${seatChip(top,'top')}${seatChip(left,'left')}${seatChip(right,'right')}${seatChip(bottom,'bottom')}${cardsHtml}<div class="mentor-played-banner"><b>${esc(notesWin)}</b><small>${esc(notesLead)}</small></div></div></div><div class="mentor-hand-wrap"><div class="mentor-hand-title"><b>Deine übrigen Karten nach diesem Stich</b><span>${afterMine.length} Karten übrig</span></div>${afterMine.length?mentorHandCards(afterMine,altId):'<p class="help" style="color:#d8eadf">Nach dem letzten Stich sind keine Karten mehr auf deiner Hand.</p>'}</div></div>`;
 }
+
+// Stable Schafkopf card order: trump by rank, then nontrump by suit and rank.
+function wastlCardOrder(cards,game){
+ const ranks=['A','10','K','O','U','9','8','7'];
+ const suits=['eichel','gras','herz','schell'];
+ return [...cards].sort((id1,id2)=>{
+   const a=CARD_MAP[id1],b=CARD_MAP[id2];
+   const ta=stitchIsTrumpFor(a,game.type,game.trumpSuit),tb=stitchIsTrumpFor(b,game.type,game.trumpSuit);
+   if(ta!==tb)return ta?-1:1;
+   if(ta)return stitchTrumpStrength(a,game.type,game.trumpSuit)-stitchTrumpStrength(b,game.type,game.trumpSuit);
+   return suits.indexOf(a.suit)-suits.indexOf(b.suit)||ranks.indexOf(a.rank)-ranks.indexOf(b.rank);
+ });
+}
+function wastlCompactSpeech(game,t,step,valid){
+ if(!valid.ready)return 'Des schau ma uns an. Manche Karten sind noch nicht ganz eindeutig erfasst.';
+ if(t.notes?.some(n=>n.type==='warn'))return 'Bei diesem Stich passt möglicherweise die Kartenfolge nicht. Schau ma genauer hin!';
+ if(t.alternative)return `Da hätt i eine andere Karte in Betracht gezogen. Magst wissen, warum?`;
+ if(t.winTeam==='us')return 'Gut! Die Augen gehen an dein Team. So kann ma weiterspielen!';
+ return 'Interessanter Stich! Für eine sichere Bewertung müsst ma die ganze Spielsituation betrachten.';
+}
+function wastlFullScreen(game,info,t,step,handState){
+ const cards=t.raw.cards, seats={};
+ // Reconstruct which individual card belongs to which PLAYER, not the position at which it was dealt.
+ cards.forEach((id,i)=>{seats[stitchPositionFromLeader(t.raw.leaderSeat,i)]=id;});
+ const ids=STITCH_SEAT_IDS, me=ids.indexOf(game.mySeat);
+ const position={top:ids[(me+2)%4],left:ids[(me+3)%4],right:ids[(me+1)%4],bottom:ids[me]};
+ const slot=(side)=>{
+   const seat=position[side],card=CARD_MAP[seats[seat]];
+   return `<div class="ws-spot ${side}${seat===game.mySeat?' mine':''}"><span>${esc(seat===game.mySeat?'Du':mentorSeatNameShort(seat,game))}</span>${card?cardSVG(card):''}</div>`;
+ };
+ const remaining=handState?.after?.[game.mySeat]||[];
+ const sorted=wastlCardOrder(remaining,game);
+ const fan=sorted.length?sorted.map((id,i)=>{
+   const center=(sorted.length-1)/2,off=i-center;
+   return `<span class="ws-fan-card${id===t.alternative?.cardId?' highlight':''}" style="--tilt:${off*4.2}deg;--lift:${Math.abs(off)*2}px;--z:${i+1}">${cardSVG(CARD_MAP[id])}</span>`;
+ }).join(''):`<div class="ws-empty-hand">Alle Karten gespielt – die Partie ist beendet.</div>`;
+ const winner=t.raw.winnerSeat?mentorSeatNameShort(t.raw.winnerSeat,game):'Noch offen';
+ const detailText=t.notes?.length?t.notes.map(mentorHint).join(''):'<p>Zu diesem Stich liegen keine weiteren Hinweise vor.</p>';
+ const alt=t.alternative?`<div class="ws-detail-alt">${cardSVG(CARD_MAP[t.alternative.cardId])}<p><strong>Alternative Überlegung:</strong> ${esc(t.alternative.reason)}</p></div>`:'';
+ const reason=info.valid.ready?'<p>Wastl ist ein lokaler Ratgeber. Ein Vorschlag ist keine sichere optimale Spielstrategie.</p>':`<p>${esc(info.valid.reason||'Die Erfassung ist nicht vollständig.')}</p>`;
+ return `<div class="ws-fullscreen" role="dialog" aria-modal="true" aria-label="Wastl Stichanalyse im Vollbild">
+   <header class="ws-topbar">
+     <button type="button" id="wsClose" aria-label="Analyse schließen">←</button>
+     <div class="ws-step-label"><strong>Stich ${step+1} von ${game.tricks.length}</strong><small>${esc(stitchTypeName(game.type))} · ${t.eye} Augen</small></div>
+     <div class="ws-nav"><button type="button" data-mentor-step="${step-1}" ${step===0?'disabled':''} aria-label="Vorheriger Stich">‹</button><button type="button" data-mentor-step="${step+1}" ${step>=game.tricks.length-1?'disabled':''} aria-label="Nächster Stich">›</button></div>
+   </header>
+   <main class="ws-board">
+     <div class="ws-guide"><img class="ws-portrait" src="wastl.png" alt="Wastl"><div class="ws-speech"><span class="ws-speech-copy">${esc(wastlCompactSpeech(game,t,step,info.valid))}</span><button class="ws-speech-more" type="button" data-ws-more aria-label="Wastls ausführliche Erklärung">ⓘ</button></div></div>
+     <section class="ws-felt" aria-label="Kartentisch mit den vier gespielten Karten">
+       <div class="ws-winner"><b>Stichgewinner</b><span>${esc(winner)}</span></div>
+       ${slot('top')}${slot('left')}${slot('right')}${slot('bottom')}
+     </section>
+     <section class="ws-hand" aria-label="Deine verbleibenden Handkarten"><div class="ws-hand-caption">Deine Hand · ${sorted.length} Karte${sorted.length===1?'':'n'} übrig</div><div class="ws-fan">${fan}</div></section>
+   </main>
+   <div class="ws-detail-scrim" data-ws-scrim hidden>
+     <div class="ws-detail-sheet" role="region" aria-label="Wastls weitere Hinweise"><button class="ws-detail-close" type="button" data-ws-dismiss aria-label="Zusatzinfos schließen">×</button><h3>Wastl erklärt diesen Stich</h3>${detailText}${alt}${reason}</div>
+   </div>
+ </div>`;
+}
 function mentorUI(){
  const g=mentorSelected();
- if(!g)return `<div class="content-page mentor-view"><div class="wastl-single-intro"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><div class="ey">Dein Schafkopf-Mentor</div><h2>Servus! I bin da Wastl.</h2><p>Such dir eine gespeicherte Partie aus, dann schauen wir uns Stich für Stich gemeinsam an, was die Karten hergeben.</p></div></div><div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${stitch.archive.length} Partien</span></div><div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small></span><span>→</span></button>`).join('')||'<div class="card empty">Noch kein archivierter Stichverlauf. Unter Erfassen → Karten tracken → Mit Stichverlauf kannst du die erste Partie erfassen.</div>'}</div><p class="mentor-rule">Wastl ist ein lokaler, regelbasierter Lernbegleiter – keine Online-KI. Er verwendet nur deine eigenen Spielaufzeichnungen und gespeicherte Regeln. Strategische Hinweise sind Hilfen, keine garantierten Gewinnzüge.</p></div>`;
- const gInfo=mentorGeneral(g),analysis=mentorStichEvidence(g),n=Math.max(0,Math.min(g.tricks.length-1,mentorStep));
- const t=analysis.tricks[n];
- if(!t)return `<div class="content-page mentor-view"><div class="mentor-analysis-screen"><div class="mentor-analysis-top"><button type="button" class="btn ghost mentor-back" id="mentorBack">← Andere Partie auswählen</button><div class="meta"><h2>${esc(stitchTypeName(g.type))}</h2><p>${new Date(g.started).toLocaleDateString('de-DE')} · ${g.tricks.length} Stiche · ${gInfo.eyes} Augen</p></div></div>${mentorSpeech('Zu dieser Partie sind noch keine vollständigen Stichdaten hinterlegt.')}</div></div>`;
- const handState=mentorHandState(g,n);
- const primaryNote=t.notes&&t.notes.length?t.notes[0]:null;
- const mainMessage=!gInfo.valid.ready?'I kann dir hier schon Hinweise geben, aber die Partie ist noch nicht vollständig oder nicht ganz sauber rekonstruiert.':(t.alternative?`Im ${n+1}. Stich wäre ${CARD_MAP[t.alternative.cardId].name} wahrscheinlich die ruhigere Wahl gewesen. Warum, siehst du direkt darunter.`:(primaryNote?primaryNote.detail:(t.winTeam==='us'?'Sauber gespielt – in diesem Stich schaut des nach einer guten und stimmigen Entscheidung aus.':'In diesem Stich war wenig Luft nach oben erkennbar. Schau dir bei Bedarf die Zusatzinfos an.')));
- const extraNotes=(t.notes||[]).slice(primaryNote?1:0);
- const altPanel=t.alternative?`<div class="mentor-alt-panel"><div class="mentor-alt-card"><span class="mentor-card-frame">${cardSVG(CARD_MAP[t.alternative.cardId])}</span></div><div><h3>Alternative Überlegung</h3><p>${esc(t.alternative.reason)}</p></div></div>`:'';
- const detailBlocks=`${extraNotes.map(x=>mentorHint(x)).join('')}${gInfo.tip.slice(0,2).map(x=>mentorHint({type:'tip',heading:'Wastls Zusatzgedanke',detail:x})).join('')||'<p>Für diesen Stich gibt es gerade keine weiteren Zusatzhinweise.</p>'}`;
- return `<div class="content-page mentor-view"><div class="mentor-analysis-screen"><div class="mentor-analysis-top"><button type="button" class="btn ghost mentor-back" id="mentorBack">← Andere Partie auswählen</button><div class="meta"><h2>${esc(stitchTypeName(g.type))}</h2><p>${new Date(g.started).toLocaleDateString('de-DE')} · ${g.tricks.length} Stiche · ${gInfo.eyes} Augen</p></div></div><div class="mentor-stage compact">${mentorSpeech(mainMessage)}${mentorTableScene(g,t,n,handState)}<div class="details-spacer"></div>${altPanel}<div class="mentor-more-card"><details><summary>Mehr von Wastl einblenden <span>▾</span></summary><div class="more-body">${detailBlocks}</div></details></div></div></div></div>`;
+ if(!g)return `<div class="content-page mentor-view"><div class="wastl-single-intro"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><div class="ey">Dein Schafkopf-Mentor</div><h2>Servus! I bin da Wastl.</h2><p>Such dir eine gespeicherte Partie aus, dann schauen wir uns Stich für Stich gemeinsam an, was die Karten hergeben.</p></div></div><div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${stitch.archive.length} Partien</span></div><div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small></span><span>→</span></button>`).join('')||'<div class="card empty">Noch kein archivierter Stichverlauf. Unter Erfassen → Karten tracken → Mit Stichverlauf kannst du die erste Partie erfassen.</div>'}</div><p class="mentor-rule">Wastl ist ein kostenloser, lokaler Lernbegleiter. Seine Hinweise beruhen auf den gespeicherten Stichen und einfachen Regeln, nicht auf einer Online-KI.</p></div>`;
+ const info=mentorGeneral(g),analysis=mentorStichEvidence(g);
+ const step=Math.max(0,Math.min(g.tricks.length-1,mentorStep));
+ const t=analysis.tricks[step];
+ if(!t)return `<div class="content-page mentor-view"><button class="btn ghost" id="mentorBack">← Zur Partieauswahl</button><p>Für diese Partie fehlen Stichdaten.</p></div>`;
+ return wastlFullScreen(g,info,t,step,mentorHandState(g,step));
 }
+
 document.addEventListener('click',e=>
 {
  const item=e.target.closest('[data-mentor-open]');if(item){mentorMode=true;mentorGameId=item.dataset.mentorOpen;mentorStep=0;switchTab('mentor');return;}
@@ -1746,5 +1849,20 @@ document.addEventListener('click',e=>{
 
 
 render();
+
+
+document.addEventListener('click',e=>{
+ const more=e.target.closest('[data-ws-more]');
+ if(more){const root=e.target.closest('.ws-fullscreen');const scrim=root?.querySelector('[data-ws-scrim]');if(scrim){scrim.hidden=false;scrim.querySelector('[data-ws-dismiss]')?.focus();}return;}
+ const close=e.target.closest('[data-ws-dismiss]');
+ if(close||e.target.matches('[data-ws-scrim]')){const root=e.target.closest('.ws-fullscreen');const scrim=root?.querySelector('[data-ws-scrim]');if(scrim){scrim.hidden=true;root.querySelector('[data-ws-more]')?.focus();}return;}
+ if(e.target.closest('#wsClose')){mentorGameId='';mentorStep=0;render();return;}
+},true);
+document.addEventListener('keydown',e=>{
+ const root=document.querySelector('.ws-fullscreen');if(!root)return;
+ if(e.key==='Escape'){const scrim=root.querySelector('[data-ws-scrim]');if(scrim&&!scrim.hidden){scrim.hidden=true;root.querySelector('[data-ws-more]')?.focus();}else{mentorGameId='';mentorStep=0;render();}}
+ if(e.key==='ArrowRight'&&root.querySelector('[data-ws-scrim]')?.hidden){const btn=root.querySelector('[data-mentor-step]:last-child');if(btn&&!btn.disabled)btn.click();}
+ if(e.key==='ArrowLeft'&&root.querySelector('[data-ws-scrim]')?.hidden){const btn=root.querySelector('[data-mentor-step]:first-child');if(btn&&!btn.disabled)btn.click();}
+});
 
 </script></body></html>

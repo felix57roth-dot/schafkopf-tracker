@@ -1,5 +1,5 @@
-/* Schafkopftracker PWA Offlinecache 3.4 – vollständiges Kartenset lokal */
-const CACHE='schafkopf-v3.4';
+/* Schafkopftracker PWA Offlinecache 3.5 – vollständiges Kartenset lokal */
+const CACHE='schafkopf-v3.5';
 const PREFIX='schafkopf-';
 const ASSETS=["./", "./index.html", "./icon.png", "./icon.svg", "./wastl.png", "./manifest.webmanifest", "./cards/eichel-10.webp", "./cards/eichel-7.webp", "./cards/eichel-8.webp", "./cards/eichel-9.webp", "./cards/eichel-A.webp", "./cards/eichel-K.webp", "./cards/eichel-O.webp", "./cards/eichel-U.webp", "./cards/gras-10.webp", "./cards/gras-7.webp", "./cards/gras-8.webp", "./cards/gras-9.webp", "./cards/gras-A.webp", "./cards/gras-K.webp", "./cards/gras-O.webp", "./cards/gras-U.webp", "./cards/herz-10.webp", "./cards/herz-7.webp", "./cards/herz-8.webp", "./cards/herz-9.webp", "./cards/herz-A.webp", "./cards/herz-K.webp", "./cards/herz-O.webp", "./cards/herz-U.webp", "./cards/schell-10.webp", "./cards/schell-7.webp", "./cards/schell-8.webp", "./cards/schell-9.webp", "./cards/schell-A.webp", "./cards/schell-K.webp", "./cards/schell-O.webp", "./cards/schell-U.webp"];
 self.addEventListener('install',event=>{event.waitUntil((async()=>{

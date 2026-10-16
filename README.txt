@@ -1,40 +1,7 @@
-SCHAFKOPFTRACKER – VERSION 3.4 (KOMPLETTPAKET)
-================================================
+Schafkopftracker 3.5 – Wastl-Vollbild und Kartenkorrekturen
 
-Dieses Paket enthält ALLE erforderlichen Dateien für die
-installierbare PWA, das neue Kartenset und Wastl.
-
-DATEIEN IM REPOSITORY-HAUPTVERZEICHNIS:
-  index.html
-  manifest.webmanifest
-  sw.js
-  icon.png
-  icon.svg
-  wastl.png
-  README.txt
-  cards/  (32 einzelne WebP-Spielkarten)
-
-INSTALLATION ÜBER GITHUB:
-1. In der bisherigen App unter Einstellungen / Datensicherung
-   die Daten als Datei exportieren.
-2. ZIP entpacken und den INNEREN Ordner öffnen.
-3. Alle 7 Dateien UND den gesamten cards-Ordner direkt ins
-   Stammverzeichnis des bestehenden GitHub-Repositories laden.
-4. Dateien mit denselben Namen überschreiben und committen.
-5. Nach Veröffentlichung mit Internetverbindung die App öffnen
-   und das PWA-Update durchführen; ggf. Seite erneut öffnen.
-
-WICHTIG:
-- NICHT den übergeordneten Ordner hochladen – index.html muss
-  im Stammverzeichnis des Repositories liegen.
-- Die gespeicherten Daten werden weiterhin unter dem bestehenden
-  lokalen Speicherschlüssel verwaltet. Bitte trotzdem sichern.
-- sw.js aktualisiert Offline-Cache inkl. der 32 Bilder und
-  ermöglicht die Aktualisierung bereits installierter PWAs.
-- Für GitHub Pages müssen die Dateien über HTTPS bereitstehen.
-
-VERSION 3.4:
-- vereinheitlichte Kartenbilder im Ordner cards/
-- Wastl wieder mit gewünschtem Porträt
-- reduzierte Analyseansicht und Holz-Kartentisch
-- optionale Erläuterungen hinter aufklappbaren Hinweisen
+Inhalt: index.html, sw.js, manifest.webmanifest, icon.png, icon.svg, wastl.png sowie 32 WebP-Karten im Ordner cards.
+Alle Dateien in das Hauptverzeichnis des bestehenden GitHub-Repositories kopieren.
+VORHER unbedingt Daten in der App exportieren. Kein Browser-Cache oder lokale Daten löschen.
+Neu: Wastl-Analyse ohne Scrollen, konstante Sprechblase und aufgefächerte Restkarten.
+Repariert: fehlzugeordnete Gras- und Schell-Karten und Sitzplatzzuordnung der ausgespielten Karten.
