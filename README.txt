@@ -1,25 +1,40 @@
-SCHAFKOPFTRACKER – VERSION 3.3 | 32 echte Bildkarten
+SCHAFKOPFTRACKER – VERSION 3.4 (KOMPLETTPAKET)
+================================================
 
-NEU:
-* Alle 32 Karten direkt aus den vier bereitgestellten Bildtafeln ausgeschnitten.
-* 32 eigenständige WebP-Dateien in cards/ (4 Farben × 8 Werte).
-* Überall dasselbe Kartendesign: einfacher Kartenzähler, Stichmodus, Verlauf, Wastl.
-* Alte selbstgezeichnete SVG-Ansichten durch die konkreten Bildkarten ersetzt.
-* Helles, gut lesbares UI der Version 3.2.2 beibehalten.
-* PWA-Manifest, Service Worker und Offline-Cache wieder vollständig enthalten.
-* Speicherformate und Berechnungen unverändert.
+Dieses Paket enthält ALLE erforderlichen Dateien für die
+installierbare PWA, das neue Kartenset und Wastl.
 
-WICHTIG: ALLE Dateien einschließlich des Ordners cards/ hochladen.
-Wenn du beim GitHub-Upload nur index.html ersetzt, fehlen die 32 Bilder!
+DATEIEN IM REPOSITORY-HAUPTVERZEICHNIS:
+  index.html
+  manifest.webmanifest
+  sw.js
+  icon.png
+  icon.svg
+  wastl.png
+  README.txt
+  cards/  (32 einzelne WebP-Spielkarten)
 
-INSTALLATION:
-1. Vorher in der alten App Profil → Daten exportieren.
-2. ZIP entpacken.
-3. Im GitHub-Repository im Hauptverzeichnis alle Dateien hochladen.
-4. Im Hauptverzeichnis zusätzlich den Ordner cards mit 32 .webp-Dateien anlegen/hochladen.
-5. GitHub Pages abwarten; dann App mit Internet öffnen und aktualisieren.
-6. Einmal online laden – danach liegen die 32 Bilder auch offline im Cache.
+INSTALLATION ÜBER GITHUB:
+1. In der bisherigen App unter Einstellungen / Datensicherung
+   die Daten als Datei exportieren.
+2. ZIP entpacken und den INNEREN Ordner öffnen.
+3. Alle 7 Dateien UND den gesamten cards-Ordner direkt ins
+   Stammverzeichnis des bestehenden GitHub-Repositories laden.
+4. Dateien mit denselben Namen überschreiben und committen.
+5. Nach Veröffentlichung mit Internetverbindung die App öffnen
+   und das PWA-Update durchführen; ggf. Seite erneut öffnen.
 
-HINWEIS: Karten wurden direkt aus den bereitgestellten KI-generierten Bildertafeln
-extrahiert. Etwaige Ungenauigkeiten der Originalillustrationen (z.B. Zahlenbild)
-werden nicht neu erfunden oder stillschweigend verändert.
+WICHTIG:
+- NICHT den übergeordneten Ordner hochladen – index.html muss
+  im Stammverzeichnis des Repositories liegen.
+- Die gespeicherten Daten werden weiterhin unter dem bestehenden
+  lokalen Speicherschlüssel verwaltet. Bitte trotzdem sichern.
+- sw.js aktualisiert Offline-Cache inkl. der 32 Bilder und
+  ermöglicht die Aktualisierung bereits installierter PWAs.
+- Für GitHub Pages müssen die Dateien über HTTPS bereitstehen.
+
+VERSION 3.4:
+- vereinheitlichte Kartenbilder im Ordner cards/
+- Wastl wieder mit gewünschtem Porträt
+- reduzierte Analyseansicht und Holz-Kartentisch
+- optionale Erläuterungen hinter aufklappbaren Hinweisen
