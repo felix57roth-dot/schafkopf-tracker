@@ -1,4 +1,4 @@
-/* Wastl 4.3: Einmaliger Simulationslauf über alle acht Stiche.
+/* Wastl 4.4: Vollspielanalyse mit unabhaengigem Offline-Prueflabor, Einmaliger Simulationslauf über alle acht Stiche.
  * Berechnung und Speicherung nur lokal; kein externer Dienst. */
 (function(){
  'use strict';
@@ -38,9 +38,63 @@
  }
  function existingSummary(game){
   const data=cache()?.get(game);if(!data)return '';
-  const grade=cache().grade(data),success=data.reports.filter(x=>x.ok).length;
+  const grade=cache().grade(data,game.type),success=data.reports.filter(x=>x.ok).length;
   const forced=data.reports.filter(x=>x.onlyLegal).length;
-  return `<div class="mc-existing"><b>✅ Ganze Partie bereits simuliert</b><p>${success} Stiche mit Zugvergleich, ${forced} ohne Kartenauswahl · ${data.samples} Verteilungen pro Stich.</p><p>${grade.grade==null?esc(grade.reason):`Experimentelle Modellnote: <strong>${grade.grade}/10</strong> · ${esc(grade.reason)}`}</p><p>Wastls Stichkommentare und die Endansicht nutzen diese Ergebnisse bereits. Du kannst neu rechnen, falls du mehr Verteilungen möchtest.</p></div>`;
+  return `<div class="mc-existing"><b>✅ Ganze Partie bereits simuliert</b><p>${success} Stiche mit Zugvergleich, ${forced} ohne Kartenauswahl · ${data.samples} Verteilungen pro Stich.</p><p>${grade.grade==null?esc(grade.reason):`Vorläufige Modellnote: <strong>${grade.grade}/10</strong> · ${esc(grade.reason)}`}</p><p>Wastls Stichkommentare und die Endansicht nutzen diese Ergebnisse bereits. Du kannst neu rechnen, falls du mehr Verteilungen möchtest.</p></div>`;
+ }
+ function benchmarkSummary(type){
+  const b=cache()?.getBenchmark?.();
+  if(!b)return '<p class="mc-bench-empty">Noch kein Prüflauf vorhanden. Eine validierte Spielnote kann Wastl deshalb noch nicht vergeben.</p>';
+  const pct=n=>(n*100).toFixed(1).replace('.',',')+' Prozentpunkte';
+  const eyes=n=>n.toFixed(1).replace('.',',');
+  const types=[['solo','Solo'],['wenz','Wenz'],['rufspiel','Rufspiel'],['geier','Geier']];
+  const rows=types.map(([id,name])=>{
+   const x=b.types?.[id];if(!x||!x.count)return '';
+   const delta=x.lift;
+   return `<tr><td>${name}</td><td>${x.count}</td><td class="${delta<0?'mc-bench-bad':''}">${delta>0?'+':''}${pct(delta)} ± ${pct(x.margin)}</td></tr>`;
+  }).join('');
+  const assessment=cache().benchmarkAssessment(type);
+  const status=assessment.status==='passed'?'Für diese Spielart: Modellprüfung bestanden.':assessment.status==='too-few'?'Für diese Spielart: noch zu wenige Tests.':'Für diese Spielart: keine ausreichend klare Überlegenheit nachgewiesen.';
+  return `<div class="mc-bench-report"><p><strong>${b.usable} von ${b.requested} Testfällen ausgewertet.</strong> Modellvorteil gegen zufällig legale Karten: ${b.lift>0?'+':''}${pct(b.lift)} (Schwankungsbereich ± ${pct(b.margin)}). Ø ${b.eyeLift>=0?'+':''}${eyes(b.eyeLift)} Teamaugen gegenüber einer zufällig legalen Karte.</p><table><thead><tr><th>Spielart</th><th>Fälle</th><th>Modellvorteil</th></tr></thead><tbody>${rows}</tbody></table><p><strong>${esc(status)}</strong> ${esc(assessment.reason)}</p><p class="mc-bench-caution">Prüfung nur gegen künstliche Spielverläufe desselben Modellumfelds – kein menschlicher Schafkopf-Spielstärkenachweis. Ein Minuswert ist ein Warnsignal.</p></div>`;
+ }
+ function benchProgress(completed,total){
+  const el=container()?.querySelector('[data-bench-output]');if(!el)return;
+  const p=Math.min(100,Math.round(completed/Math.max(1,total)*100));
+  el.innerHTML=`<b>Test läuft: ${completed} / ${total} Vergleichssituationen · ${p}%</b><progress class="mc-progress" value="${completed}" max="${total}"></progress><p class="mc-progress-note">Unbekannte Karten werden geschätzt, anschließend mit zurückgehaltenen Referenzhänden überprüft. Die persönlichen Partien werden nicht benutzt.</p>`;
+ }
+ function runBenchmark(){
+  const modal=container(),selection=activeSelection;
+  if(!modal||!selection)return;
+  const count=Number(modal.querySelector('[data-bench-count]')?.value)||48;
+  if(worker){worker.terminate();worker=null;}
+  const job=++sequence;
+  setRunning(true);benchProgress(0,count);
+  try{
+   worker=new Worker('./wastl-benchmark-worker.js');
+   worker.onmessage=event=>{
+    if(!container()||job!==sequence||event.data?.requestId!==job)return;
+    const payload=event.data;
+    if(payload.kind==='progress'){benchProgress(payload.completed,payload.total);return;}
+    worker?.terminate();worker=null;setRunning(false);
+    const el=container()?.querySelector('[data-bench-output]');
+    if(payload.kind==='error'||!payload.report?.ok){
+     if(el)el.innerHTML=`<div class="mc-warning">${esc(payload.reason||payload.report?.reason||'Prüfberechnung nicht möglich.')}</div>`;
+     return;
+    }
+    try{
+     const stored=cache().saveBenchmark(payload.report);
+     if(el)el.innerHTML=benchmarkSummary(selection.game.type);
+     if(typeof render==='function'&&currentGame()?.id===selection.game.id)render();
+    }catch(e){if(el)el.innerHTML=`<div class="mc-warning">${esc(e.message||e)}</div>`;}
+   };
+   worker.onerror=()=>{
+    if(job!==sequence||!container())return;
+    worker?.terminate();worker=null;setRunning(false);
+    const el=container()?.querySelector('[data-bench-output]');
+    if(el)el.innerHTML='<div class="mc-warning">Prüflabor konnte nicht gestartet werden. Bitte die App einmal online aktualisieren.</div>';
+   };
+   worker.postMessage({requestId:job,options:{cases:count,samples:100,evalRuns:24,seed:0x441022}});
+  }catch(e){setRunning(false);const el=container()?.querySelector('[data-bench-output]');if(el)el.innerHTML=`<div class="mc-warning">${esc(e.message||e)}</div>`;}
  }
  function overlay(game,automatic=false){
   cleanup();
@@ -48,23 +102,30 @@
   const label=typeof stitchTypeName==='function'?stitchTypeName(game.type):game.type;
   const div=document.createElement('div');div.className='mc-overlay';div.dataset.monteDialog='';
   div.innerHTML=`<section class="mc-dialog" role="dialog" aria-modal="true" aria-label="Wastl Ganze Partie simulieren" tabindex="-1">
-   <div class="mc-head"><div><small>WASTL-ENGINE 4.3 · OFFLINE · EXPERIMENTELL</small><h2>Ganze Partie simulieren</h2><p>${esc(label)} · alle acht Stiche in einem Durchlauf</p></div><button type="button" data-monte-close class="mc-close" aria-label="Schließen">×</button></div>
+   <div class="mc-head"><div><small>WASTL-ENGINE 4.4 · OFFLINE · MODELLPRÜFUNG</small><h2>Ganze Partie simulieren</h2><p>${esc(label)} · alle acht Stiche in einem Durchlauf</p></div><button type="button" data-monte-close class="mc-close" aria-label="Schließen">×</button></div>
    ${existingSummary(game)}
    <p class="mc-intro">Wastl simuliert deine Entscheidung bei <strong>allen acht Stichen</strong> mit zum jeweiligen Zeitpunkt plausiblen unbekannten Händen. Die Ergebnisse fließen danach automatisch in seine Erklärungen ein. Du musst nicht jeden Zug einzeln anstoßen.</p>
    <div class="mc-controls"><label>Verteilungen je Stich<select data-monte-count>
     <option value="80">Schnell · 80 × 8 · ohne Spielnote</option><option value="160" selected>Normal · 160 × 8 · Modellnote möglich</option><option value="350">Gründlicher · 350 × 8 · Modellnote möglich</option>
    </select></label><button type="button" data-monte-run class="mc-run">Gesamte Partie simulieren</button></div>
+   <details class="mc-benchmark"><summary>🧪 Engine-Prüflabor <small>Optional: Modellqualität untersuchen</small></summary><div class="mc-bench-body">
+    <p>Vergleiche Wastls Vorschläge mit getrennt ausgewerteten Fortsetzungen auf vollständig bekannten Referenzhänden. Erst wenn das Modell für eine Spielart ausreichend überzeugt, darf es eine vorläufige 1–10-Note anzeigen.</p>
+    <div class="mc-bench-controls"><label>Prüfumfang<select data-bench-count><option value="24">24 Vergleichssituationen (schnell)</option><option value="48" selected>48 Vergleichssituationen (gründlicher)</option></select></label><button type="button" data-bench-run class="mc-bench-button">Modell prüfen</button></div>
+    <div data-bench-output aria-live="polite">${benchmarkSummary(game.type)}</div>
+   </div></details>
    <div class="mc-output" data-monte-output role="status" aria-live="polite"><p>${automatic?'Wähle einmal den Rechenumfang und starte anschließend die Analyse.':'Du kannst die Partie neu berechnen oder die bisherigen Ergebnisse verwenden.'}</p></div>
    <div class="mc-bottom"><button type="button" class="mc-skip" data-monte-close>${cache()?.get(game)?'Zur Analyse zurück':'Ohne Simulation fortfahren'}</button></div>
-   <p class="mc-disclaimer">Die gesamte Berechnung erfolgt auf deinem Gerät. Während des Laufs bleibt die bereits gespeicherte Partie unverändert. Die später tatsächlich gespielten Karten der Gegner werden nicht als Wissen vorweggenommen. Eine 1–10-Modellnote ist nicht mit menschlicher Spielstärke gleichzusetzen.</p>
+   <p class="mc-disclaimer">Die gesamte Berechnung erfolgt auf deinem Gerät. Während des Laufs bleibt die bereits gespeicherte Partie unverändert. Die später tatsächlich gespielten Karten der Gegner werden nicht als Wissen vorweggenommen. Eine 1–10-Modellnote wird nur bei bestandenem Modell-Prüflauf der jeweiligen Spielart freigegeben und bleibt experimentell. Ein solcher Test ersetzt keine Bewertung durch erfahrene Spieler.</p>
   </section>`;
   document.body.appendChild(div);div.querySelector('.mc-dialog')?.focus();
  }
  function setRunning(isRunning){
   const modal=container();if(!modal)return;
-  const run=modal.querySelector('[data-monte-run]'),select=modal.querySelector('[data-monte-count]');
+  const run=modal.querySelector('[data-monte-run]'),select=modal.querySelector('[data-monte-count]'),bench=modal.querySelector('[data-bench-run]'),benchSelect=modal.querySelector('[data-bench-count]');
   if(run){run.disabled=isRunning;run.textContent=isRunning?'Simulation läuft …':'Erneut simulieren';}
   if(select)select.disabled=isRunning;
+  if(bench)bench.disabled=isRunning;
+  if(benchSelect)benchSelect.disabled=isRunning;
  }
  function showProgress(completed,total){
   const out=container()?.querySelector('[data-monte-output]');if(!out)return;
@@ -73,7 +134,7 @@
  }
  function showDone(data){
   const out=container()?.querySelector('[data-monte-output]');if(!out)return;
-  const grade=cache().grade(data);
+  const grade=cache().grade(data,activeSelection?.game?.type);
   const results=data.reports.map((r,i)=>{
    const desc=r.ok ? `${r.sampleCount} Verteilungen · ${r.clearAlternative?'Modellalternative erkennbar':'kein klar besserer Zug'}`
     :r.onlyLegal?'Bedienpflicht · keine Alternative':`Nicht bewertbar: ${r.reason||'Keine Daten'}`;
@@ -118,6 +179,7 @@
    const g=currentGame();if(!g)return;
    prompted.add(cache().fingerprint(g));overlay(g);return;
   }
+  if(event.target.closest('[data-bench-run]')){event.preventDefault();event.stopImmediatePropagation();runBenchmark();return;}
   if(event.target.closest('[data-monte-run]')){event.preventDefault();event.stopImmediatePropagation();simulate();return;}
   if(event.target.closest('[data-monte-close]')||event.target.matches('[data-monte-dialog]')){
    event.preventDefault();event.stopImmediatePropagation();cleanup();return;

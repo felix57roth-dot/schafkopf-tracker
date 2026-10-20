@@ -34,3 +34,20 @@
 .wm43-detail td,.wm43-detail th{text-align:left;border-bottom:1px solid #cadbcc;padding:5px 3px}
 .wm43-detail .wm43-caution{font-size:11px;color:#546e5a}
 @media(max-width:365px){.mc-turn-list li{flex-direction:column;gap:2px}.mc-dialog{max-height:calc(100dvh - 22px)}}
+/* Version 4.4: separate, freiwillige Qualitaetskontrolle */
+.mc-benchmark{margin-top:16px;border-top:1px solid #d1d9cd;padding-top:14px;color:#2a4437}
+.mc-bench-title b{font-size:15px}.mc-bench-title small{display:block;color:#667a6b;font-size:11px;margin-top:2px}
+.mc-benchmark>p{font-size:12px;margin:9px 0 12px;line-height:1.55}
+.mc-bench-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+.mc-bench-controls label{font-size:12px;font-weight:750}.mc-bench-controls select{margin-top:5px;display:block;width:100%;min-height:40px;background:#fff;border:1px solid #c7d0c4;border-radius:10px;padding:8px;color:#213a2d;font-size:12px}
+.mc-bench-button{border:1px solid #2e654f;background:#e2ede6;color:#224f36;font-weight:800;border-radius:11px;padding:10px 12px;min-height:41px}
+.mc-bench-button:disabled{opacity:.5}
+.mc-bench-empty{font-size:12px;color:#657262;margin:10px 0 0}
+.mc-bench-report{padding:10px 0}.mc-bench-report p{font-size:12px;line-height:1.5;margin:6px 0 10px}
+.mc-bench-report table{font-size:11px;width:100%;border-collapse:collapse}.mc-bench-report th,.mc-bench-report td{padding:6px 5px;border-bottom:1px solid #d7ded4;text-align:left}.mc-bench-report th:last-child,.mc-bench-report td:last-child{text-align:right}.mc-bench-bad{color:#9b3826;font-weight:750}
+.mc-bench-report .mc-bench-caution{font-size:11px;color:#7d684d}
+@media(max-width:365px){.mc-bench-controls{grid-template-columns:1fr}.mc-bench-button{width:100%}}
+
+.mc-benchmark>summary{font-weight:800;cursor:pointer;list-style-position:inside;font-size:14px;color:#264a35;padding:9px 0}
+.mc-benchmark>summary small{display:block;margin-left:22px;font-size:11px;color:#728071;font-weight:500}
+.mc-bench-body{padding-bottom:8px}

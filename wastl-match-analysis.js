@@ -9,7 +9,7 @@
  if(root)root.WastlMatchAnalysis=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const VERSION='4.3.0', STORAGE='wastl-match-model-v43';
+ const VERSION='4.3.0', STORAGE='wastl-match-model-v43', BENCH_STORAGE='wastl-benchmark-v44', BENCH_VERSION='4.4.0';
  const asNumber=n=>Number.isFinite(Number(n))?Number(n):0;
  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function fingerprint(game){
@@ -37,7 +37,7 @@
  // Interpretable relative anchor: a random LEGAL decision corresponds to 5/10,
  // highest modeled win rate to 10/10. This is not validated human calibration.
  // Ignore apparent regret when it does not exceed paired-sample uncertainty.
- function grade(data){
+ function modelGrade(data){
   if(!data?.reports||data.reports.length!==8)return {grade:null,reason:'Bitte zuerst die ganze Partie simulieren.'};
   const considered=data.reports.filter(x=>x?.ok&&x.candidates?.length>1&&x.sampleCount>=160);
   if(considered.length<3)return {grade:null,reason:`Nur ${considered.length} auswertbare eigene Entscheidungen mit mindestens 160 Verteilungen. Keine belastbare 1–10-Note möglich.`};
@@ -62,6 +62,40 @@
   const averageN=Math.round(meanSample/informed);
   return {grade:value,informative:informed,considered:considered.length,clear,averageN,relative,
    reason:`Vorläufige Modellnote: ${informed} unterscheidbare Entscheidungen (Ø ${averageN} Verteilungen), ${clear} erkennbar schlechtere Züge. Skala: 10 = beste Modellalternativen; 5 ≈ zufällig gewählte legale Karten. Gemessene Nachteile werden um die Stichprobenunsicherheit reduziert. Keine validierte menschliche Spielstärkenote.`};
+ }
+ // Ergebnisse des getrennten Prueflabors; kein Nachweis menschlicher Spielstaerke.
+ function saveBenchmark(report){
+  if(!report||report.version!==BENCH_VERSION||report.model!=='wastl-policy-4.2'||!report.ok)throw Error('Pruefprotokoll ungueltig');
+  const {cases,errors,...summary}=report; // Only small, non-personal aggregate data.
+  const b={...summary,saved:Date.now()};
+  try{root.localStorage?.setItem(BENCH_STORAGE,JSON.stringify(b));}catch{};
+  benchmarkMemory=b;return b;
+ }
+ let benchmarkMemory=null;
+ function getBenchmark(){
+  if(benchmarkMemory)return benchmarkMemory;
+  try{
+   const b=JSON.parse(root.localStorage?.getItem(BENCH_STORAGE)||'null');
+   if(b?.version===BENCH_VERSION&&b.model==='wastl-policy-4.2'&&b.ok){benchmarkMemory=b;return b;}
+  }catch{}
+  return null;
+ }
+ function benchmarkAssessment(type){
+  const b=getBenchmark();
+  if(!b)return {status:'missing',reason:'Noch kein unabhaengiger Testlauf durchgefuehrt.'};
+  const segment=b.types?.[type];
+  if(!segment||segment.count<12)return {status:'too-few',reason:`Nur ${segment?.count||0} Testentscheidungen fuer diese Spielart (mindestens 12 erforderlich).`};
+  if(segment.lift-(segment.margin||1)<=.015)return {status:'inconclusive',reason:'Kein ausreichend klarer Vorteil gegen die Zufallsreferenz nachgewiesen.'};
+  if(segment.modelError>=.10)return {status:'inconclusive',reason:'Modellprognosen weichen zu stark von den zurueckgehaltenen Ergebnissen ab.'};
+  return {status:'passed',reason:'Im kuenstlichen Vergleichslabor bestanden; noch nicht durch menschliche Experten kalibriert.'};
+ }
+ function grade(data,type){
+  const raw=modelGrade(data);
+  if(raw.grade==null)return raw;
+  const assessment=benchmarkAssessment(type);
+  if(assessment.status!=='passed')return {grade:null,provisionalIndex:raw.grade,assessment:assessment.status,
+   reason:`1–10-Note aus Sicherheitsgruenden zurueckgehalten: ${assessment.reason} Der rechnerische Zufallsvergleich ergibt einen experimentellen Index, aber keine nachgewiesene Spielstaerke.`};
+  return {...raw,reason:raw.reason+' '+assessment.reason};
  }
  function cardLabel(id){
   const parts=String(id||'').split('-');
@@ -89,5 +123,5 @@
   const row=r.candidates.slice(0,8).map(c=>`<tr><td>${escape(cardLabel(c.card))}${c.card===r.actual?' (dein Zug)':''}</td><td>${Math.round(c.winRate*100)} %</td><td>${asNumber(c.meanEyes).toFixed(1)}</td></tr>`).join('');
   return `<section class="wm43-detail"><h4>🎲 Berechneter Zugvergleich</h4><p>${escape(explanation(game,step))}</p><table><thead><tr><th>Spielzug</th><th>Modell-Siege</th><th>Ø Teamaugen</th></tr></thead><tbody>${row}</tbody></table><p class="wm43-caution">${r.sampleCount} Verteilungen · ${escape(r.method||'Monte-Carlo-Verteilung mit heuristischen Mitspielern')}. Werte sind keine kalibrierten Wahrscheinlichkeiten. Die Unsicherheit bezieht sich nur auf die Stichprobe, nicht auf Modellfehler.</p></section>`;
  }
- return Object.freeze({VERSION,fingerprint,get,save,grade,item,explanation,detail});
+ return Object.freeze({VERSION,fingerprint,get,save,grade,modelGrade,saveBenchmark,getBenchmark,benchmarkAssessment,item,explanation,detail});
 });

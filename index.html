@@ -1916,7 +1916,7 @@ function wastlResult(game,info){
  // 4.3: Keine frei berechnete Ergebnisnote. Nur die explizit dokumentierte
  // Monte-Carlo-Modellnote relativ zu zufällig legalen Zügen ist zulässig.
  const match=window.WastlMatchAnalysis?.get(game);
- const model=window.WastlMatchAnalysis?.grade(match);
+ const model=window.WastlMatchAnalysis?.grade(match,game.type);
  grade=match?(model?.grade??null):null;
  gradeReason=match?(model?.reason||'Modellbewertung derzeit nicht möglich.'):'Noch keine ganze Partie simuliert. Eine Ergebnisnote allein aus Sieg oder Niederlage wäre irreführend.';
  return {ok:true,individual:false,myEyes:result.myEyes,theirEyes:result.theirEyes,teamWinner,myResult,grade,gradeReason};
@@ -1961,12 +1961,9 @@ function wastlFullScreen(game,info,t,step,handState){
    return `<span class="ws-fan-card${id===t.alternative?.cardId?' highlight':''}" style="--tilt:${off*4.2}deg;--lift:${Math.abs(off)*2}px;--z:${i+1}">${cardSVG(CARD_MAP[id])}</span>`;
  }).join(''):`<div class="ws-empty-hand">Alle Karten gespielt – die Partie ist beendet.</div>`;
  const winner=t.raw.winnerSeat?mentorSeatNameShort(t.raw.winnerSeat,game):'Noch offen';
- const modelEntry=window.WastlMatchAnalysis?.item(game,step);
- const detailText=modelEntry
-   ? (t.notes||[]).filter(n=>n.type==='warn').map(mentorHint).join('')
-   : (t.notes?.length?t.notes.map(mentorHint).join(''):'<p>Zu diesem Stich liegen keine weiteren Hinweise vor.</p>');
+ const detailText=t.notes?.length?t.notes.map(mentorHint).join(''):'<p>Zu diesem Stich liegen keine weiteren Hinweise vor.</p>';
  const modelDetail=window.WastlMatchAnalysis?.detail(game,step)||'';
- const alt=!modelEntry&&t.alternative?`<div class="ws-detail-alt">${cardSVG(CARD_MAP[t.alternative.cardId])}<p><strong>Alternative Überlegung:</strong> ${esc(t.alternative.reason)}</p></div>`:'';
+ const alt=t.alternative?`<div class="ws-detail-alt">${cardSVG(CARD_MAP[t.alternative.cardId])}<p><strong>Alternative Überlegung:</strong> ${esc(t.alternative.reason)}</p></div>`:'';
  const reason=info.valid.ready?'<p>Wastl ist ein lokaler Ratgeber. Ein Vorschlag ist keine sichere optimale Spielstrategie.</p>':`<p>${esc(info.valid.reason||'Die Erfassung ist nicht vollständig.')}</p>`;
  return `<div class="ws-fullscreen" role="dialog" aria-modal="true" aria-label="Wastl Stichanalyse im Vollbild">
    <header class="ws-topbar">
