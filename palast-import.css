@@ -22,3 +22,21 @@
 .palast-lead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px;font-size:12px;color:#3a604b;font-weight:700}
 .palast-lead select{min-width:0;max-width:62%;border:1px solid #bfd6c6;background:white;border-radius:9px;padding:8px;font-size:11px;color:#17442f}
 .palast-lead select:disabled{opacity:.6}
+
+.palast-proposals{border-top:1px solid #edf1ec;padding-top:7px;margin-top:4px;display:flex;flex-wrap:wrap;gap:5px}
+.palast-proposals>span{width:100%;font-size:10px;font-weight:650;color:#687a70}
+.palast-proposals button{padding:5px 7px;border-radius:8px;border:1px solid #bfdcc9;background:#eff9f1;color:#245a41;cursor:pointer;font-size:11px}
+.palast-manual-label{font-size:11px;font-weight:750;color:#16764b}
+
+.palast-pick-open{margin-top:3px;border:1px solid #cae0d0;background:#e6f4ec;border-radius:10px;color:#205840;font-weight:800;padding:9px 5px;font-size:12px;cursor:pointer}
+.palast-picker-backdrop{position:fixed;inset:0;z-index:200000;background:#071a14bb;display:flex;justify-content:center;align-items:center;padding:12px}
+.palast-picker{height:min(88dvh,760px);width:min(100%,540px);background:#fff9ed;color:#163c2a;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;padding:14px}
+.palast-picker-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.palast-picker-top strong{font-size:18px}
+.palast-picker-top button{border:none;background:#e8e7dd;border-radius:10px;padding:8px 12px;color:#24503b;font-size:18px}
+.palast-picker p{font-size:12px;margin:9px 0 12px;color:#536b59}
+.palast-picker-suits{overflow-y:auto;overscroll-behavior:contain;padding:0 4px 16px}
+.palast-picker h4{font-size:15px;color:#1e523a;margin:12px 0 8px}
+.palast-picker-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px}
+.palast-picker-card{min-width:0;border:1px solid #dce4d9;border-radius:8px;background:#fff;display:flex;flex-direction:column;align-items:center;padding:3px 1px 4px;gap:3px;cursor:pointer}
+.palast-picker-card img{width:100%;height:auto;aspect-ratio:320/500;object-fit:contain}.palast-picker-card span{font-size:8px;color:#21633d}
+.palast-picker-card.used{background:#f5f0e9;opacity:.62}.palast-picker-card.used span{color:#9a5b3c}

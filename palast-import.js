@@ -12,10 +12,10 @@ const PALAST_SUIT_LABEL={eichel:'Eichel',gras:'Gras',herz:'Herz',schell:'Schell'
 const PALAST_CHOICE_ORDER=['eichel','gras','herz','schell'].flatMap(s=>['A','10','K','O','U','9','8','7'].map(r=>s+'-'+r));
 const PALAST_TEMPLATE_PIXELS=PALAST_SIGNATURES.map(([id,s])=>{const binary=atob(s),bits=new Uint8Array(binary.length);for(let i=0;i<bits.length;i++)bits[i]=binary.charCodeAt(i);return {id,bits};});
 function palastNew(){
- return {image:null,small:null,name:'',tricks:Array(32).fill(''),scores:Array(32).fill(999),fileName:'',fileSize:0,
+ return {image:null,small:null,name:'',tricks:Array(32).fill(''),scores:Array(32).fill(999),alternatives:Array.from({length:32},()=>[]),userEdited:Array(32).fill(false),fileName:'',fileSize:0,
  type:'rufspiel',calledSuit:'gras',trumpSuit:'herz',firstSeat:'vh',leaders:Array(8).fill('auto'),declarerSeat:'hh',mySeat:'mh',
  seatNames:{vh:'Spieler VH',mh:'Spieler MH',hh:'Spieler HH',g:'Spieler G'},
- date:nowISO(),gameId:'',recognized:false,notice:'',selected:0};
+ date:nowISO(),gameId:'',recognized:false,notice:'',selected:0,picking:-1};
 }
 function palastImageCanvas(img){const c=document.createElement('canvas');c.width=600;c.height=1350;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,600,1350);return c;}
 function palastPatch(ctx,x,y){
@@ -24,7 +24,17 @@ function palastPatch(ctx,x,y){
  const rgba=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,10,20).data;
  const rgb=new Uint8Array(600);for(let i=0,j=0;i<rgba.length;i+=4){rgb[j++]=rgba[i];rgb[j++]=rgba[i+1];rgb[j++]=rgba[i+2];}return rgb;
 }
-function palastPixelDistance(a,b){let value=0;for(let j=0;j<a.length;j++)value+=Math.abs(a[j]-b[j]);return value/a.length;}
+function palastPixelDistance(a,b){
+ // Lettering and suit symbol carry more information than the picture detail below.
+ let value=0,weightSum=0;
+ for(let px=0;px<200;px++){
+  const j=px*3,y=Math.floor(px/10),w=y<9?1.5:1;
+  // Equal channel balance; RGB keeps red hearts distinct from green leaves.
+  value+=w*(Math.abs(a[j]-b[j])+Math.abs(a[j+1]-b[j+1])+Math.abs(a[j+2]-b[j+2]));
+  weightSum+=w*3;
+ }
+ return value/weightSum;
+}
 // Returns optimal non-repeating proposals. Hungarian algorithm, O(n^3).
 function palastAssign(cost){
  const n=cost.length,p=new Array(n+1).fill(0),u=new Array(n+1).fill(0),v=new Array(n+1).fill(0),way=new Array(n+1).fill(0);
@@ -39,19 +49,38 @@ function palastAssign(cost){
  }
  const assignment=new Array(n);for(let j=1;j<=n;j++)assignment[p[j]-1]=j-1;return assignment;
 }
-function palastRecognize(c){
- const ctx=c.getContext('2d',{willReadFrequently:true}),matrix=[],selected=[];
+function palastRecognize(c,locked={}){
+ const ctx=c.getContext('2d',{willReadFrequently:true}),matrix=[];
+ // Schafkopf Palast stacks the cards at slightly different vertical positions.
+ // Wider offsets improve tolerance without internet/OCR or fixed external APIs.
  for(let t=0;t<8;t++)for(let k=0;k<4;k++){
   const [bx,by]=PALAST_POSITIONS[t],x=bx+k*40;
-  const crops=[];for(const dx of [-2,-1,0,1,2])for(const dy of [-3,-2,-1,0,1,2,3])crops.push(palastPatch(ctx,x+dx,by+dy));
-  matrix.push(PALAST_TEMPLATE_PIXELS.map(ref=>{let best=Infinity;for(const pix of crops)best=Math.min(best,palastPixelDistance(pix,ref.bits));return best;}));
+  const crops=[];
+  for(const dx of [-4,-2,0,2,4])for(const dy of [-13,-10,-7,-4,-1,2,5,8])crops.push(palastPatch(ctx,x+dx,by+dy));
+  matrix.push(PALAST_TEMPLATE_PIXELS.map(ref=>{
+   let best=Infinity;for(const pix of crops)best=Math.min(best,palastPixelDistance(pix,ref.bits));return best;
+  }));
  }
- const assigned=palastAssign(matrix);
- for(let i=0;i<32;i++){const k=assigned[i];selected.push({id:PALAST_TEMPLATE_PIXELS[k].id,score:matrix[i][k]});}
- return selected;
+ // Preserve manual corrections when recognition is run again.
+ const fixedIndices=Object.keys(locked).map(Number).filter(i=>i>=0&&i<32&&PALAST_TEMPLATE_PIXELS.some(r=>r.id===locked[i]));
+ const reserved=new Set(fixedIndices.map(i=>locked[i]));
+ if(reserved.size!==fixedIndices.length)throw new Error('Einige manuell ausgewählte Karten sind doppelt vergeben. Bitte erst die doppelten Karten korrigieren.');
+ const variable=Array.from({length:32},(_,i)=>i).filter(i=>!fixedIndices.includes(i));
+ const reference=PALAST_TEMPLATE_PIXELS.map((r,i)=>i).filter(i=>!reserved.has(PALAST_TEMPLATE_PIXELS[i].id));
+ const result=new Array(32);
+ fixedIndices.forEach(i=>{result[i]={id:locked[i],score:0,alternatives:[locked[i]]};});
+ if(variable.length&&variable.length===reference.length){
+  const match=palastAssign(variable.map(i=>reference.map(j=>matrix[i][j])));
+  variable.forEach((i,rank)=>{
+   const assignedIndex=reference[match[rank]],selected=PALAST_TEMPLATE_PIXELS[assignedIndex];
+   const shortlist=reference.map(j=>({id:PALAST_TEMPLATE_PIXELS[j].id,score:matrix[i][j]})).sort((a,b)=>a.score-b.score).slice(0,4);
+   result[i]={id:selected.id,score:matrix[i][assignedIndex],alternatives:shortlist};
+  });
+ }
+ return result;
 }
 function palastImageSlice(c,x,y,width=164,height=105,targetWidth=328){const crop=document.createElement('canvas');crop.width=targetWidth;crop.height=Math.round(targetWidth*height/width);crop.getContext('2d').drawImage(c,x,y,width,height,0,0,crop.width,crop.height);return crop.toDataURL('image/jpeg',.82);}
-function palastScoreLabel(score){return score<32?'guter Vorschlag':score<55?'prüfen':'unsicher'};
+function palastScoreLabel(score){return score<26?'Vorschlag':score<46?'bitte prüfen':'unsicher';}
 function palastSeatSelect(value,attr){return PALAST_SEATS.map(s=>`<option value="${s}" ${s===value?'selected':''}>${{vh:'Vorhand',mh:'Mittelhand',hh:'Hinterhand',g:'Geber'}[s]}</option>`).join('');}
 function palastReview(){
  const p=palastDraft;if(!p)return {errors:['Kein Bild geladen.'],notes:[],valid:false};
@@ -89,7 +118,7 @@ function palastReview(){
    }
   }
  }
- if(p.recognized){const low=p.scores.filter(n=>n>=55).length;notes.unshift(`${low} automatische Kartenvorschläge sind besonders unsicher. Bitte alle 32 anhand des Screenshots prüfen.`);}
+ if(p.recognized){const low=p.scores.filter((n,i)=>!p.userEdited[i]&&n>=46).length;notes.unshift(`${low} Vorschläge sind besonders unsicher. Auch die übrigen erkannten Karten bitte anhand des Screenshots kontrollieren.`);}
  return {errors,notes,valid:errors.length===0,eyes};
 }
 function palastBuildTricks(p){
@@ -126,8 +155,11 @@ function palastImportUI(){
  const review=valid.errors.map(s=>`<p class="palast-err">${esc(s)}</p>`).join('')+valid.notes.map(s=>`<p class="palast-note">${esc(s)}</p>`).join('');
  const renders=hasPicture?Array.from({length:8},(_,ti)=>{const [x,y]=PALAST_POSITIONS[ti];return `<section class="palast-trick" id="palast-trick-${ti}"><div class="palast-trick-h"><b>Stich ${ti+1}</b><span>${p.tricks.slice(ti*4,ti*4+4).filter(Boolean).length} / 4 Karten</span></div><label class="palast-lead">Erster Ausspieler <select data-palast-leader="${ti}" ${ti===0?'disabled':''}><option value="auto" ${p.leaders[ti]==='auto'?'selected':''}>${ti===0?'Wie oben festgelegt':'Automatisch aus dem vorherigen Stich'}</option>${PALAST_SEATS.map(v=>`<option value="${v}" ${p.leaders[ti]===v?'selected':''}>${{vh:'VH – Vorhand',mh:'MH – Mittelhand',hh:'HH – Hinterhand',g:'G – Geber'}[v]}</option>`).join('')}</select></label>
  <img loading="lazy" class="palast-crop" src="${palastImageSlice(p.small,x,y-11,162,118,324)}" alt="Bildauszug aus Stich ${ti+1}">
- <div class="palast-trick-grid">${Array.from({length:4},(_,ci)=>{const at=ti*4+ci,id=p.tricks[at],score=p.scores[at];return `<label class="palast-card-choice"><span>Karte ${ci+1}${p.recognized?` <small>${palastScoreLabel(score)}</small>`:''}</span><select data-palast-card="${at}" aria-label="Stich ${ti+1}, Karte ${ci+1}"><option value="">Bitte auswählen</option>${PALAST_CHOICE_ORDER.map(v=>`<option value="${v}" ${v===id?'selected':''}>${CARD_MAP[v].name}</option>`).join('')}</select>${id?`<img class="palast-mini" src="cards/${id}.webp" alt="${esc(CARD_MAP[id]?.name||id)}">`:''}</label>`;}).join('')}</div></section>`;}).join(''):'';
- return `<div class="content-page palast-import"><button type="button" class="btn ghost" id="palastCancel">← Zurück zu Wastl</button><div class="palast-hero"><h2>Schafkopf Palast importieren</h2><p>Alle Daten bleiben auf deinem Gerät. Die automatische Kartenerkennung liefert <b>Vorschläge</b>, keine garantierte Erkennung.</p></div>
+ <div class="palast-trick-grid">${Array.from({length:4},(_,ci)=>{const at=ti*4+ci,id=p.tricks[at],score=p.scores[at];return `<label class="palast-card-choice"><span>Karte ${ci+1}${p.recognized?` <small>${p.userEdited[at]?'manuell geprüft':palastScoreLabel(score)}</small>`:''}</span><select data-palast-card="${at}" aria-label="Stich ${ti+1}, Karte ${ci+1}"><option value="">Bitte auswählen</option>${PALAST_CHOICE_ORDER.map(v=>`<option value="${v}" ${v===id?'selected':''}>${CARD_MAP[v].name}</option>`).join('')}</select>${id?`<img class="palast-mini" src="cards/${id}.webp" alt="${esc(CARD_MAP[id]?.name||id)}">`:''}
+ ${p.recognized&&!p.userEdited[at]&&p.alternatives[at]?.length?`<div class="palast-proposals"><span>Andere Vorschläge:</span>${p.alternatives[at].filter(v=>v.id!==id).slice(0,3).map(v=>`<button type="button" data-palast-suggest="${at}" data-card="${v.id}">${esc(CARD_MAP[v.id].name)}</button>`).join('')}</div>`:''}
+ ${p.userEdited[at]?'<span class="palast-manual-label">✓ Manuell korrigiert</span>':''}<button type="button" class="palast-pick-open" data-palast-pick="${at}">🃏 Karte aus Bildern wählen</button></label>`;}).join('')}</div></section>`;}).join(''):'';
+ const picker=p.picking>=0?`<div class="palast-picker-backdrop" role="dialog" aria-modal="true" aria-label="Spielkarte auswählen"><div class="palast-picker"><div class="palast-picker-top"><strong>Stich ${Math.floor(p.picking/4)+1} · Karte ${p.picking%4+1}</strong><button type="button" id="palastPickClose" aria-label="Kartenwahl schließen">✕</button></div><p>Tippe die passende Karte an. Schon in anderen Stichen vergebene Karten sind markiert.</p><div class="palast-picker-suits">${['eichel','gras','herz','schell'].map(suit=>`<section><h4>${PALAST_SUIT_LABEL[suit]}</h4><div class="palast-picker-grid">${['A','10','K','O','U','9','8','7'].map(rank=>{const id=suit+'-'+rank,used=p.tricks.some((v,i)=>v===id&&i!==p.picking);return `<button type="button" class="palast-picker-card ${used?'used':''}" data-palast-pick-choice="${id}" aria-label="${esc(CARD_MAP[id].name)}${used?', bereits verwendet':''}"><img loading="lazy" src="cards/${id}.webp" alt=""><span>${used?'Bereits':'Wählen'}</span></button>`;}).join('')}</div></section>`).join('')}</div></div></div>`:'';
+ return `<div class="content-page palast-import">${picker}<button type="button" class="btn ghost" id="palastCancel">← Zurück zu Wastl</button><div class="palast-hero"><h2>Schafkopf Palast importieren</h2><p>Alle Daten bleiben auf deinem Gerät. Die Kartenerkennung vergleicht die Karten mit Bildvorlagen, bietet Alternativen an und bewahrt deine Korrekturen. <b>Alle Vorschläge müssen geprüft werden.</b></p></div>
  <section class="card palast-section"><label class="palast-upload"><span>📷 Geteiltes Spielbild auswählen</span><input id="palastFile" type="file" accept="image/png,image/jpeg,image/webp"></label>${!hasPicture?'<p class="help">Wähle das vollständige Hochformatbild aus Schafkopf Palast mit vier Spielerhänden und allen acht Stichen. Unterstützt wird vorerst die bekannte Bildaufteilung im Format ca. 600 × 1350.</p>':`<p class="palast-image-meta">${esc(p.fileName)} · ${Math.round(p.fileSize/1024)} KB</p><img class="palast-screenshot" src="${p.image}" alt="Importiertes Schafkopf-Palast-Bild"><div class="palast-actions"><button type="button" class="btn" id="palastRecognize">↻ Karten automatisch vorschlagen</button><button type="button" class="btn secondary" id="palastClearCards">Kartenzuordnung leeren</button></div>`}</section>
  ${hasPicture?`<section class="card palast-section"><h3>Spielangaben</h3>${fields}</section><section class="card palast-section"><div class="palast-section-title"><h3>Stiche und Karten kontrollieren</h3><span class="badge">${p.tricks.filter(Boolean).length}/32</span></div><p class="help">Links nach rechts: Reihenfolge, in der die Karten gespielt wurden. Vergleiche jeden Bildausschnitt mit den Vorschlägen und korrigiere Fehler. Der Stichgewinner wird aus den Karten berechnet.</p>${renders}</section><section class="card palast-section"><h3>Prüfergebnis</h3>${review}<button id="palastSave" class="btn" type="button" ${!valid.valid?'disabled':''}>✓ Geprüfte Partie bei Wastl speichern</button><p class="help">Erst nach deiner Bestätigung wird die Partie als Training gespeichert. Es werden keine Geldbeträge oder Spielabende verändert.</p></section>`:''}</div>`;
 }
@@ -138,7 +170,7 @@ function palastLoad(file){
  const reader=new FileReader();reader.onerror=()=>alert('Die Datei konnte nicht gelesen werden.');reader.onload=()=>{
   const img=new Image();img.onerror=()=>alert('Das Bild konnte nicht geöffnet werden.');img.onload=()=>{
    const ratio=img.width/img.height;if(Math.abs(ratio-600/1350)>.055){alert('Dieses Bild hat eine andere Aufteilung als die bekannten geteilten Palast-Spielbilder (ca. 600 × 1350). Der Import kann die Kartenbereiche eventuell nicht richtig finden.');}
-   palastDraft.small=palastImageCanvas(img);palastDraft.image=reader.result;palastDraft.fileName=file.name;palastDraft.fileSize=file.size;palastDraft.recognized=false;
+   palastDraft.small=palastImageCanvas(img);palastDraft.image=reader.result;palastDraft.fileName=file.name;palastDraft.fileSize=file.size;palastDraft.recognized=false;palastDraft.tricks=Array(32).fill('');palastDraft.scores=Array(32).fill(999);palastDraft.userEdited=Array(32).fill(false);palastDraft.alternatives=Array.from({length:32},()=>[]);
    // Let user intentionally trigger matching, since proposals must be reviewed.
    palastRefresh(false);window.scrollTo(0,0);
   };img.src=reader.result;
@@ -148,7 +180,7 @@ function palastSave(){
  const p=palastDraft,check=palastReview();if(!check.valid){alert('Bitte prüfe die Karten: '+check.errors.join(' '));palastRefresh();return;}
  if(!confirm('Hast du alle 32 Karten mit dem Screenshot verglichen? Die Partie wird nur lokal zu Wastls Training gespeichert.'))return;
  const ts=palastBuildTricks(p),id=p.gameId.trim()?'palast-'+p.gameId.trim():'palast-'+uid();if(stitch.archive.some(g=>g.id===id)){alert('Diese Partie ist bereits gespeichert.');return;}
- const game=palastAsGame(p,ts);game.id=id;game.started=p.date+'T12:00:00';game.finished=new Date().toISOString();game.fairPlay=true;game.partnerMode=p.type==='rufspiel'?'auto':'manual';
+ const game=palastAsGame(p,ts);game.id=id;game.source='palast';game.palastGameId=p.gameId.trim();game.started=p.date+'T12:00:00';game.finished=new Date().toISOString();game.fairPlay=true;game.partnerMode=p.type==='rufspiel'?'auto':'manual';
  game.partnerSeat=null;game.linkedGameId=null;game.role=stitchMyDeclarerTeam(game)?'declarer':'defender';
  for(const t of ts)t.winner=stitchTeamForSeat(t.winnerSeat,game)||'pending';
  const previousLength=stitch.archive.length;stitch.archive.push(game);
@@ -161,15 +193,20 @@ document.addEventListener('click',e=>{
  if(e.target.closest('#palastCancel')){palastDraft=null;palastRefresh(false);window.scrollTo(0,0);return;}
  if(e.target.closest('#palastRecognize')){
   if(!palastDraft?.small)return;const button=e.target.closest('button');button.disabled=true;button.textContent='Erkennung läuft …';
-  setTimeout(()=>{try{const got=palastRecognize(palastDraft.small);palastDraft.tricks=got.map(x=>x.id);palastDraft.scores=got.map(x=>x.score);palastDraft.recognized=true;palastRefresh();flash('32 Vorschläge erstellt · bitte vollständig kontrollieren');}catch(err){console.error(err);alert('Erkennung fehlgeschlagen. Bitte die Karten manuell auswählen.');button.disabled=false;}},50);return;
+  setTimeout(()=>{try{const locked=Object.fromEntries(palastDraft.userEdited.flatMap((is,i)=>is&&palastDraft.tricks[i]?[[i,palastDraft.tricks[i]]]:[]));const got=palastRecognize(palastDraft.small,locked);palastDraft.tricks=got.map(x=>x.id);palastDraft.scores=got.map(x=>x.score);palastDraft.alternatives=got.map(x=>x.alternatives);palastDraft.recognized=true;palastRefresh();flash('Kartenvorschläge aktualisiert · Änderungen bleiben erhalten');}catch(err){console.error(err);alert(err?.message||'Erkennung fehlgeschlagen. Bitte die Karten manuell auswählen.');button.disabled=false;}},50);return;
  }
- if(e.target.closest('#palastClearCards')){if(!confirm('Alle Kartenzuordnungen leeren?'))return;palastDraft.tricks.fill('');palastDraft.scores.fill(999);palastDraft.recognized=false;palastRefresh();return;}
+ if(e.target.closest('#palastPickClose')||e.target.classList.contains('palast-picker-backdrop')){palastDraft.picking=-1;palastRefresh();return;}
+ const pick=e.target.closest('[data-palast-pick]');if(pick&&palastDraft){palastDraft.picking=Number(pick.dataset.palastPick);palastRefresh();return;}
+ const choice=e.target.closest('[data-palast-pick-choice]');if(choice&&palastDraft&&palastDraft.picking>=0){const i=palastDraft.picking,id=choice.dataset.palastPickChoice;palastDraft.tricks[i]=id;palastDraft.scores[i]=999;palastDraft.userEdited[i]=true;palastDraft.picking=-1;palastRefresh();return;}
+ const suggest=e.target.closest('[data-palast-suggest]');
+ if(suggest&&palastDraft){const i=Number(suggest.dataset.palastSuggest),id=suggest.dataset.card;if(i>=0&&i<32&&CARD_MAP[id]){palastDraft.tricks[i]=id;palastDraft.scores[i]=999;palastDraft.userEdited[i]=true;palastRefresh();}return;}
+ if(e.target.closest('#palastClearCards')){if(!confirm('Alle Kartenzuordnungen leeren?'))return;palastDraft.tricks.fill('');palastDraft.scores.fill(999);palastDraft.userEdited.fill(false);palastDraft.alternatives=Array.from({length:32},()=>[]);palastDraft.recognized=false;palastRefresh();return;}
  if(e.target.closest('#palastSave')){palastSave();return;}
 },true);
 document.addEventListener('change',e=>{
  if(e.target.id==='palastFile'){const file=e.target.files?.[0];if(file)palastLoad(file);return;}
  if(!palastDraft)return;
- const card=e.target.closest('[data-palast-card]');if(card){const at=Number(card.dataset.palastCard);palastDraft.tricks[at]=card.value;palastDraft.scores[at]=999;palastRefresh();return;}
+ const card=e.target.closest('[data-palast-card]');if(card){const at=Number(card.dataset.palastCard);palastDraft.tricks[at]=card.value;palastDraft.scores[at]=999;palastDraft.userEdited[at]=true;palastRefresh();return;}
  const leader=e.target.closest('[data-palast-leader]');if(leader){palastDraft.leaders[Number(leader.dataset.palastLeader)]=leader.value;palastRefresh();return;}
  const setting=e.target.closest('[data-palast-config]');if(setting){const key=setting.dataset.palastConfig;palastDraft[key]=setting.value;palastRefresh();return;}
  const name=e.target.closest('[data-palast-name]');if(name){palastDraft.seatNames[name.dataset.palastName]=name.value.trim().slice(0,28);palastRefresh();return;}

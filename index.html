@@ -690,6 +690,19 @@ html:has(.ws-fullscreen), body:has(.ws-fullscreen){overflow:hidden!important; ov
 .wastl-single-intro{column-gap:20px!important;}
 .wastl-single-intro>div{min-width:0;}
 .palast-entry{margin:14px 0 18px;padding:14px;border-radius:18px;background:#f3f9f3;border:1px solid #d6e8d9}.palast-entry button{width:100%}.palast-entry p{margin:9px 0 0;color:#47735a;}
+
+/* v3.7: korrekt gedrehte Sitzpositionen, Spielansage, klar unterscheidbare Trainingsquellen */
+.ws-player-tag{max-width:min(35vw,145px);display:flex;flex-direction:column;align-items:center;gap:2px;background:#2f2018ec;color:#fff2ce;border:1px solid #b99a6d;border-radius:12px;padding:3px 8px;text-align:center;line-height:1.15;font-size:clamp(10px,2.8vw,13px)}
+.ws-player-tag strong{font-weight:800;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-player-tag small{display:block;font-size:clamp(9px,2.1vw,11px);font-weight:650;line-height:1.1;color:#f3d58f}
+.ws-spot.top{top:5px}.ws-spot.left,.ws-spot.right{top:51%}
+.ws-spot.bottom{bottom:0}
+.mentor-source-filters{display:flex;gap:7px;flex-wrap:wrap;margin:4px 0 15px}
+.mentor-source-filters button{background:#f5f8f4;border:1px solid #cfded2;border-radius:999px;padding:8px 11px;color:#234c3b;font-weight:700;font-size:12px;cursor:pointer}
+.mentor-source-filters button.active{background:#17684b;color:white;border-color:#17684b}
+.mentor-source-tag{display:inline-flex;align-items:center;margin-top:8px;padding:4px 9px;border-radius:999px;font-weight:750;font-size:11px;line-height:1.25;max-width:max-content}
+.mentor-source-tag.palast{background:#e6eefb;color:#265a88}.mentor-source-tag.tracked{background:#e1f4e8;color:#1b7048}
+@media(max-height:670px){.ws-player-tag{gap:0;font-size:10px;padding:2px 5px}.ws-player-tag small{font-size:9px}}
 </style></head><body><div id="app" class="app"><header class="hero"><div class="top"><div class="brand"><div class="emblem" id="brandSuit"></div><span>Schafkopf<span style="color:#e4c47b">tracker</span></span></div><div class="suite" id="suits"></div></div><h1 id="headerTitle">Servus am Kartentisch!</h1><p id="headerSub">Alle deine Schafkopfabende auf einen Blick.</p></header><main class="main" id="main"></main><nav class="nav" id="nav"></nav><div id="toast" class="hidden" role="status" aria-live="polite"></div><div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><div class="update-text"><b>🃏 Neue Version verfügbar!</b><p>Ein Update ist bereit. Deine gespeicherten Spielabende bleiben erhalten.</p></div><button type="button" class="btn" id="applyUpdate">Aktualisieren</button><button type="button" class="mini-btn" id="dismissUpdate" aria-label="Später aktualisieren" title="Später">✕</button></div></div><script>
 'use strict';
 /* Schafkopftracker v3.0 – Navigation und Design überarbeitet, weiterhin offline. */
@@ -784,7 +797,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='3.6';
+const VERSION='3.7';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1236,7 +1249,7 @@ function stitchNormalize(raw){
   if(ts.length!==8||ts.reduce((n,t)=>n+t.eyes,0)!==120)continue;
   const t=STITCH_TYPES.find(y=>y[0]===x.type)?.[0]||'rufspiel';
   const iso=typeof x.started==='string'&&!isNaN(Date.parse(x.started))?x.started:new Date().toISOString();
-  archives.push({seatNames:x.seatNames&&typeof x.seatNames==='object'?Object.fromEntries(STITCH_SEAT_IDS.map(k=>[k,String(x.seatNames[k]||'').slice(0,28)])):null,dealerChair:[0,1,2,3].includes(x.dealerChair)?x.dealerChair:null,id:String(x.id||uid()).slice(0,80),type:t,trumpSuit:CARD_SUITS.some(y=>y.id===x.trumpSuit)?x.trumpSuit:'herz',role:x.role==='defender'?'defender':'declarer',mySeat:validStitchSeat(x.mySeat)?x.mySeat:'vh',firstSeat:validStitchSeat(x.firstSeat)?x.firstSeat:'vh',declarerSeat:validStitchSeat(x.declarerSeat)?x.declarerSeat:'vh',partnerSeat:validStitchSeat(x.partnerSeat)&&x.partnerSeat!==x.declarerSeat?x.partnerSeat:null,partnerMode:x.partnerMode==='auto'?'auto':'manual',calledSuit:['eichel','gras','schell'].includes(x.calledSuit)?x.calledSuit:'eichel',started:iso,finished:typeof x.finished==='string'?x.finished:iso,tricks:ts,linkedGameId:x.linkedGameId?String(x.linkedGameId).slice(0,90):null});
+  archives.push({seatNames:x.seatNames&&typeof x.seatNames==='object'?Object.fromEntries(STITCH_SEAT_IDS.map(k=>[k,String(x.seatNames[k]||'').slice(0,28)])):null,dealerChair:[0,1,2,3].includes(x.dealerChair)?x.dealerChair:null,id:String(x.id||uid()).slice(0,80),source:x.source==='palast'||String(x.id||'').startsWith('palast-')?'palast':'tracked',palastGameId:x.palastGameId?String(x.palastGameId).slice(0,42):'',type:t,trumpSuit:CARD_SUITS.some(y=>y.id===x.trumpSuit)?x.trumpSuit:'herz',role:x.role==='defender'?'defender':'declarer',mySeat:validStitchSeat(x.mySeat)?x.mySeat:'vh',firstSeat:validStitchSeat(x.firstSeat)?x.firstSeat:'vh',declarerSeat:validStitchSeat(x.declarerSeat)?x.declarerSeat:'vh',partnerSeat:validStitchSeat(x.partnerSeat)&&x.partnerSeat!==x.declarerSeat?x.partnerSeat:null,partnerMode:x.partnerMode==='auto'?'auto':'manual',calledSuit:['eichel','gras','schell'].includes(x.calledSuit)?x.calledSuit:'eichel',started:iso,finished:typeof x.finished==='string'?x.finished:iso,tricks:ts,linkedGameId:x.linkedGameId?String(x.linkedGameId).slice(0,90):null});
  }
  const declarerSeat=validStitchSeat(data.declarerSeat)?data.declarerSeat:'vh';
  const partnerMode=data.partnerMode==='auto'?'auto':(data.partnerMode==='manual'?'manual':(Object.prototype.hasOwnProperty.call(data,'partnerSeat')?'manual':'auto'));
@@ -1402,7 +1415,7 @@ function handleStitchClick(t){
  const rewind=t.closest('[data-stitch-rewind]');if(rewind){const i=Number(rewind.dataset.stitchRewind);if(!Number.isInteger(i)||i<0||i>=stitch.tricks.length)return true;if(i<stitch.tricks.length-1&&!confirm(`Stich ${i+1} und alle folgenden Stiche korrigieren?`))return true;stitch.current=[...stitch.tricks[i].cards];stitch.tricks=stitch.tricks.slice(0,i);stitch.overrideSeat='';saveStitch();refreshStitch();return true;}
  if(t.closest('#stitchUndoTrick')){if(stitch.current.length&&!confirm('Aktuelle Kartenauswahl verwerfen und letzten Stich korrigieren?'))return true;const last=stitch.tricks.pop();if(last){stitch.current=[...last.cards];stitch.overrideSeat='';saveStitch();refreshStitch();}return true;}
  if(t.closest('#stitchReset')){if((stitch.tricks.length||stitch.current.length)&&!confirm('Aktuelle Partie verwerfen und neu beginnen? Abgeschlossene Trainingsspiele bleiben gespeichert.'))return true;resetStitchKeepOptions();return true;}
- if(t.closest('#stitchFinish')){const z=stitchTotals();if(stitch.tricks.length!==8||stitch.current.length||stitch.tricks.reduce((n,t)=>n+t.eyes,0)!==120){alert('Es müssen genau acht vollständige Stiche mit zusammen 120 Augen erfasst sein.');return true;}const rec={seatNames:stitch.seatNames?{...stitch.seatNames}:null,dealerChair:stitch.dealerChair,id:uid(),fairPlay:stitch.fairPlay,type:stitch.type,trumpSuit:stitch.trumpSuit,role:stitch.role,mySeat:stitch.mySeat,firstSeat:stitch.firstSeat,declarerSeat:stitch.declarerSeat,partnerSeat:stitch.partnerSeat,partnerMode:stitch.partnerMode,calledSuit:stitch.calledSuit,started:stitch.started,finished:new Date().toISOString(),tricks:stitch.tricks.map(t=>({...t,cards:[...t.cards]})),linkedGameId:null};stitch.archive.push(rec);stitchArchiveOpen=rec.id;stitchReplayStep=0;if(tableSetup.configured){tableSetup.dealerChair=(tableSetup.dealerChair+1)%4;saveTable();}resetStitchKeepOptions();flash('Spielverlauf gespeichert ✓ · Nächster Geber steht bereit');return true;}
+ if(t.closest('#stitchFinish')){const z=stitchTotals();if(stitch.tricks.length!==8||stitch.current.length||stitch.tricks.reduce((n,t)=>n+t.eyes,0)!==120){alert('Es müssen genau acht vollständige Stiche mit zusammen 120 Augen erfasst sein.');return true;}const rec={source:'tracked',seatNames:stitch.seatNames?{...stitch.seatNames}:null,dealerChair:stitch.dealerChair,id:uid(),fairPlay:stitch.fairPlay,type:stitch.type,trumpSuit:stitch.trumpSuit,role:stitch.role,mySeat:stitch.mySeat,firstSeat:stitch.firstSeat,declarerSeat:stitch.declarerSeat,partnerSeat:stitch.partnerSeat,partnerMode:stitch.partnerMode,calledSuit:stitch.calledSuit,started:stitch.started,finished:new Date().toISOString(),tricks:stitch.tricks.map(t=>({...t,cards:[...t.cards]})),linkedGameId:null};stitch.archive.push(rec);stitchArchiveOpen=rec.id;stitchReplayStep=0;if(tableSetup.configured){tableSetup.dealerChair=(tableSetup.dealerChair+1)%4;saveTable();}resetStitchKeepOptions();flash('Spielverlauf gespeichert ✓ · Nächster Geber steht bereit');return true;}
  const archive=t.closest('[data-stitch-archive]');if(archive){stitchArchiveOpen=stitchArchiveOpen===archive.dataset.stitchArchive?null:archive.dataset.stitchArchive;stitchReplayStep=0;refreshStitch();return true;}
  const stepButton=t.closest('[data-replay-step]');if(stepButton){const n=Number(stepButton.dataset.replayStep);if(Number.isInteger(n))stitchReplayStep=Math.max(0,Math.min(7,n));refreshStitch();return true;}
  if(t.closest('#stitchDeleteArchive')){if(!stitchArchiveOpen||!confirm('Diesen gespeicherten Trainingsverlauf löschen? Ein eventuell übernommenes Einzelspiel bleibt bestehen.'))return true;stitch.archive=stitch.archive.filter(x=>x.id!==stitchArchiveOpen);stitchArchiveOpen=null;saveStitch();refreshStitch();return true;}
@@ -1606,9 +1619,10 @@ document.addEventListener('change',async e=>{if(e.target.id==='chartScrub'){char
 if('serviceWorker' in navigator){let controlled=!!navigator.serviceWorker.controller,reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(controlled&&!reloaded){reloaded=true;location.reload();}controlled=true;});window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}),watch=w=>{if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)offerUpdate(w);});};if(reg.waiting&&navigator.serviceWorker.controller)offerUpdate(reg.waiting);watch(reg.installing);reg.addEventListener('updatefound',()=>watch(reg.installing));if(navigator.onLine)reg.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&navigator.onLine)reg.update().catch(()=>{});});}catch(err){console.warn('Service Worker nicht verfügbar',err);}});}
 
 /* Wastl 2.7 – nur eigene Regeln und lokal gespeicherte Trainingsdaten; keine KI-API. */
-let mentorMode=false,mentorGameId='',mentorStep=0,mentorTab='overview';
+let mentorMode=false,mentorGameId='',mentorStep=0,mentorTab='overview',mentorArchiveFilter='all';
 function mentorPromo(){return `<div class="mentor-teaser"><img src="wastl.png" alt="Wastl, dein bayerischer Schafkopf-Mentor"><div class="mentor-teaser-info"><b>Servus, i bin da Wastl!</b><p>I schau mit dir deine aufgezeichneten Stiche an – mit Lob, Hinweisen und erklärbaren Regeln.</p></div><button type="button" class="btn" id="mentorStart">Partie analysieren →</button></div>`;}
-function mentorGameList(){return [...stitch.archive].filter(g=>g&&Array.isArray(g.tricks)).sort((a,b)=>String(b.started).localeCompare(String(a.started)));}
+function mentorSource(g){return g?.source==='palast'||String(g?.id||'').startsWith('palast-')?'palast':'tracked';}
+function mentorGameList(){return [...stitch.archive].filter(g=>g&&Array.isArray(g.tricks)&&(mentorArchiveFilter==='all'||mentorSource(g)===mentorArchiveFilter)).sort((a,b)=>String(b.started).localeCompare(String(a.started)));}
 function mentorSelected(){return stitch.archive.find(g=>String(g.id)===String(mentorGameId))||null;}
 function mentorComplete(g){return !!g&&g.tricks.length===8&&g.tricks.every(t=>Array.isArray(t.cards)&&t.cards.length===4&&t.cards.every(id=>CARD_MAP[id]));}
 function mentorRuleCheck(g){
@@ -1748,7 +1762,7 @@ function mentorTableScene(game,trickInfo,step,state){
  const positions=['top','right','bottom','left'];
  const seatOrder=[stitchPositionFromLeader(trick.leaderSeat,0),stitchPositionFromLeader(trick.leaderSeat,1),stitchPositionFromLeader(trick.leaderSeat,2),stitchPositionFromLeader(trick.leaderSeat,3)];
  const cardsHtml=seatOrder.map((seat,i)=>`<div class="mentor-table-card mentor-card-${positions[i]} ${seat===game.mySeat?'own-card':''}">${cardSVG(CARD_MAP[trick.cards[i]])}</div>`).join('');
- const top=stitchPositionFromLeader(game.mySeat,2), left=stitchPositionFromLeader(game.mySeat,3), right=stitchPositionFromLeader(game.mySeat,1), bottom=game.mySeat;
+ const top=stitchPositionFromLeader(game.mySeat,2), left=stitchPositionFromLeader(game.mySeat,1), right=stitchPositionFromLeader(game.mySeat,3), bottom=game.mySeat;
  const seatChip=(seat,pos)=>`<div class="mentor-seat-chip mentor-seat-${pos}"><b>${esc(mentorSeatNameShort(seat,game))}</b><small>${esc(mentorSeatRole(seat,game))}</small></div>`;
  const notesLead = validStitchSeat(trick.leaderSeat)?`Ausspiel: ${mentorSeatNameShort(trick.leaderSeat,game)} (${CARD_MAP[trick.cards[0]].name})`:'Ausspiel unbekannt';
  const notesWin = validStitchSeat(trick.winnerSeat)?`Stichgewinner: ${mentorSeatNameShort(trick.winnerSeat,game)}`:'Stichgewinner: offen';
@@ -1780,10 +1794,15 @@ function wastlFullScreen(game,info,t,step,handState){
  // Reconstruct which individual card belongs to which PLAYER, not the position at which it was dealt.
  cards.forEach((id,i)=>{seats[stitchPositionFromLeader(t.raw.leaderSeat,i)]=id;});
  const ids=STITCH_SEAT_IDS, me=ids.indexOf(game.mySeat);
- const position={top:ids[(me+2)%4],left:ids[(me+3)%4],right:ids[(me+1)%4],bottom:ids[me]};
+ // Physical table clockwise from viewer: right is the PREVIOUS seat in play order. For MH: right VH, left HH.
+ const position={top:ids[(me+2)%4],left:ids[(me+1)%4],right:ids[(me+3)%4],bottom:ids[me]};
+ const announcement = game.type==='rufspiel' ? `Rufspiel ${({eichel:'Eichel',gras:'Gras',schell:'Schell'})[game.calledSuit]||''}`.trim()
+     : ['solo','tout','farbwenz','farbgeier'].includes(game.type) ? `${stitchTypeName(game.type)} ${({eichel:'Eichel',gras:'Gras',herz:'Herz',schell:'Schell'})[game.trumpSuit]||''}`.trim()
+     : stitchTypeName(game.type);
  const slot=(side)=>{
    const seat=position[side],card=CARD_MAP[seats[seat]];
-   return `<div class="ws-spot ${side}${seat===game.mySeat?' mine':''}"><span>${esc(seat===game.mySeat?'Du':mentorSeatNameShort(seat,game))}</span>${card?cardSVG(card):''}</div>`;
+   const declared=seat===game.declarerSeat && !['ramsch','kreuzrunde','bockrunde'].includes(game.type);
+   return `<div class="ws-spot ${side}${seat===game.mySeat?' mine':''}"><div class="ws-player-tag"><strong>${esc(seat===game.mySeat?'Du':mentorSeatNameShort(seat,game))}</strong>${declared?`<small>${esc(announcement)}</small>`:''}</div>${card?cardSVG(card):''}</div>`;
  };
  const remaining=handState?.after?.[game.mySeat]||[];
  const sorted=wastlCardOrder(remaining,game);
@@ -1817,7 +1836,13 @@ function wastlFullScreen(game,info,t,step,handState){
 function mentorUI(){
  if(typeof palastDraft!=='undefined'&&palastDraft)return palastImportUI();
  const g=mentorSelected();
- if(!g)return `<div class="content-page mentor-view"><div class="wastl-single-intro"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><div class="ey">Dein Schafkopf-Mentor</div><h2>Servus! I bin da Wastl.</h2><p>Such dir eine gespeicherte Partie aus, dann schauen wir uns Stich für Stich gemeinsam an, was die Karten hergeben.</p></div></div><div class="palast-entry"><button class="btn" id="palastStart" type="button">📷 Schafkopf-Palast-Partie importieren</button><p class="help">Geteiltes Spielbild auswählen, 32 Karten kontrollieren und anschließend mit Wastl analysieren – kostenlos und offline.</p></div><div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${stitch.archive.length} Partien</span></div><div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small></span><span>→</span></button>`).join('')||'<div class="card empty">Noch kein archivierter Stichverlauf. Unter Erfassen → Karten tracken → Mit Stichverlauf kannst du die erste Partie erfassen.</div>'}</div><p class="mentor-rule">Wastl ist ein kostenloser, lokaler Lernbegleiter. Seine Hinweise beruhen auf den gespeicherten Stichen und einfachen Regeln, nicht auf einer Online-KI.</p></div>`;
+ if(!g){
+ const all=stitch.archive.filter(x=>Array.isArray(x?.tricks)),imported=all.filter(x=>mentorSource(x)==='palast').length,local=all.length-imported;
+ const segments=[['all',`Alle (${all.length})`],['palast',`Schafkopf Palast (${imported})`],['tracked',`Selbst getrackt (${local})`]];
+ return `<div class="content-page mentor-view"><div class="wastl-single-intro"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><div class="ey">Dein Schafkopf-Mentor</div><h2>Servus! I bin da Wastl.</h2><p>Such dir eine gespeicherte Partie aus, dann schauen wir uns Stich für Stich gemeinsam an, was die Karten hergeben.</p></div></div><div class="palast-entry"><button class="btn" id="palastStart" type="button">📷 Schafkopf-Palast-Partie importieren</button><p class="help">Geteiltes Spielbild auswählen, Karten prüfen und mit Wastl analysieren – kostenlos und offline.</p></div><div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${all.length} Partien</span></div>
+ <div class="mentor-source-filters" role="group" aria-label="Partien nach Herkunft filtern">${segments.map(([key,label])=>`<button type="button" data-mentor-source="${key}" class="${mentorArchiveFilter===key?'active':''}" aria-pressed="${mentorArchiveFilter===key}">${label}</button>`).join('')}</div>
+ <div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small><span class="mentor-source-tag ${mentorSource(x)}">${mentorSource(x)==='palast'?'↗ Schafkopf Palast':'✓ Selbst getrackt'}</span></span><span>→</span></button>`).join('')||'<div class="card empty">Für diese Auswahl sind noch keine Partien gespeichert.</div>'}</div><p class="mentor-rule">Wastl ist ein kostenloser, lokaler Lernbegleiter. Seine Hinweise beruhen auf den gespeicherten Stichen und einfachen Regeln, nicht auf einer Online-KI.</p></div>`;
+ }
  const info=mentorGeneral(g),analysis=mentorStichEvidence(g);
  const step=Math.max(0,Math.min(g.tricks.length-1,mentorStep));
  const t=analysis.tricks[step];
@@ -1827,6 +1852,7 @@ function mentorUI(){
 
 document.addEventListener('click',e=>
 {
+ const src=e.target.closest('[data-mentor-source]');if(src){mentorArchiveFilter=src.dataset.mentorSource;render();return;}
  const item=e.target.closest('[data-mentor-open]');if(item){mentorMode=true;mentorGameId=item.dataset.mentorOpen;mentorStep=0;switchTab('mentor');return;}
  if(e.target.closest('#mentorStart')){mentorMode=true;mentorGameId='';switchTab('mentor');return;}
  if(e.target.closest('#mentorBack')){mentorGameId='';mentorStep=0;render();scrollTo({top:0,behavior:'instant'});return;}
