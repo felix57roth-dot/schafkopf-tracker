@@ -797,7 +797,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='3.8';
+const VERSION='3.9';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1247,7 +1247,7 @@ function stitchNormalize(raw){
  const archives=[];if(Array.isArray(data.archive))for(const x of data.archive.slice(-100)){
   if(!x||typeof x!=='object')continue;const ts=normTricks(x.tricks);
   if(ts.length!==8||ts.reduce((n,t)=>n+t.eyes,0)!==120)continue;
-  const t=STITCH_TYPES.find(y=>y[0]===x.type)?.[0]||'rufspiel';
+  const t=STITCH_TYPES.find(y=>y[0]===x.type)?.[0]||(/solo/i.test(String(x.type||''))?'solo':String(x.type||'unbekannt'));
   const iso=typeof x.started==='string'&&!isNaN(Date.parse(x.started))?x.started:new Date().toISOString();
   archives.push({seatNames:x.seatNames&&typeof x.seatNames==='object'?Object.fromEntries(STITCH_SEAT_IDS.map(k=>[k,String(x.seatNames[k]||'').slice(0,28)])):null,dealerChair:[0,1,2,3].includes(x.dealerChair)?x.dealerChair:null,id:String(x.id||uid()).slice(0,80),source:x.source==='palast'||String(x.id||'').startsWith('palast-')?'palast':'tracked',palastGameId:x.palastGameId?String(x.palastGameId).slice(0,42):'',type:t,trumpSuit:CARD_SUITS.some(y=>y.id===x.trumpSuit)?x.trumpSuit:'herz',role:x.role==='defender'?'defender':'declarer',mySeat:validStitchSeat(x.mySeat)?x.mySeat:'vh',firstSeat:validStitchSeat(x.firstSeat)?x.firstSeat:'vh',declarerSeat:validStitchSeat(x.declarerSeat)?x.declarerSeat:'vh',partnerSeat:validStitchSeat(x.partnerSeat)&&x.partnerSeat!==x.declarerSeat?x.partnerSeat:null,partnerMode:x.partnerMode==='auto'?'auto':'manual',calledSuit:['eichel','gras','schell'].includes(x.calledSuit)?x.calledSuit:'eichel',started:iso,finished:typeof x.finished==='string'?x.finished:iso,tricks:ts,linkedGameId:x.linkedGameId?String(x.linkedGameId).slice(0,90):null});
  }
@@ -1318,7 +1318,7 @@ function stitchTrainingSummary(archive=stitch.archive){
 }
 
 function stitchUsed(){return new Set(stitch.tricks.flatMap(t=>t.cards));}
-function stitchTypeName(type){return COUNTER_TYPES.find(t=>t[0]===type)?.[1]||'Rufspiel';}
+function stitchTypeName(type){return COUNTER_TYPES.find(t=>t[0]===type)?.[1]||'Spielart prüfen';}
 function stitchUsesColor(type=stitch.type){return ['solo','farbwenz','farbgeier','tout'].includes(type);}
 function stitchIsTrump(c){return stitchIsTrumpFor(c,stitch.type,stitch.trumpSuit);}
 function stitchCardButton(c,used){const played=used.has(c.id),active=stitch.current.includes(c.id);return `<button type="button" class="training-card ${!stitch.fairPlay&&played?'is-fallen':''} ${active?'in-current':''} ${!stitch.fairPlay&&stitchIsTrump(c)?'is-trump':''}" data-stitch-card="${c.id}" ${played&&!stitch.fairPlay?'disabled':''} aria-label="${c.name}${stitch.fairPlay?'':played?', gefallen':active?', aktueller Stich':''}" aria-pressed="${active}"><span class="playing-card">${cardSVG(c)}<span class="gone-overlay" aria-hidden="true"><span>✓</span></span></span></button>`;}
@@ -1626,6 +1626,7 @@ function mentorGameList(){return [...stitch.archive].filter(g=>g&&Array.isArray(
 function mentorSelected(){return stitch.archive.find(g=>String(g.id)===String(mentorGameId))||null;}
 function mentorComplete(g){return !!g&&g.tricks.length===8&&g.tricks.every(t=>Array.isArray(t.cards)&&t.cards.length===4&&t.cards.every(id=>CARD_MAP[id]));}
 function mentorRuleCheck(g){
+ if(!COUNTER_TYPES.some(t=>t[0]===g.type))return {ready:false,reason:'Die Spielart dieser älteren Partie ist nicht bekannt. Bitte zuerst über Bearbeiten korrigieren.'};
  if(!mentorComplete(g))return {ready:false,reason:'Diese Partie enthält noch keine acht vollständig dokumentierten Stiche.'};
  const all=g.tricks.flatMap(t=>t.cards),distinct=new Set(all);
  if(distinct.size!==32)return {ready:false,reason:'In der Aufzeichnung sind Karten mehrfach enthalten. Deshalb kann ich die Handkarten nicht zuverlässig rekonstruieren.'};
@@ -1667,32 +1668,40 @@ function mentorHandState(g,idx){
  return {before,after};
 }
 function mentorEvaluateAlternative(game,trick,myPlay){
+ // A hypothetical different move must not be declared better merely because the
+ // recorded opponents' cards are known in hindsight. The future could change.
  if(!myPlay||!myPlay.alternatives?.length||!validStitchSeat(trick.winnerSeat))return null;
  if(['ramsch','bettel'].includes(game.type))return null;
  const chosen=CARD_MAP[myPlay.id];
  const originalWinnerIndex=stitchWinnerIndex(trick.cards,game.type,game.trumpSuit);
- const originalWinnerSeat=stitchPositionFromLeader(trick.leaderSeat,originalWinnerIndex);
- const originalTeam=stitchTeamForSeat(originalWinnerSeat,game);
- const eye=trick.cards.reduce((s,id)=>s+CARD_MAP[id].eyes,0);
+ if(originalWinnerIndex<0)return null;
+ const originalTeam=stitchTeamForSeat(stitchPositionFromLeader(trick.leaderSeat,originalWinnerIndex),game);
+ const originalEyes=trick.cards.reduce((sum,id)=>sum+CARD_MAP[id].eyes,0);
  let best=null;
  for(const altId of myPlay.alternatives){
   const alt=CARD_MAP[altId],cards=[...trick.cards];cards[myPlay.position]=altId;
-  const altWinnerIndex=stitchWinnerIndex(cards,game.type,game.trumpSuit);if(altWinnerIndex<0)continue;
-  const altWinnerSeat=stitchPositionFromLeader(trick.leaderSeat,altWinnerIndex);
-  const altTeam=stitchTeamForSeat(altWinnerSeat,game);
-  const chosenTrump=stitchIsTrumpFor(chosen,game.type,game.trumpSuit),altTrump=stitchIsTrumpFor(alt,game.type,game.trumpSuit);
+  const wi=stitchWinnerIndex(cards,game.type,game.trumpSuit);if(wi<0)continue;
+  const altTeam=stitchTeamForSeat(stitchPositionFromLeader(trick.leaderSeat,wi),game);
+  const chosenTrump=stitchIsTrumpFor(chosen,game.type,game.trumpSuit);
+  const altTrump=stitchIsTrumpFor(alt,game.type,game.trumpSuit);
+  const altEyes=originalEyes-chosen.eyes+alt.eyes;
   let score=0,reason='';
-  if(originalTeam!=='us'&&altTeam==='us'){score=100;reason=`Mit ${alt.name} hätte dein Team diesen Stich voraussichtlich gewonnen. Das wäre bei ${eye} Augen eine starke Verbesserung gewesen.`;}
-  else if(originalTeam==='us'&&altTeam==='us'){
-   if(chosenTrump&&!altTrump){score=60;reason=`Mit ${alt.name} wäre der Stich ebenfalls bei euch geblieben. Du hättest also einen Trumpf geschont.`;}
-   else if(chosenTrump&&altTrump&&stitchTrumpStrength(alt,game.type,game.trumpSuit)>stitchTrumpStrength(chosen,game.type,game.trumpSuit)){score=55;reason=`${alt.name} hätte ebenfalls gereicht. So hättest du den stärkeren Trumpf ${chosen.name} für später behalten können.`;}
-   else if(alt.eyes<chosen.eyes){score=35;reason=`${alt.name} hätte ebenfalls funktioniert und weniger Augen bzw. weniger Wert preisgegeben.`;}
-  } else if(originalTeam==='them'&&altTeam==='them'){
-   if(alt.eyes<chosen.eyes){score=45;reason=`Mit ${alt.name} hättest du bei einem verlorenen Stich weniger Augen an die Gegner abgegeben.`;}
-   else if(chosenTrump&&!altTrump){score=25;reason=`Der Stich wäre wohl trotzdem verloren gegangen. ${alt.name} hätte aber einen Trumpf auf der Hand gelassen.`;}
+  if(originalTeam!=='us'&&altTeam==='us'&&myPlay.position===3){
+   // Hinterhand: with no later cards, the compared trick can be evaluated.
+   score=85;reason=`Mit ${alt.name} hättest du bei derselben Auslage den Stich mit ${altEyes} Augen geholt. Ob das langfristig besser wäre, hängt auch von der weiteren Kartenverteilung ab.`;
+  }else if(originalTeam==='us'&&altTeam==='us'){
+   // Particularly important: playing the Heart Ace/Trump Ace intentionally
+   // increases the captured eyes. Do not penalize this as "wasted trump".
+   if(chosen.eyes>=10 && alt.eyes<chosen.eyes)continue;
+   // An alternative is at most a cautious suggestion, not a claim of a better play.
+   if(chosenTrump&&altTrump&&alt.eyes>=chosen.eyes&&
+      stitchTrumpStrength(alt,game.type,game.trumpSuit)>stitchTrumpStrength(chosen,game.type,game.trumpSuit)&&myPlay.position===3){
+     score=24;reason=`${alt.name} hätte bei genau dieser Auslage den Stich ebenso gesichert. Das könnte einen stärkeren Trumpf schonen – allerdings ist das nicht automatisch die bessere Entscheidung.`;
+   }
+  }else if(originalTeam==='them'&&altTeam==='them'&&myPlay.position===3){
+   if(alt.eyes<chosen.eyes){score=30;reason=`${alt.name} hätte in dieser Auslage ${chosen.eyes-alt.eyes} Augen weniger abgegeben. Ob du die höhere Karte später hättest retten können, bleibt offen.`;}
   }
-  if(myPlay.position===0 && score<35 && alt.eyes<chosen.eyes){score=35;reason=`Beim Ausspiel wäre ${alt.name} die etwas ruhigere Eröffnung gewesen.`;}
-  if(score>0 && (!best||score>best.score))best={cardId:altId,score,reason};
+  if(score>0&&(!best||score>best.score))best={cardId:altId,score,reason,certainty:'hypothesis'};
  }
  return best;
 }
@@ -1719,9 +1728,10 @@ function mentorStichEvidence(g){
    const chosen=CARD_MAP[myPlay.id],hadTrump=stitchIsTrumpFor(chosen,g.type,g.trumpSuit),won=winTeam==='us';
    if(won&&eye>=20)notes.push({type:'good',heading:g.type==='ramsch'?'Augenreicher eigener Stich':'Augenstarker Stich für dein Team',detail:g.type==='ramsch'?`Du hast in Stich ${idx+1} ${eye} Augen erhalten. Beim Ramsch sind viele eigene Augen normalerweise eher ungünstig.`:`Dein Team hat in Stich ${idx+1} ${eye} Augen gewonnen. Entscheidend ist dabei die gesamte Stichfolge, nicht nur deine eigene Karte.`});
    if(g.type!=='ramsch'&&winTeam==='them'&&chosen.eyes>=10)notes.push({type:'tip',heading:'Viele Augen abgegeben',detail:`Du hast ${chosen.name} mit ${chosen.eyes} Augen gelegt; dieser Stich ging an die Gegner. Ob eine andere Karte besser gewesen wäre, hängt von deinen damaligen Informationen ab.`});
+   if(g.type!=='ramsch'&&won&&chosen.eyes>=10){notes.push({type:'good',heading:'Wertvolle Augen gesichert',detail:`${chosen.name} hat ${chosen.eyes} Augen beigetragen, die in diesem Stich sicher an dein Team gingen. Ein höherer Trumpf kann dafür genau richtig sein; erst mit dem restlichen Spielverlauf lässt sich die Alternative abwägen.`});}
    if(hadTrump&&idx<3&&['O','U'].includes(chosen.rank))notes.push({type:'tip',heading:'Früher hoher Trumpf',detail:`Du hast bereits in Stich ${idx+1} ${chosen.name} eingesetzt. Überlege, ob dir damit wichtige Trumpfkontrolle erhalten blieb – das ist kein sicherer Fehler.`});
    alternative=mentorEvaluateAlternative(g,t,myPlay);
-   if(alternative){notes.push({type:'tip',heading:'Mögliche bessere Karte',detail:alternative.reason});}
+   if(alternative){notes.push({type:'tip',heading:'Alternative zum Nachdenken',detail:alternative.reason});}
    else if(myPlay.alternatives.length){const alt=CARD_MAP[myPlay.alternatives[0]].name;notes.push({type:'neutral',heading:'Andere legale Karte möglich',detail:`Nach dem vollständig rekonstruierten Blatt hättest du hier auch ${alt} spielen dürfen. Das heißt nicht automatisch, dass diese Karte besser gewesen wäre.`});}
   }
   if(g.type==='rufspiel'&&g.calledSuit&&t.cards.includes(g.calledSuit+'-A'))notes.push({type:'good',heading:'Ruf-Ass deckt die Partnerschaft auf',detail:`In Stich ${idx+1} fällt das gerufene Ass. Jetzt lässt sich die Parteizugehörigkeit auch für die vorherigen Stiche rückwirkend zuordnen.`});
@@ -1785,7 +1795,8 @@ function wastlCardOrder(cards,game){
 function wastlCompactSpeech(game,t,step,valid){
  if(!valid.ready)return 'Des schau ma uns an. Manche Karten sind noch nicht ganz eindeutig erfasst.';
  if(t.notes?.some(n=>n.type==='warn'))return 'Bei diesem Stich passt möglicherweise die Kartenfolge nicht. Schau ma genauer hin!';
- if(t.alternative)return `Da hätt i eine andere Karte in Betracht gezogen. Magst wissen, warum?`;
+ if(t.myPlay&&t.winTeam==='us'&&CARD_MAP[t.myPlay.id]?.eyes>=10)return `Guad! Mit ${CARD_MAP[t.myPlay.id].name} hast du ${CARD_MAP[t.myPlay.id].eyes} Augen auf eure Seite gebracht. Des kann ein sehr guter Zug sein!`;
+ if(t.alternative)return `Es gäb da noch eine andere Möglichkeit. Ob die besser war, is ned sicher – i erklär's dir gern.`;
  if(t.winTeam==='us')return 'Gut! Die Augen gehen an dein Team. So kann ma weiterspielen!';
  return 'Interessanter Stich! Für eine sichere Bewertung müsst ma die ganze Spielsituation betrachten.';
 }
@@ -1900,4 +1911,6 @@ document.addEventListener('keydown',e=>{
 <link rel="stylesheet" href="./palast-import.css">
 <script src="./palast-signatures.js"></script>
 <script src="./palast-import.js"></script>
+<link rel="stylesheet" href="./training-manager.css">
+<script src="./training-manager.js"></script>
 </body></html>

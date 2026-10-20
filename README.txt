@@ -1,9 +1,19 @@
-Schafkopftracker 3.5 – Wastl-Vollbild und Kartenkorrekturen
+Schafkopftracker v3.9 – Einfache Importkontrolle, Trainingspartien verwalten, Wastl-Strategie
 
-Inhalt: index.html, sw.js, manifest.webmanifest, icon.png, icon.svg, wastl.png sowie 32 WebP-Karten im Ordner cards.
-Alle Dateien in das Hauptverzeichnis des bestehenden GitHub-Repositories kopieren.
-VORHER unbedingt Daten in der App exportieren. Kein Browser-Cache oder lokale Daten löschen.
-Neu: Wastl-Analyse ohne Scrollen, konstante Sprechblase und aufgefächerte Restkarten.
-Repariert: fehlzugeordnete Gras- und Schell-Karten und Sitzplatzzuordnung der ausgespielten Karten.
+NEU:
+- Importierte Stiche sind einzeln aufklappbar, statt 32 Karten auf einmal anzuzeigen.
+- Archivierte Trainingspartien bearbeiten und löschen, ohne Finanzdaten zu ändern.
+- Bearbeiten: Spielart/Trumpffarbe/Ansager/Sitzposition/Namen und Karten jedes Stichs korrigieren.
+- Archiv-Solo bleibt nach Änderung gespeichert, die neue Spielart wird geprüft.
+- Wastl behandelt Trumpf-Augensicherung differenzierter und bewertet niedrigere Trümpfe nicht automatisch als bessere Alternative.
 
-VERSION 3.6: Importhilfe fuer geteilte Schafkopf-Palast-Spielbilder. Unter Wastl -> Schafkopf-Palast-Partie importieren koennen Spieler ein JPG/PNG/WebP lokal oeffnen. Vorschlaege fuer Karten werden vor dem Speichern manuell kontrolliert. Es erfolgt kein Upload. Wastl bekommt ein Archivspiel, keine Geldtransaktion. Daten werden im bisherigen localStorage beibehalten.
+WICHTIG: Die Palast-Bilderkennung bleibt fehlbar. Auch scheinbar sichere Vorschläge vor dem Speichern mit dem Bild vergleichen.
+
+UPDATE AUF GITHUB:
+1. Backup der Daten aus der App exportieren.
+2. Hochladen/ersetzen: index.html, sw.js.
+3. Neu hinzufügen: training-manager.js, training-manager.css.
+4. Bestehende palast-import.js, palast-import.css, palast-signatures.js, 32 Karten, Manifest und Icons unverändert belassen.
+5. GitHub Pages aktualisieren lassen, App mit Internet einmal neu öffnen.
+
+Die gespeicherten Spielabende bleiben in localStorage erhalten. Gelöschte Trainingsverläufe lassen sich nur aus einem vorherigen Backup wiederherstellen.
