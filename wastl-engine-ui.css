@@ -1,0 +1,16 @@
+/* Regel-Check bleibt bewusst separat von der Wastl-Spielanalyse. */
+.wastl-engine-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.wastl-engine-row > .mentor-game-row{margin-bottom:0}
+.wastl-engine-audit{align-self:flex-end;border:1px solid #c5ddce;background:#eff8f1;color:#136b45;border-radius:12px;padding:7px 12px;font-size:13px;font-weight:700}
+.wastl-engine-overlay{position:fixed;inset:0;z-index:20000;background:rgba(6,28,20,.64);padding:max(18px,env(safe-area-inset-top)) 12px max(16px,env(safe-area-inset-bottom));display:grid;place-items:center}
+.wastl-engine-dialog{width:min(100%,620px);max-height:90dvh;overflow:auto;background:#faf8f1;color:#18392d;border:1px solid #bfcfc5;border-radius:23px;padding:20px;box-shadow:0 20px 50px rgba(4,28,19,.32)}
+.wastl-engine-title{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:9px}.wastl-engine-title h2{font-size:23px;margin:0}
+.wastl-engine-exit{background:#e5ece6;border:0;border-radius:11px;font-size:21px;width:39px;height:39px}
+.wastl-engine-status{border-radius:15px;padding:13px 14px;background:#f4e0cf;color:#6d3e25;margin:12px 0}
+.wastl-engine-status.good{background:#e2f3e8;color:#17633e}
+.wastl-engine-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.wastl-engine-stat{border:1px solid #d9e6dd;border-radius:13px;background:#fff;padding:13px}
+.wastl-engine-stat small{display:block;color:#65746a}.wastl-engine-stat b{display:block;font-size:22px}
+.wastl-engine-errors{padding-left:20px;margin:8px 0 12px}.wastl-engine-errors li{padding:4px 0;font-size:13px;line-height:1.45}
+.wastl-engine-tricks{width:100%;border-collapse:collapse;font-size:13px}.wastl-engine-tricks th,.wastl-engine-tricks td{border-bottom:1px solid #dae5dc;padding:8px 4px;text-align:left}
+.wastl-engine-fine{font-size:12px;color:#65746a;line-height:1.5;margin-top:12px}
