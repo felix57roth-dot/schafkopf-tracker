@@ -1,0 +1,24 @@
+/* Readable, isolated screenshot-import interface; does not affect live tracking. */
+.palast-import{max-width:900px;margin:0 auto 110px;padding:10px 3px 20px;color:#173b2e}
+.palast-import .palast-hero{background:linear-gradient(130deg,#103c2d,#286347);color:#fff;padding:22px;border-radius:24px;margin:12px 0 18px}
+.palast-hero h2{font-size:25px;margin:0 0 8px}.palast-hero p{margin:0;color:#ecf6ec;font-size:14px;line-height:1.5}
+.palast-section{padding:18px!important;margin:0 0 16px;background:#fff!important;color:#173b2e!important;border:1px solid #dce5dc!important}
+.palast-section h3{color:#173b2e;margin:0 0 13px;font-size:20px}.palast-section .help{color:#526c5d;line-height:1.5}
+.palast-upload{display:block;padding:18px;border:2px dashed #2c8865;background:#eff8ef;border-radius:18px;text-align:center;font-weight:800;color:#145a42;cursor:pointer}
+.palast-upload input{display:block;margin:12px auto 0;max-width:100%;font-size:13px;color:#173b2e}
+.palast-image-meta{font-size:12px;color:#54715f;margin:12px 0}.palast-screenshot{display:block;max-width:190px;width:42%;margin:12px auto;border-radius:12px;border:1px solid #c5d0c6;box-shadow:0 8px 22px #16372a1e}
+.palast-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.palast-actions .btn{font-size:14px}
+.palast-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.palast-settings label{display:grid;gap:6px;color:#244c3d;font-weight:700;font-size:13px;min-width:0}
+.palast-settings input,.palast-settings select{width:100%;min-width:0;box-sizing:border-box;background:#fff;color:#18382b;border:1px solid #bfd2c3;border-radius:11px;padding:12px 10px;font-size:14px}
+.palast-names{padding-top:14px}.palast-names summary{cursor:pointer;font-weight:700;margin-bottom:12px}
+.palast-section-title{display:flex;align-items:center;justify-content:space-between}.palast-trick{background:#f7faf6;border:1px solid #dce8dd;border-radius:18px;padding:13px;margin-top:14px}.palast-trick-h{display:flex;justify-content:space-between;gap:10px;color:#173b2e;margin-bottom:10px}.palast-trick-h span{font-size:12px;color:#65806d}
+.palast-crop{display:block;width:100%;max-width:350px;height:auto;aspect-ratio:164/118;object-fit:contain;object-position:center;border-radius:9px;border:1px solid #c9b899;background:#6f472f;margin:0 auto 12px}
+.palast-trick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.palast-card-choice{position:relative;background:#fff;border:1px solid #d7e4da;border-radius:12px;padding:9px;min-width:0;display:flex;flex-direction:column;gap:7px;color:#234b37;font-size:13px;font-weight:700}
+.palast-card-choice>span{display:block}.palast-card-choice small{color:#78725e;font-size:10px;font-weight:500}.palast-card-choice select{width:100%;min-width:0;max-width:100%;border:1px solid #bad2c0;border-radius:8px;background:#f8fcf8;padding:9px 5px;color:#1a4230;font-size:12px}
+.palast-card-choice .palast-mini{object-fit:contain;max-height:75px;width:48px;align-self:center}
+.palast-err,.palast-note{padding:10px 12px;border-radius:10px;margin:8px 0!important;font-size:13px;line-height:1.42}.palast-err{background:#ffefed;color:#912b25;border:1px solid #faccc7}.palast-note{background:#e9f4ed;color:#194a35;border:1px solid #c9e0d2}
+.palast-section #palastSave{width:100%;margin:14px 0 6px}.palast-section #palastSave:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:520px){.palast-import{padding:5px 1px 15px}.palast-hero{padding:17px!important}.palast-section{padding:14px!important}.palast-settings{grid-template-columns:1fr}.palast-trick{padding:9px}.palast-trick-grid{gap:7px}.palast-card-choice{padding:7px}.palast-card-choice select{font-size:11px}.palast-card-choice .palast-mini{height:54px}.palast-upload input{font-size:11px}}
+.palast-lead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px;font-size:12px;color:#3a604b;font-weight:700}
+.palast-lead select{min-width:0;max-width:62%;border:1px solid #bfd6c6;background:white;border-radius:9px;padding:8px;font-size:11px;color:#17442f}
+.palast-lead select:disabled{opacity:.6}

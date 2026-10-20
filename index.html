@@ -686,6 +686,10 @@ html:has(.ws-fullscreen), body:has(.ws-fullscreen){overflow:hidden!important; ov
 @media(max-height:670px){.ws-fullscreen{grid-template-rows:44px minmax(0,1fr)}.ws-topbar button{height:34px}.ws-board{grid-template-rows:64px minmax(0,1fr) clamp(92px,23%,130px)}.ws-guide{padding:4px 8px}.ws-portrait{height:54px;width:54px}.ws-speech{max-height:57px;font-size:12px}.ws-hand{grid-template-rows:19px minmax(0,1fr)}.ws-hand-caption{font-size:11px}.ws-spot img.training-face{width:clamp(42px,14vw,67px)!important}.ws-spot.bottom img.training-face{width:clamp(40px,13vw,62px)!important}.ws-spot>span{font-size:10px;padding:2px 6px}}
 @media(orientation:landscape) and (max-height:510px){.ws-fullscreen{grid-template-rows:40px minmax(0,1fr)}.ws-board{grid-template-columns:145px minmax(0,1fr) 160px;grid-template-rows:minmax(0,1fr)}.ws-guide{display:flex;flex-direction:column;gap:6px;padding:7px 5px;align-items:center;justify-content:start}.ws-portrait{width:58px;height:58px;flex:none}.ws-speech{max-height:calc(100% - 62px);height:auto;min-height:90px;font-size:12px}.ws-felt{margin:5px 2px 5px}.ws-hand{display:flex;flex-direction:column;padding:6px 5px}.ws-hand-caption{font-size:12px}.ws-fan{flex:1;align-items:center}.ws-fan-card{width:38px;margin-left:-24px}.ws-spot img.training-face{width:clamp(45px,8vw,66px)!important}.ws-spot.bottom img.training-face{width:clamp(42px,8vw,62px)!important}}
 
+
+.wastl-single-intro{column-gap:20px!important;}
+.wastl-single-intro>div{min-width:0;}
+.palast-entry{margin:14px 0 18px;padding:14px;border-radius:18px;background:#f3f9f3;border:1px solid #d6e8d9}.palast-entry button{width:100%}.palast-entry p{margin:9px 0 0;color:#47735a;}
 </style></head><body><div id="app" class="app"><header class="hero"><div class="top"><div class="brand"><div class="emblem" id="brandSuit"></div><span>Schafkopf<span style="color:#e4c47b">tracker</span></span></div><div class="suite" id="suits"></div></div><h1 id="headerTitle">Servus am Kartentisch!</h1><p id="headerSub">Alle deine Schafkopfabende auf einen Blick.</p></header><main class="main" id="main"></main><nav class="nav" id="nav"></nav><div id="toast" class="hidden" role="status" aria-live="polite"></div><div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><div class="update-text"><b>🃏 Neue Version verfügbar!</b><p>Ein Update ist bereit. Deine gespeicherten Spielabende bleiben erhalten.</p></div><button type="button" class="btn" id="applyUpdate">Aktualisieren</button><button type="button" class="mini-btn" id="dismissUpdate" aria-label="Später aktualisieren" title="Später">✕</button></div></div><script>
 'use strict';
 /* Schafkopftracker v3.0 – Navigation und Design überarbeitet, weiterhin offline. */
@@ -780,7 +784,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='3.5';
+const VERSION='3.6';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1811,8 +1815,9 @@ function wastlFullScreen(game,info,t,step,handState){
  </div>`;
 }
 function mentorUI(){
+ if(typeof palastDraft!=='undefined'&&palastDraft)return palastImportUI();
  const g=mentorSelected();
- if(!g)return `<div class="content-page mentor-view"><div class="wastl-single-intro"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><div class="ey">Dein Schafkopf-Mentor</div><h2>Servus! I bin da Wastl.</h2><p>Such dir eine gespeicherte Partie aus, dann schauen wir uns Stich für Stich gemeinsam an, was die Karten hergeben.</p></div></div><div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${stitch.archive.length} Partien</span></div><div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small></span><span>→</span></button>`).join('')||'<div class="card empty">Noch kein archivierter Stichverlauf. Unter Erfassen → Karten tracken → Mit Stichverlauf kannst du die erste Partie erfassen.</div>'}</div><p class="mentor-rule">Wastl ist ein kostenloser, lokaler Lernbegleiter. Seine Hinweise beruhen auf den gespeicherten Stichen und einfachen Regeln, nicht auf einer Online-KI.</p></div>`;
+ if(!g)return `<div class="content-page mentor-view"><div class="wastl-single-intro"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><div class="ey">Dein Schafkopf-Mentor</div><h2>Servus! I bin da Wastl.</h2><p>Such dir eine gespeicherte Partie aus, dann schauen wir uns Stich für Stich gemeinsam an, was die Karten hergeben.</p></div></div><div class="palast-entry"><button class="btn" id="palastStart" type="button">📷 Schafkopf-Palast-Partie importieren</button><p class="help">Geteiltes Spielbild auswählen, 32 Karten kontrollieren und anschließend mit Wastl analysieren – kostenlos und offline.</p></div><div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${stitch.archive.length} Partien</span></div><div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small></span><span>→</span></button>`).join('')||'<div class="card empty">Noch kein archivierter Stichverlauf. Unter Erfassen → Karten tracken → Mit Stichverlauf kannst du die erste Partie erfassen.</div>'}</div><p class="mentor-rule">Wastl ist ein kostenloser, lokaler Lernbegleiter. Seine Hinweise beruhen auf den gespeicherten Stichen und einfachen Regeln, nicht auf einer Online-KI.</p></div>`;
  const info=mentorGeneral(g),analysis=mentorStichEvidence(g);
  const step=Math.max(0,Math.min(g.tricks.length-1,mentorStep));
  const t=analysis.tricks[step];
@@ -1865,4 +1870,8 @@ document.addEventListener('keydown',e=>{
  if(e.key==='ArrowLeft'&&root.querySelector('[data-ws-scrim]')?.hidden){const btn=root.querySelector('[data-mentor-step]:first-child');if(btn&&!btn.disabled)btn.click();}
 });
 
-</script></body></html>
+</script>
+<link rel="stylesheet" href="./palast-import.css">
+<script src="./palast-signatures.js"></script>
+<script src="./palast-import.js"></script>
+</body></html>
