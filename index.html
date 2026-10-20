@@ -820,7 +820,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='4.0';
+const VERSION='4.1';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -2051,4 +2051,7 @@ document.addEventListener('keydown',e=>{
 <script src="./wastl-engine.js"></script>
 <link rel="stylesheet" href="./wastl-engine-ui.css">
 <script src="./wastl-engine-ui.js"></script>
+<script src="./wastl-montecarlo.js"></script>
+<script src="./wastl-montecarlo-ui.js"></script>
+<link rel="stylesheet" href="./wastl-montecarlo-ui.css">
 </body></html>

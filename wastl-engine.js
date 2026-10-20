@@ -11,7 +11,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const VERSION = '4.0.0';
+  const VERSION = '4.1.0';
   const SUITS = Object.freeze(['eichel', 'gras', 'herz', 'schell']);
   const RANKS = Object.freeze(['A', '10', 'K', 'O', 'U', '9', '8', '7']);
   const EYES = Object.freeze({ A: 11, '10': 10, K: 4, O: 3, U: 2, '9': 0, '8': 0, '7': 0 });
@@ -201,5 +201,5 @@
     const result = reliable ? outcome(game,teams,normalized) : {status:'unreliable',reason:'Wegen offener Regel-/Erfassungsfehler wird kein Gewinner behauptet.'};
     return {version:VERSION,ok:reliable,supported:cfg.supported,errors,warnings,tricks:normalized,eyesTotal,teams,teamEyes,result, note:'Regelprüfung ≠ Strategiebewertung. Kein Zug wurde als besser oder schlechter eingestuft.'};
   }
-  return Object.freeze({ VERSION, SUITS, RANKS, SEATS, FULL, parse, config, isTrump, colorClass, legalMoves, winnerIndex, trickEyes, nextSeat, reconstructHands, partnership, review });
+  return Object.freeze({ VERSION, SUITS, RANKS, SEATS, FULL, parse, config, isTrump, colorClass, compare, legalMoves, winnerIndex, trickEyes, nextSeat, reconstructHands, partnership, review });
 });
