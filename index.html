@@ -1816,6 +1816,8 @@ function wastlCardOrder(cards,game){
  });
 }
 function wastlCompactSpeech(game,t,step,valid){
+ const modelSpeech=window.WastlMatchAnalysis?.explanation(game,step);
+ if(modelSpeech)return modelSpeech;
  if(!valid.ready)return 'Des schau ma uns an. Manche Karten sind noch nicht ganz eindeutig erfasst.';
  if(t.notes?.some(n=>n.type==='warn'))return 'Bei diesem Stich passt möglicherweise die Kartenfolge nicht. Schau ma genauer hin!';
  if(t.myPlay&&t.winTeam==='us'&&CARD_MAP[t.myPlay.id]?.eyes>=10)return `Guad! Mit ${CARD_MAP[t.myPlay.id].name} hast du ${CARD_MAP[t.myPlay.id].eyes} Augen auf eure Seite gebracht. Des kann ein sehr guter Zug sein!`;
@@ -1911,6 +1913,12 @@ function wastlResult(game,info){
   }
  }else if(!info.valid.ready)gradeReason='Die Partie ist nicht ausreichend geprüft, um deine Spielleistung seriös zu bewerten.';
  else gradeReason='Für diese Sonder-Spielart liegt noch kein belastbares Bewertungsschema vor.';
+ // 4.3: Keine frei berechnete Ergebnisnote. Nur die explizit dokumentierte
+ // Monte-Carlo-Modellnote relativ zu zufällig legalen Zügen ist zulässig.
+ const match=window.WastlMatchAnalysis?.get(game);
+ const model=window.WastlMatchAnalysis?.grade(match);
+ grade=match?(model?.grade??null):null;
+ gradeReason=match?(model?.reason||'Modellbewertung derzeit nicht möglich.'):'Noch keine ganze Partie simuliert. Eine Ergebnisnote allein aus Sieg oder Niederlage wäre irreführend.';
  return {ok:true,individual:false,myEyes:result.myEyes,theirEyes:result.theirEyes,teamWinner,myResult,grade,gradeReason};
 }
 function wastlScoreWidget(game,step){
@@ -1927,7 +1935,7 @@ function wastlEnding(game,info){
  const speech=result.ok?(result.grade!==null?`Servus! ${result.myResult} Für dein Spiel geb i dir vorläufig ${result.grade} von 10 Punkten. Frag mi gern, worauf die Note beruht.`:`Servus! ${result.myResult} Für eine faire Spielnote fehlen ma noch sichere Anhaltspunkte.`):`Da stimmt noch etwas nicht. ${result.reason}`;
  return `<div class="ws-fullscreen ws-result-screen" role="dialog" aria-modal="true" aria-label="Wastls Endauswertung">
   <header class="ws-topbar"><button type="button" id="wsClose" aria-label="Zur Partieübersicht">←</button><div class="ws-step-label"><strong>Partie beendet</strong><small>${esc(stitchTypeName(game.type))} · 8 von 8 Stichen</small></div><div class="ws-nav"><button type="button" data-mentor-step="7" aria-label="Zum letzten Stich">‹</button></div></header>
-  <main class="ws-result-body"><div class="ws-result-mentor"><img src="wastl.png" alt="Wastl"><div class="ws-result-speech">${esc(speech)}</div></div><section class="ws-result-card"><div class="ws-result-trophy" aria-hidden="true">🏆</div><h2>${esc(title)}</h2>${result.ok?score:`<p>${esc(result.reason)}</p>`}<div class="ws-result-grade"><span>Wastls Spielbewertung</span><strong>${result.grade===null||result.grade===undefined?'–':result.grade}<small>/10</small></strong></div><p class="ws-result-note">${esc(result.gradeReason||'Bitte prüfe zuerst die Aufzeichnung.')}</p></section><button type="button" class="ws-result-done" id="wsCloseResult">Zurück zu meinen Partien</button></main>
+  <main class="ws-result-body"><div class="ws-result-mentor"><img src="wastl.png" alt="Wastl"><div class="ws-result-speech">${esc(speech)}</div></div><section class="ws-result-card"><div class="ws-result-trophy" aria-hidden="true">🏆</div><h2>${esc(title)}</h2>${result.ok?score:`<p>${esc(result.reason)}</p>`}<div class="ws-result-grade"><span>Wastls Modellbewertung (experimentell)</span><strong>${result.grade===null||result.grade===undefined?'–':result.grade}<small>/10</small></strong></div><p class="ws-result-note">${esc(result.gradeReason||'Bitte prüfe zuerst die Aufzeichnung.')}</p></section><button type="button" class="ws-result-done" id="wsCloseResult">Zurück zu meinen Partien</button></main>
  </div>`;
 }
 
@@ -1953,8 +1961,12 @@ function wastlFullScreen(game,info,t,step,handState){
    return `<span class="ws-fan-card${id===t.alternative?.cardId?' highlight':''}" style="--tilt:${off*4.2}deg;--lift:${Math.abs(off)*2}px;--z:${i+1}">${cardSVG(CARD_MAP[id])}</span>`;
  }).join(''):`<div class="ws-empty-hand">Alle Karten gespielt – die Partie ist beendet.</div>`;
  const winner=t.raw.winnerSeat?mentorSeatNameShort(t.raw.winnerSeat,game):'Noch offen';
- const detailText=t.notes?.length?t.notes.map(mentorHint).join(''):'<p>Zu diesem Stich liegen keine weiteren Hinweise vor.</p>';
- const alt=t.alternative?`<div class="ws-detail-alt">${cardSVG(CARD_MAP[t.alternative.cardId])}<p><strong>Alternative Überlegung:</strong> ${esc(t.alternative.reason)}</p></div>`:'';
+ const modelEntry=window.WastlMatchAnalysis?.item(game,step);
+ const detailText=modelEntry
+   ? (t.notes||[]).filter(n=>n.type==='warn').map(mentorHint).join('')
+   : (t.notes?.length?t.notes.map(mentorHint).join(''):'<p>Zu diesem Stich liegen keine weiteren Hinweise vor.</p>');
+ const modelDetail=window.WastlMatchAnalysis?.detail(game,step)||'';
+ const alt=!modelEntry&&t.alternative?`<div class="ws-detail-alt">${cardSVG(CARD_MAP[t.alternative.cardId])}<p><strong>Alternative Überlegung:</strong> ${esc(t.alternative.reason)}</p></div>`:'';
  const reason=info.valid.ready?'<p>Wastl ist ein lokaler Ratgeber. Ein Vorschlag ist keine sichere optimale Spielstrategie.</p>':`<p>${esc(info.valid.reason||'Die Erfassung ist nicht vollständig.')}</p>`;
  return `<div class="ws-fullscreen" role="dialog" aria-modal="true" aria-label="Wastl Stichanalyse im Vollbild">
    <header class="ws-topbar">
@@ -1971,7 +1983,7 @@ function wastlFullScreen(game,info,t,step,handState){
      <section class="ws-hand" aria-label="Deine verbleibenden Handkarten"><div class="ws-hand-caption">Deine Hand · ${sorted.length} Karte${sorted.length===1?'':'n'} übrig${step===game.tricks.length-1?` <button class="ws-result-link" data-mentor-step="${game.tricks.length}" type="button">Ergebnis & Bewertung →</button>`:''}</div><div class="ws-fan">${fan}</div></section>
    </main>
    <div class="ws-detail-scrim" data-ws-scrim hidden>
-     <div class="ws-detail-sheet" role="region" aria-label="Wastls weitere Hinweise"><button class="ws-detail-close" type="button" data-ws-dismiss aria-label="Zusatzinfos schließen">×</button><h3>Wastl erklärt diesen Stich</h3>${detailText}${alt}${reason}</div>
+     <div class="ws-detail-sheet" role="region" aria-label="Wastls weitere Hinweise"><button class="ws-detail-close" type="button" data-ws-dismiss aria-label="Zusatzinfos schließen">×</button><h3>Wastl erklärt diesen Stich</h3>${modelDetail}${detailText}${alt}${reason}</div>
    </div>
  </div>`;
 }
@@ -2053,6 +2065,7 @@ document.addEventListener('keydown',e=>{
 <script src="./wastl-engine-ui.js"></script>
 <script src="./wastl-policy.js"></script>
 <script src="./wastl-montecarlo.js"></script>
+<script src="./wastl-match-analysis.js"></script>
 <script src="./wastl-montecarlo-ui.js"></script>
 <link rel="stylesheet" href="./wastl-montecarlo-ui.css">
 </body></html>
