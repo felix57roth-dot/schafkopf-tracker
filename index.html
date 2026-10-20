@@ -704,7 +704,7 @@ html:has(.ws-fullscreen), body:has(.ws-fullscreen){overflow:hidden!important; ov
 .mentor-source-tag.palast{background:#e6eefb;color:#265a88}.mentor-source-tag.tracked{background:#e1f4e8;color:#1b7048}
 @media(max-height:670px){.ws-player-tag{gap:0;font-size:10px;padding:2px 5px}.ws-player-tag small{font-size:9px}}
 
-/* v3.10: Punkte an der Tischkante ohne Ueberdecken der Karten */
+/* v4.0: Punkte an der Tischkante ohne Ueberdecken der Karten */
 .ws-hand-caption{position:relative;z-index:30!important;overflow:visible!important}.ws-hand .ws-fan{z-index:1}.ws-result-link{position:relative;z-index:32!important}
 .ws-score{position:absolute;z-index:5;top:8px;left:8px;min-width:116px;max-width:48%;border-radius:10px;background:rgba(12,55,42,.94);color:#fff5d9;border:1px solid rgba(236,199,118,.70);padding:5px 7px;font-size:clamp(9px,2.65vw,12px);line-height:1.25;box-shadow:0 3px 9px #1e120c33}
 .ws-score>b,.ws-score>span{display:block}.ws-score>b{color:#f2d692}.ws-score>span{margin-top:2px}.ws-score span strong{font-size:1.12em}.ws-score small{display:block;opacity:.85}
@@ -820,7 +820,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='3.10';
+const VERSION='4.0';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1824,7 +1824,7 @@ function wastlCompactSpeech(game,t,step,valid){
  return 'Interessanter Stich! Für eine sichere Bewertung müsst ma die ganze Spielsituation betrachten.';
 }
 
-/* Version 3.10: Stich-fuer-Stich-Augen und vorsichtige Endbewertung.
+/* Version 4.0: Stich-fuer-Stich-Augen und vorsichtige Endbewertung.
    Ermittelt Stiche aus den Karten, vertraut nie blind gespeicherten Siegerflags. */
 function wastlScoreProgress(game,through){
  const count=Math.min(Math.max(0,through),Array.isArray(game.tricks)?game.tricks.length:0);
@@ -2047,4 +2047,8 @@ document.addEventListener('keydown',e=>{
 <script src="./palast-import.js"></script>
 <link rel="stylesheet" href="./training-manager.css">
 <script src="./training-manager.js"></script>
+
+<script src="./wastl-engine.js"></script>
+<link rel="stylesheet" href="./wastl-engine-ui.css">
+<script src="./wastl-engine-ui.js"></script>
 </body></html>
