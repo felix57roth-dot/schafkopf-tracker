@@ -40,3 +40,25 @@
 .palast-picker-card{min-width:0;border:1px solid #dce4d9;border-radius:8px;background:#fff;display:flex;flex-direction:column;align-items:center;padding:3px 1px 4px;gap:3px;cursor:pointer}
 .palast-picker-card img{width:100%;height:auto;aspect-ratio:320/500;object-fit:contain}.palast-picker-card span{font-size:8px;color:#21633d}
 .palast-picker-card.used{background:#f5f0e9;opacity:.62}.palast-picker-card.used span{color:#9a5b3c}
+
+/* v3.8 – critical source verification; avoids false attribution of game/player */
+.palast-critical{padding:14px;background:#f8faf6;border:1px solid #cadccf;border-radius:19px}
+.palast-critical h4{margin:13px 0 9px;color:#173b2e;font-size:17px}
+.palast-critical h4:first-child{margin-top:0}
+.palast-critical .help{font-size:12px;color:#516a59;line-height:1.5;margin:6px 0 12px}
+.palast-player-names{margin:14px 0 18px}
+.palast-status{padding:10px 12px;background:#eff7ee;color:#1d573f;font-size:12px;line-height:1.55;border:1px solid #cce0d0;border-radius:12px;margin:10px 0}
+.palast-game-crop{display:block;width:100%;height:auto;max-width:450px;margin:10px auto 14px;background:#714830;border-radius:11px;border:1px solid #bda380}
+.palast-summary{padding:12px;background:#e8f4eb;color:#1b4d39;border:1px solid #badac3;border-radius:12px;font-size:13px;margin:15px 0}
+.palast-summary div{margin-top:5px;line-height:1.6}
+.palast-check{display:flex;align-items:flex-start;gap:10px;padding:13px;background:white;border:1px solid #cbdccb;border-radius:13px;font-size:13px;color:#244737;font-weight:700;margin:13px 0;line-height:1.5}
+.palast-check input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:#11764e}
+.palast-hand-compare,.palast-reconstructed{padding:11px;border:1px solid #d2ddce;background:#fff;border-radius:13px;margin:11px 0}
+.palast-hand-compare b,.palast-reconstructed b{display:block;color:#234f38;margin-bottom:10px;font-size:13px}
+.palast-hand-compare img{display:block;width:100%;height:auto;border-radius:8px;background:#725034}
+.palast-my-hand{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
+.palast-my-hand img{width:100%;height:auto;aspect-ratio:320/500;object-fit:contain}
+
+.palast-suspects{background:#fff5e0;border:1px solid #e8bd72;color:#67451b;border-radius:13px;padding:12px;margin-bottom:15px;font-size:13px}
+.palast-suspects>div{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.palast-suspects a{border:1px solid #dcc490;background:#fff9ed;color:#6b4a18;border-radius:9px;padding:6px 9px;text-decoration:none;font-size:12px;font-weight:700}
