@@ -1,32 +1,36 @@
-Schafkopftracker Version 4.1 – Monte-Carlo-Versuch (offline)
+Schafkopftracker – Version 4.2 (Wastl-Monte-Carlo, reparierte Bedienung)
 
-Neu:
-- Optionales Würfel-Symbol in Wastls Vollbild-Tischansicht eines gespeicherten Spiels.
-- Lokale Simulation legaler Karten bei Rufspiel, Farbsolo, Wenz, Farb-Wenz, Geier und Farb-Geier.
-- Stichregeln geprüft, eigene Hand rekonstruiert, öffentliche Karten und Abwürfe berücksichtigt.
-- 80 / 160 / 350 mögliche Verteilungen, Berechnung in einem Web Worker.
-- Vergleich als Modell-Durchschnitt (Teamaugen) und Simulationserfolgsanteil.
-- Keine echte, kalibrierte Gewinnwahrscheinlichkeit oder objektive Spielnote.
-- Die bisherige Wastl-Analyse, ihr 1-10 Ergebnis und gespeicherte Daten bleiben unverändert.
-- Sonderformen (Ramsch, Bettel, Tout, Hochzeit, Kreuzrunde u. a.) noch nicht als
-  strategische Monte-Carlo-Analyse verfügbar.
+NEU UND REPARIERT
+- Der Würfel öffnet die Auswahl der Simulationen sofort sichtbar ÜBER der Vollbildanalyse.
+- Der Simulationsdialog merkt sich beim Öffnen das gerade ausgewählte Spiel und den Stich.
+  Beim Klick auf „Simulation starten“ kann dadurch nicht versehentlich eine andere
+  oder bereits geschlossene Partie ausgewertet werden.
+- Neues, eigenständig entwickeltes Offline-Mitspieler-Modell: Ausspielen, Übernehmen,
+  Schmieren, Abwerfen, Partnerrollen, Trumpfreserven und Augen werden berücksichtigt.
+- Die Werte bleiben EXPERIMENTELLE MODELLERGEBNISSE, keine objektiven Gewinnquoten.
+- Der bestehende Wastl-Spielbericht und die gespeicherten Daten bleiben unangetastet.
 
-GitHub Installation:
-1. Daten aus der alten App exportieren und sichern.
-2. Klein-Update entpacken und ALLE enthaltenen Dateien ins Repository-Hauptverzeichnis laden.
-   Neue Dateien: wastl-montecarlo.js, wastl-montecarlo-worker.js,
-     wastl-montecarlo-ui.js, wastl-montecarlo-ui.css.
-   Aktualisieren: index.html, sw.js, wastl-engine.js.
-3. GitHub Commit speichern. Die 32 Karten müssen nicht neu hochgeladen werden.
-4. Nach Deployment online App aufrufen / auf Aktualisierung warten;
-   Offline wird erst nach erfolgreichem Vorladen aller neuen Dateien funktionieren.
-5. Unter Wastl gespeicherte Partie öffnen und 🎲 oben rechts betätigen.
+INSTALLATION DES KLEINEN UPDATES
+1. Unter Einstellungen → Datensicherung die Daten exportieren.
+2. ZIP entpacken und alle enthaltenen Dateien direkt ins Hauptverzeichnis
+   deines GitHub-Repositories laden; vorhandene Dateien ersetzen.
+3. Keine Kartenbilder löschen: Der vorhandene Ordner cards bleibt bestehen.
+4. Änderungen committen. Nach der GitHub-Pages-Veröffentlichung die App
+   bei bestehender Internetverbindung öffnen und das PWA-Update übernehmen.
+5. Wastl → gespeicherte Partie → 🎲 → 80, 160 oder 350 Verteilungen →
+   „Simulation starten“.
 
-Wichtige technische Einschränkungen:
-- Simulierende Mitspieler handeln nach einer einfachen Heuristik, nicht wie geübte Profis.
-- Zufällige Verteilungen erfüllen erkannte Bedienpflicht-Ausschlüsse, sind aber nicht
-  statistisch gleichverteilt und berücksichtigen nicht alle Ansage-Signale.
-- Ergebnisse sind Schätzungen des Modells, keine objektiven Bewertungen.
-- Keine Abhängigkeiten, Cloudkosten oder übernommenen Fremdcodelizenzen.
+SICHERHEIT DER ANALYSE
+- Modell der Mitspieler ist heuristisch und nicht kalibriert.
+- Tatsächlich gespielte Karten späterer Stiche werden bei der Verteilung
+  unbekannter Gegnerkarten nicht als Wissen verwendet.
+- Für unvollständige oder regelwidrige Partien liefert die Engine eine
+  Fehlermeldung statt einer erfundenen Spielbewertung.
+- Keine kostenpflichtige API, kein Datenversand und keine fremden KI-Codebasen.
 
-Tests: node --test tests/*.test.js
+TESTS
+  node --test tests/*.test.js
+
+26 automatische Tests bestanden, einschließlich zweier Regressionstests für
+Sichtbarkeit des Würfel-Dialogs und Bindung an die angeklickte Partie.
+Ein echter Smartphone-Browsertest auf dem Nutzergerät ist weiterhin nötig.

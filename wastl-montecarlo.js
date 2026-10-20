@@ -5,12 +5,13 @@
  */
 (function(root, factory){
  const E = (typeof module==='object' && module.exports) ? require('./wastl-engine.js') : root.WastlEngine;
- const api=factory(E);
+ const Policy=(typeof module==='object' && module.exports) ? require('./wastl-policy.js') : root.WastlPolicy;
+ const api=factory(E,Policy);
  if(typeof module==='object' && module.exports)module.exports=api;
  if(root)root.WastlMonteCarlo=api;
-})(typeof globalThis!=='undefined'?globalThis:this, function(E){
+})(typeof globalThis!=='undefined'?globalThis:this, function(E,Policy){
  'use strict';
- const VERSION='4.1.0';
+ const VERSION='4.2.0';
  const SUPPORTED=new Set(['rufspiel','solo','wenz','farbwenz','geier','farbgeier']);
  function seeded(seed){let a=seed>>>0;return function(){a=(a+0x6d2b79f5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
  function shuffle(arr,random){for(let i=arr.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
@@ -90,52 +91,18 @@
   if(!teammate||teammate===g.declarerSeat)return null;
   return new Set([g.declarerSeat,teammate]);
  }
- function weight(card,game){
-  const c=E.parse(card);const rank=c.rank;
-  const order= ['O','U','A','10','K','9','8','7'];
-  return (E.isTrump(card,game)?12:0)+(8-order.indexOf(rank))+(c.eyes*.4);
- }
- // Imperfect-information *policy*: does not inspect other private hands. It uses
- // only observed cards and whether declarer/partner are publicly identifiable.
- function policyPick(hand,played,seat,game,publicPartner,random){
-  const opts=E.legalMoves(hand,played[0]||null,game);if(opts.length===1)return opts[0];
-  if(!played.length){
-   const scored=opts.map(c=>({c,s:1.1*weight(c,game)+(E.isTrump(c,game)?2:0)+random()*13}));
-   scored.sort((a,b)=>b.s-a.s);return scored[0].c;
-  }
-  const leader=game.__simLeader;
-  // Prefix-winner, taking only the partial trick into account.
-  const prefixWin=(()=>{let best=0;for(let i=1;i<played.length;i++)if(E.compare(played[i],played[best],played[0],game)<0)best=i;return E.nextSeat(leader,best);})();
-  const alliesKnown=publicPartner!==null;
-  const ownTeam=s=>game.type==='rufspiel'?(alliesKnown&&(s===game.declarerSeat||s===publicPartner)):(s===game.declarerSeat);
-  const likelyFriendly=alliesKnown&&ownTeam(seat)===ownTeam(prefixWin) || game.type!=='rufspiel'&&ownTeam(seat)===ownTeam(prefixWin);
-  const scored=opts.map(c=>{
-    const beats=E.compare(c,played[prefixCardWinnerIndex(played,game)],played[0],game)<0;
-    const eyes=played.reduce((n,x)=>n+E.parse(x).eyes,0)+E.parse(c).eyes;
-    let score;
-    if(likelyFriendly)score=E.parse(c).eyes*2.1-(beats?10:0)-(E.isTrump(c,game)?weight(c,game)*.45:0);
-    else if(beats)score=11+eyes*.7-weight(c,game)*.68;
-    else score=-E.parse(c).eyes*1.8-weight(c,game)*.05;
-    return {c,score:score+random()*9};
-  });
-  scored.sort((a,b)=>b.score-a.score);
-  return scored[0].c;
- }
- function prefixCardWinnerIndex(cards,game){
-  let best=0;
-  for(let i=1;i<cards.length;i++)if(E.compare(cards[i],cards[best],cards[0],game)<0)best=i;
-  return best;
- }
  function rollout(pos,sampled,candidate,random){
   const g={...pos.game};
   const hands=cloneHands(sampled);hands[pos.seat]=[...pos.myHand];
   const team=worldTeams(pos,hands);if(!team)return null;
   const actualSide=team.has(pos.seat),knownAce=pos.knownCalledAce;
+  const publicState={past:pos.past.map(t=>({leaderSeat:t.leaderSeat,cards:[...t.cards]})),partner:null};
   let publiclyKnownPartner=null;
   if(g.type==='rufspiel'){
    for(const t of pos.past){const k=t.cards.indexOf(knownAce);if(k>=0)publiclyKnownPartner=E.nextSeat(t.leaderSeat,k);}
    const k=pos.prefix.indexOf(knownAce);if(k>=0)publiclyKnownPartner=E.nextSeat(pos.t.leaderSeat,k);
   }
+  publicState.partner=publiclyKnownPartner;
   let declarerPoints=pos.past.reduce((n,t)=>n+(team.has(t.winnerSeat)?t.eyes:0),0);
   let trickLeader=pos.t.leaderSeat;
   for(let k=pos.turn;k<8;k++){
@@ -144,14 +111,15 @@
    g.__simLeader=trickLeader;
    for(let j=begin;j<4;j++){
     const s=E.nextSeat(trickLeader,j);
-    const card=k===pos.turn&&j===pos.idx?candidate:policyPick(hands[s],play,s,g,publiclyKnownPartner,random);
+    const card=k===pos.turn&&j===pos.idx?candidate:Policy.choose(hands[s],play,s,trickLeader,g,publicState,random);
     const at=hands[s].indexOf(card);if(at<0)throw Error('Simulierte Hand enthält die gespielte Karte nicht.');
     hands[s].splice(at,1);play.push(card);
-    if(card===knownAce)publiclyKnownPartner=s;
+    if(card===knownAce){publiclyKnownPartner=s;publicState.partner=s;}
    }
    const winner=E.nextSeat(trickLeader,E.winnerIndex(play,g));
    if(team.has(winner))declarerPoints+=E.trickEyes(play);
    trickLeader=winner;
+   publicState.past.push({leaderSeat:g.__simLeader,cards:[...play]});
   }
   const myPoints=actualSide?declarerPoints:120-declarerPoints;
   const myWin=actualSide?declarerPoints>=61:declarerPoints<=60;
@@ -163,24 +131,45 @@
   const seed=(Number(options.seed)||0x4192026)>>>0;
   const rnd=seeded(seed),totals=Object.fromEntries(pos.legal.map(c=>[c,{card:c,wins:0,eyes:0,count:0}]));
   let rejected=0;
+  const paired=Object.fromEntries(pos.legal.map(c=>[c,[]]));
   for(let i=0;i<samples;i++){
    let hand=null;for(let retry=0;retry<35&&!hand;retry++)hand=assignUnknown(pos,rnd);
    if(!hand){rejected++;continue;}
-   // Same underlying deals for every move; tie stochastic simulations to common seed.
+   // Dieselbe Kartenverteilung und identische Zufalls-Startwerte für jeden Zug.
    const common=(rnd()*0xffffffff)>>>0;
-   for(const card of pos.legal){const sim=rollout(pos,hand,card,seeded(common));if(!sim)continue;
-    const x=totals[card];x.count++;x.wins+=sim.myWin;x.eyes+=sim.myPoints;}
+   const results={};
+   for(const card of pos.legal){
+    const sim=rollout(pos,hand,card,seeded(common));
+    if(!sim)continue;
+    const x=totals[card];x.count++;x.wins+=sim.myWin;x.eyes+=sim.myPoints;
+    results[card]=sim;
+   }
+   const actual=results[pos.actual];
+   if(actual)for(const card of pos.legal){
+    if(results[card])paired[card].push(results[card].myWin-actual.myWin);
+   }
   }
-  const evaluated=Object.values(totals).filter(x=>x.count>0).map(x=>({card:x.card,samples:x.count,winRate:x.wins/x.count,meanEyes:x.eyes/x.count})).sort((a,b)=>b.meanEyes-a.meanEyes);
+  const evaluated=Object.values(totals).filter(x=>x.count>0).map(x=>({card:x.card,samples:x.count,winRate:x.wins/x.count,meanEyes:x.eyes/x.count}))
+   .sort((a,b)=>b.winRate-a.winRate||b.meanEyes-a.meanEyes);
   if(!evaluated.length)return {ok:false,version:VERSION,reason:'Unter den bisherigen Beobachtungen konnte keine konsistente Kartenverteilung erzeugt werden.'};
-  const recorded=evaluated.find(x=>x.card===pos.actual), best=evaluated[0], n=evaluated[0].samples;
-  const lowSamples=n<60;
+  const recorded=evaluated.find(x=>x.card===pos.actual),best=evaluated[0],n=best.samples;
+  const diff=paired[best.card],gain=diff.reduce((x,y)=>x+y,0)/Math.max(1,diff.length);
+  const variance=diff.reduce((x,y)=>x+(y-gain)**2,0)/Math.max(1,diff.length-1);
+  const margin=diff.length>1?1.96*Math.sqrt(variance/diff.length):1;
+  // Eine klare Empfehlung nur bei genügend Stichproben und größerem Abstand.
+  const clear=best.card!==pos.actual&&diff.length>=100&&gain>=.05&&gain-margin>0;
+  const lowSamples=n<80;
+  const comparison=best.card===pos.actual
+   ? 'Deine gespielte Karte liegt in diesem Modell vorne. Das belegt noch keinen optimalen Zug.'
+   : clear
+    ? 'Die Alternative erzielte in diesem Modell häufiger einen Sieg; der Unterschied ist innerhalb dieser Stichprobe erkennbar.'
+    : 'Mehrere Karten liegen im Bereich der statistischen Unsicherheit. Kein klar besserer Zug nachweisbar.';
   return {ok:true,version:VERSION,turn:turn+1,actual:pos.actual,candidates:evaluated,
-   sampleCount:n,rejected,supported:game.type,method:'Randomisierte Kartenzuteilung mit Bedienpflicht-Ausschlüssen; einfache simulierte Mitspieler',
-   estimated:true,confidence:lowSamples?'low':'experimental',
-   note:'Experimentelle Schätzung, keine kalibrierte Gewinnwahrscheinlichkeit oder sichere Bestzug-Aussage. Die Ergebnisse hängen stark vom einfachen Mitspielermodell und der Kartenzuteilung ab.',
-   comparison:best.card===pos.actual?'Die gespielte Karte lag im einfachen Simulationsmodell vorne.':'Eine andere Karte ergab in diesem experimentellen Modell mehr durchschnittliche Augen.',
-   pointsGap:Math.max(0,best.meanEyes-recorded.meanEyes), recorded, reference:best};
+   sampleCount:n,rejected,supported:game.type,method:'Wiederholte Kartenzuteilung mit öffentlicher Bedienpflicht-Information; rollen- und situationsabhängige Offline-Mitspieler (Wastl Policy 4.2)',
+   estimated:true,confidence:lowSamples?'low':'experimental',policyVersion:Policy.VERSION,clearAlternative:clear,
+   note:'Modellergebnis, keine kalibrierte Gewinnwahrscheinlichkeit oder sichere Bestzug-Aussage. Die simulierten Mitspieler sind heuristisch; Kartenverteilungen und Annahmen bleiben vereinfacht.',
+   comparison,pairedWinGap:gain,pairedUncertainty:margin,
+   pointsGap:Math.max(0,best.meanEyes-recorded.meanEyes),recorded,reference:best};
  }
  return Object.freeze({VERSION,analyze,buildPosition,assignUnknown});
 });

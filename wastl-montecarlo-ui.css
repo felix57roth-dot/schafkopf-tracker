@@ -1,6 +1,6 @@
 /* Optionaler Rechenmodus – keine globale Umfärbung vorhandener App-Seiten. */
 .ws-monte-trigger{flex:0 0 auto;border:1px solid rgba(255,255,255,.4)!important;background:rgba(255,255,255,.12)!important;color:#fff;border-radius:12px;width:37px;height:37px;font-size:20px;display:grid;place-items:center}
-.mc-overlay{position:fixed;z-index:26000;inset:0;display:grid;place-items:center;background:rgba(6,24,18,.78);padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}
+.mc-overlay{position:fixed;z-index:200000;inset:0;display:grid;place-items:center;background:rgba(6,24,18,.78);padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}
 .mc-dialog{width:min(100%,610px);max-height:92dvh;overflow:auto;overscroll-behavior:contain;background:#fffaf0;color:#18372c;border-radius:22px;border:1px solid #dfc49e;box-shadow:0 25px 60px rgba(0,0,0,.32);padding:20px;font-size:14px;line-height:1.5}
 .mc-head{display:flex;align-items:flex-start;gap:10px;justify-content:space-between}.mc-head small{font-size:11px;font-weight:800;letter-spacing:1px;color:#9d6e31}.mc-head h2{font-size:23px;margin:4px 0 1px;color:#123b2c}.mc-head p{font-size:13px;margin:0;color:#637568}.mc-close{border:0;border-radius:10px;background:#e8ede8;font-size:22px;width:38px;height:38px;flex:0 0 auto}
 .mc-intro{background:#edf4ed;border:1px solid #d0dfd2;border-radius:13px;padding:12px;margin:16px 0;color:#253f31}.mc-controls{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}.mc-controls label{font-size:12px;font-weight:700;color:#365745}.mc-controls select{display:block;margin-top:6px;padding:10px;background:#fff;border:1px solid #bacbbd;border-radius:11px;width:100%;color:#19392b;max-width:100%;font-size:13px}
@@ -12,3 +12,5 @@
 .ws-topbar:has(.ws-monte-trigger) .ws-nav{gap:4px}
 .ws-topbar:has(.ws-monte-trigger) .ws-nav button{width:40px;height:40px}
 @media(max-width:360px){.ws-topbar:has(.ws-monte-trigger){grid-template-columns:36px minmax(0,1fr) 108px}.ws-topbar:has(.ws-monte-trigger) .ws-nav{gap:3px}.ws-topbar:has(.ws-monte-trigger) .ws-nav button{width:32px;height:36px}}
+
+.mc-uncertainty{font-size:12px;line-height:1.45;background:#f5f8f1;border:1px solid #d4e2cf;color:#3c5947;border-radius:12px;padding:10px 12px;margin:-3px 0 12px}

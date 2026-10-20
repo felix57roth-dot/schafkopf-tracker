@@ -1,5 +1,5 @@
 /* Asynchronous, fully offline worker: does not access UI or user storage. */
-importScripts('./wastl-engine.js', './wastl-montecarlo.js');
+importScripts('./wastl-engine.js', './wastl-policy.js', './wastl-montecarlo.js');
 self.onmessage = event => {
  const {game,turn,options,requestId} = event.data || {};
  try {
