@@ -703,6 +703,29 @@ html:has(.ws-fullscreen), body:has(.ws-fullscreen){overflow:hidden!important; ov
 .mentor-source-tag{display:inline-flex;align-items:center;margin-top:8px;padding:4px 9px;border-radius:999px;font-weight:750;font-size:11px;line-height:1.25;max-width:max-content}
 .mentor-source-tag.palast{background:#e6eefb;color:#265a88}.mentor-source-tag.tracked{background:#e1f4e8;color:#1b7048}
 @media(max-height:670px){.ws-player-tag{gap:0;font-size:10px;padding:2px 5px}.ws-player-tag small{font-size:9px}}
+
+/* v3.10: Punkte an der Tischkante ohne Ueberdecken der Karten */
+.ws-hand-caption{position:relative;z-index:30!important;overflow:visible!important}.ws-hand .ws-fan{z-index:1}.ws-result-link{position:relative;z-index:32!important}
+.ws-score{position:absolute;z-index:5;top:8px;left:8px;min-width:116px;max-width:48%;border-radius:10px;background:rgba(12,55,42,.94);color:#fff5d9;border:1px solid rgba(236,199,118,.70);padding:5px 7px;font-size:clamp(9px,2.65vw,12px);line-height:1.25;box-shadow:0 3px 9px #1e120c33}
+.ws-score>b,.ws-score>span{display:block}.ws-score>b{color:#f2d692}.ws-score>span{margin-top:2px}.ws-score span strong{font-size:1.12em}.ws-score small{display:block;opacity:.85}
+.ws-result-link{display:inline-flex;padding:3px 8px;margin-left:8px;vertical-align:middle;border-radius:12px;border:1px solid #e5bd66;background:#f7df98;color:#174634;font-size:clamp(10px,2.6vw,13px);font-weight:800;cursor:pointer;max-width:70%;white-space:nowrap}
+.ws-result-screen{background:linear-gradient(155deg,#0c3027 0%,#244e3b 100%)}
+.ws-result-body{display:grid;grid-template-rows:minmax(0,22%) minmax(0,1fr) 44px;gap:10px;min-height:0;overflow:hidden;padding:clamp(8px,2.5vh,24px) 14px}
+.ws-result-mentor{display:grid;grid-template-columns:clamp(64px,22vw,112px) minmax(0,1fr);gap:10px;align-items:center;min-height:0}
+.ws-result-mentor img{width:100%;max-height:100%;height:auto;aspect-ratio:1;object-fit:cover;object-position:center 12%;border:2px solid #e3bf72;border-radius:16px}
+.ws-result-speech{position:relative;background:#fff4db;border:1px solid #e0c88e;border-radius:17px;padding:10px 12px;font-size:clamp(12px,3.1vw,16px);line-height:1.36;color:#2c3227;max-height:100%;overflow:auto}
+.ws-result-card{min-height:0;overflow:auto;border-radius:24px;background:#fff7e8;color:#1a3228;padding:clamp(12px,3vh,26px);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:space-around;gap:clamp(4px,1vh,14px);box-shadow:0 10px 28px #001c1250}
+.ws-result-trophy{font-size:clamp(25px,5vh,49px);line-height:1}.ws-result-card h2{font-size:clamp(18px,4vw,28px);line-height:1.16;margin:0;color:#144331}
+.ws-result-tally{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);align-items:center;gap:8px;width:min(100%,430px);background:#f5ecd5;border:1px solid #e6d5ae;border-radius:18px;padding:8px 14px}
+.ws-result-tally>div{display:grid;gap:0}.ws-result-tally strong{font-size:clamp(34px,8vw,52px);line-height:1.1;color:#166844;font-variant-numeric:tabular-nums}.ws-result-tally small{font-size:clamp(10px,2.7vw,14px)}
+.ws-result-grade{display:flex;flex-direction:column;gap:2px;align-items:center}.ws-result-grade span{font-size:clamp(12px,3vw,16px);font-weight:700}.ws-result-grade strong{color:#157448;font-size:clamp(36px,9vw,66px);line-height:1;font-variant-numeric:tabular-nums}.ws-result-grade strong small{font-size:.42em;color:#737e72}
+.ws-result-note{margin:0;font-size:clamp(10px,2.9vw,13px);line-height:1.35;color:#62675a}
+.ws-result-done{border:1px solid #e5ca87;background:#178754;color:white;border-radius:13px;font-size:14px;font-weight:800;min-height:42px;cursor:pointer}
+.ws-result-people{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%}.ws-result-people>span{background:#f6ecd4;border-radius:12px;padding:7px 4px;font-size:12px;display:flex;justify-content:space-around}.ws-result-people b{color:#137c51}
+@media(max-width:355px){.ws-score{max-width:47%;min-width:0;padding:4px}.ws-result-body{gap:6px;padding:7px}.ws-result-card{padding:10px}}
+@media(max-height:630px){.ws-result-body{grid-template-rows:minmax(0,20%) minmax(0,1fr) 40px;gap:6px;padding:5px 10px}.ws-result-card{padding:9px}.ws-result-mentor img{max-height:88px}.ws-result-note{font-size:10px}}
+@media(orientation:landscape) and (max-height:510px){.ws-result-body{grid-template-columns:33% minmax(0,1fr);grid-template-rows:minmax(0,1fr) 38px}.ws-result-mentor{grid-row:1/3;display:flex;flex-direction:column;justify-content:center}.ws-result-mentor img{max-width:78px}.ws-result-mentor .ws-result-speech{font-size:12px}.ws-result-card{grid-column:2;grid-row:1}.ws-result-done{grid-column:2;grid-row:2}.ws-result-trophy{display:none}}
+
 </style></head><body><div id="app" class="app"><header class="hero"><div class="top"><div class="brand"><div class="emblem" id="brandSuit"></div><span>Schafkopf<span style="color:#e4c47b">tracker</span></span></div><div class="suite" id="suits"></div></div><h1 id="headerTitle">Servus am Kartentisch!</h1><p id="headerSub">Alle deine Schafkopfabende auf einen Blick.</p></header><main class="main" id="main"></main><nav class="nav" id="nav"></nav><div id="toast" class="hidden" role="status" aria-live="polite"></div><div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><div class="update-text"><b>🃏 Neue Version verfügbar!</b><p>Ein Update ist bereit. Deine gespeicherten Spielabende bleiben erhalten.</p></div><button type="button" class="btn" id="applyUpdate">Aktualisieren</button><button type="button" class="mini-btn" id="dismissUpdate" aria-label="Später aktualisieren" title="Später">✕</button></div></div><script>
 'use strict';
 /* Schafkopftracker v3.0 – Navigation und Design überarbeitet, weiterhin offline. */
@@ -797,7 +820,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='3.9';
+const VERSION='3.10';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1800,6 +1823,114 @@ function wastlCompactSpeech(game,t,step,valid){
  if(t.winTeam==='us')return 'Gut! Die Augen gehen an dein Team. So kann ma weiterspielen!';
  return 'Interessanter Stich! Für eine sichere Bewertung müsst ma die ganze Spielsituation betrachten.';
 }
+
+/* Version 3.10: Stich-fuer-Stich-Augen und vorsichtige Endbewertung.
+   Ermittelt Stiche aus den Karten, vertraut nie blind gespeicherten Siegerflags. */
+function wastlScoreProgress(game,through){
+ const count=Math.min(Math.max(0,through),Array.isArray(game.tricks)?game.tricks.length:0);
+ const seats=Object.fromEntries(STITCH_SEAT_IDS.map(s=>[s,0]));
+ const wonStitches=Object.fromEntries(STITCH_SEAT_IDS.map(s=>[s,0]));
+ let detectedRufPartner=null,complete=true;
+ for(let i=0;i<count;i++){
+  const t=game.tricks[i];
+  if(!t||!Array.isArray(t.cards)||t.cards.length!==4||!validStitchSeat(t.leaderSeat)||t.cards.some(id=>!CARD_MAP[id])){complete=false;break;}
+  const wi=stitchWinnerIndex(t.cards,game.type,game.trumpSuit);
+  if(wi<0){complete=false;break;}
+  const winner=stitchPositionFromLeader(t.leaderSeat,wi);
+  if(validStitchSeat(t.winnerSeat)&&t.winnerSeat!==winner){complete=false;break;}
+  const eyes=t.cards.reduce((n,id)=>n+CARD_MAP[id].eyes,0);
+  seats[winner]+=eyes;wonStitches[winner]++;
+  if(game.type==='rufspiel'&&['eichel','gras','schell'].includes(game.calledSuit)){
+   const acePosition=t.cards.indexOf(game.calledSuit+'-A');
+   if(acePosition!==-1)detectedRufPartner=stitchPositionFromLeader(t.leaderSeat,acePosition);
+  }
+ }
+ const total=Object.values(seats).reduce((n,x)=>n+x,0);
+ const personName=seat=>mentorSeatNameShort(seat,game);
+ if(game.type==='ramsch')return {ready:complete,individual:true,people:STITCH_SEAT_IDS.map(seat=>({seat,name:personName(seat),eyes:seats[seat],tricks:wonStitches[seat]})),total,count,teamReady:false};
+ let other=[];
+ if(!validStitchSeat(game.mySeat)||!validStitchSeat(game.declarerSeat))complete=false;
+ if(game.type==='kreuzrunde')other=[stitchPartnerOf(game.mySeat)];
+ else if(game.type==='rufspiel'){
+  if(!detectedRufPartner){return {ready:complete,teamReady:false,reason:'Partnerschaft noch unbekannt – das gerufene Ass ist noch nicht gefallen.',total,count,seats,detectedRufPartner:null};}
+  if(detectedRufPartner===game.declarerSeat){complete=false;}
+  const declarers=new Set([game.declarerSeat,detectedRufPartner]);
+  other=declarers.has(game.mySeat)?[...declarers].filter(s=>s!==game.mySeat):STITCH_SEAT_IDS.filter(s=>!declarers.has(s)&&s!==game.mySeat);
+ }else if(game.type==='hochzeit'){
+  if(!validStitchSeat(game.partnerSeat))return {ready:complete,teamReady:false,reason:'Hochzeitspartner nicht gespeichert.',total,count,seats};
+  const declarers=new Set([game.declarerSeat,game.partnerSeat]);
+  other=declarers.has(game.mySeat)?[...declarers].filter(s=>s!==game.mySeat):STITCH_SEAT_IDS.filter(s=>!declarers.has(s)&&s!==game.mySeat);
+ }else{
+  other=game.mySeat===game.declarerSeat?[]:STITCH_SEAT_IDS.filter(s=>s!==game.declarerSeat&&s!==game.mySeat);
+ }
+ const mine=new Set([game.mySeat,...other]);
+ const myEyes=STITCH_SEAT_IDS.reduce((n,s)=>n+(mine.has(s)?seats[s]:0),0),theirEyes=total-myEyes;
+ const callerSide=game.type==='kreuzrunde'?null:mine.has(game.declarerSeat);
+ return {ready:complete,teamReady:true,individual:false,count,total,myEyes,theirEyes,seats,wonStitches,mine,callerSide,detectedRufPartner};
+}
+function wastlResult(game,info){
+ const result=wastlScoreProgress(game,game.tricks.length);
+ if(!result.ready||game.tricks.length!==8||result.total!==120)return {ok:false,reason:'Die Partie ist noch nicht vollständig oder die Stichgewinner stimmen nicht mit den Karten überein. Bitte korrigiere den Verlauf.'};
+ if(!result.teamReady&&!result.individual)return {ok:false,reason:result.reason||'Die Teamzuordnung ist noch nicht eindeutig.'};
+ // Official formats have game-dependent win conditions. Do not rank skill when rules are uncertain.
+ if(result.individual){
+  const top=Math.max(...result.people.map(p=>p.eyes)),losers=result.people.filter(p=>p.eyes===top);
+  return {ok:true,individual:true,people:result.people,winningText:losers.length===1?`${losers[0].name} hat die meisten Augen (${top}).`:`Gleichstand bei ${top} Augen – die Hausregel entscheidet.`,grade:null,gradeReason:'Ramsch wird nach eigenen Regeln gewertet. Eine 1–10-Analyse erfordert gesonderte Bewertungsregeln.'};
+ }
+ const myWon= result.callerSide===null ? result.myEyes>=61 : (result.callerSide?result.myEyes>=61:result.myEyes>=60);
+ let myResult='';
+ if(game.type==='bettel'){
+  const tricks=result.wonStitches[game.declarerSeat];
+  const successful=tricks===0;
+  myResult=successful?`Bettel: ${mentorSeatNameShort(game.declarerSeat,game)} gewinnt ohne Stich. ${game.mySeat===game.declarerSeat?'Du hast gewonnen.':'Du hast verloren.'}`:`Bettel: ${mentorSeatNameShort(game.declarerSeat,game)} verliert mit ${tricks} Stich${tricks===1?'':'en'}. ${game.mySeat===game.declarerSeat?'Du hast verloren.':'Du hast gewonnen.'}`;
+ }else if(game.type==='tout'){
+  const success=result.wonStitches[game.declarerSeat]===8;
+  myResult=success?`Tout: Alle acht Stiche für ${mentorSeatNameShort(game.declarerSeat,game)}. ${game.mySeat===game.declarerSeat?'Du hast gewonnen.':'Du hast verloren.'}`:`Tout: Die Ansagerpartei hat nicht alle Stiche. ${game.mySeat===game.declarerSeat?'Du hast verloren.':'Du hast gewonnen.'}`;
+ }else if(game.type==='sie')myResult='Sie: Sonderwertung – dieser Spieltyp wird gewöhnlich nicht ausgespielt.';
+ else myResult=myWon?'Dein Team hat gewonnen!':'Die Gegenpartei hat gewonnen.';
+ const teamWinner=(game.type==='bettel'||game.type==='tout'||game.type==='sie')?null:(myWon?'mein':'gegner');
+ let grade=null,gradeReason='';
+ const checked=info.valid.ready && !['sie','bettel','ramsch','bockrunde'].includes(game.type);
+ if(checked){
+  const ev=mentorStichEvidence(game);
+  const warnings=ev.tricks.flatMap(t=>t.notes).filter(n=>n.type==='warn'&&['Bedienpflicht prüfen','Stichgewinner prüfen'].includes(n.heading));
+  if(warnings.length)gradeReason=`${warnings.length} möglicher Regelfehler: Bewertung erst nach Korrektur.`;
+  else{
+   // A conservative HEURISTIC, not a learned evaluator or objective skill score.
+   const ownSideWin=game.type==='tout'?(result.wonStitches[game.declarerSeat]===8)===(game.mySeat===game.declarerSeat):myWon;
+   let points=5+(ownSideWin?1:-1);
+   const margin=result.myEyes-60;
+   if(margin>=15)points++;
+   if(margin<=-15)points--;
+   const secured=ev.tricks.filter(t=>t.myPlay && t.winTeam==='us' && CARD_MAP[t.myPlay.id]?.eyes>=10).length;
+   if(secured>=2)points++;
+   const lateLoss=ev.tricks.filter(t=>t.myPlay && t.winTeam==='them' && CARD_MAP[t.myPlay.id]?.eyes>=10 && t.myPlay.position===3).length;
+   if(lateLoss>=2)points--;
+   grade=Math.min(10,Math.max(1,points));
+   gradeReason='Vorläufige Regelbewertung aus Ergebnis, Teamaugen und ausgewählten eigenen Spielzügen – keine objektive KI-Leistungsnote.';
+  }
+ }else if(!info.valid.ready)gradeReason='Die Partie ist nicht ausreichend geprüft, um deine Spielleistung seriös zu bewerten.';
+ else gradeReason='Für diese Sonder-Spielart liegt noch kein belastbares Bewertungsschema vor.';
+ return {ok:true,individual:false,myEyes:result.myEyes,theirEyes:result.theirEyes,teamWinner,myResult,grade,gradeReason};
+}
+function wastlScoreWidget(game,step){
+ const p=wastlScoreProgress(game,step+1);
+ if(!p.ready)return `<div class="ws-score" role="status">Punkte prüfen <small>Stichfolge unklar</small></div>`;
+ if(p.individual)return `<div class="ws-score" aria-live="polite"><b>Augen nach Stich ${step+1}</b><span>${p.people.map(x=>`${esc(x.name)} ${x.eyes}`).join(' · ')}</span></div>`;
+ if(!p.teamReady)return `<div class="ws-score" aria-live="polite"><b>Teamstand offen</b><span>Ruf-Ass noch nicht gefallen</span></div>`;
+ return `<div class="ws-score" aria-live="polite"><b>Nach Stich ${step+1}</b><span>Dein Team <strong>${p.myEyes}</strong> : <strong>${p.theirEyes}</strong> Gegner</span></div>`;
+}
+function wastlEnding(game,info){
+ const result=wastlResult(game,info);
+ const score=result.individual?`<div class="ws-result-people">${result.people.map(p=>`<span>${esc(p.name)} <b>${p.eyes}</b></span>`).join('')}</div>`:`<div class="ws-result-tally"><div><small>Dein Team</small><strong>${result.myEyes??'–'}</strong><small>Augen</small></div><span>:</span><div><small>Gegner</small><strong>${result.theirEyes??'–'}</strong><small>Augen</small></div></div>`;
+ const title=result.ok?result.myResult:'Spielauswertung prüfen';
+ const speech=result.ok?(result.grade!==null?`Servus! ${result.myResult} Für dein Spiel geb i dir vorläufig ${result.grade} von 10 Punkten. Frag mi gern, worauf die Note beruht.`:`Servus! ${result.myResult} Für eine faire Spielnote fehlen ma noch sichere Anhaltspunkte.`):`Da stimmt noch etwas nicht. ${result.reason}`;
+ return `<div class="ws-fullscreen ws-result-screen" role="dialog" aria-modal="true" aria-label="Wastls Endauswertung">
+  <header class="ws-topbar"><button type="button" id="wsClose" aria-label="Zur Partieübersicht">←</button><div class="ws-step-label"><strong>Partie beendet</strong><small>${esc(stitchTypeName(game.type))} · 8 von 8 Stichen</small></div><div class="ws-nav"><button type="button" data-mentor-step="7" aria-label="Zum letzten Stich">‹</button></div></header>
+  <main class="ws-result-body"><div class="ws-result-mentor"><img src="wastl.png" alt="Wastl"><div class="ws-result-speech">${esc(speech)}</div></div><section class="ws-result-card"><div class="ws-result-trophy" aria-hidden="true">🏆</div><h2>${esc(title)}</h2>${result.ok?score:`<p>${esc(result.reason)}</p>`}<div class="ws-result-grade"><span>Wastls Spielbewertung</span><strong>${result.grade===null||result.grade===undefined?'–':result.grade}<small>/10</small></strong></div><p class="ws-result-note">${esc(result.gradeReason||'Bitte prüfe zuerst die Aufzeichnung.')}</p></section><button type="button" class="ws-result-done" id="wsCloseResult">Zurück zu meinen Partien</button></main>
+ </div>`;
+}
+
 function wastlFullScreen(game,info,t,step,handState){
  const cards=t.raw.cards, seats={};
  // Reconstruct which individual card belongs to which PLAYER, not the position at which it was dealt.
@@ -1829,15 +1960,15 @@ function wastlFullScreen(game,info,t,step,handState){
    <header class="ws-topbar">
      <button type="button" id="wsClose" aria-label="Analyse schließen">←</button>
      <div class="ws-step-label"><strong>Stich ${step+1} von ${game.tricks.length}</strong><small>${esc(stitchTypeName(game.type))} · ${t.eye} Augen</small></div>
-     <div class="ws-nav"><button type="button" data-mentor-step="${step-1}" ${step===0?'disabled':''} aria-label="Vorheriger Stich">‹</button><button type="button" data-mentor-step="${step+1}" ${step>=game.tricks.length-1?'disabled':''} aria-label="Nächster Stich">›</button></div>
+     <div class="ws-nav"><button type="button" data-mentor-step="${step-1}" ${step===0?'disabled':''} aria-label="Vorheriger Stich">‹</button><button type="button" data-mentor-step="${step+1}" aria-label="${step===game.tricks.length-1?'Ergebnis und Bewertung ansehen':'Nächster Stich'}">${step===game.tricks.length-1?'✓':'›'}</button></div>
    </header>
    <main class="ws-board">
      <div class="ws-guide"><img class="ws-portrait" src="wastl.png" alt="Wastl"><div class="ws-speech"><span class="ws-speech-copy">${esc(wastlCompactSpeech(game,t,step,info.valid))}</span><button class="ws-speech-more" type="button" data-ws-more aria-label="Wastls ausführliche Erklärung">ⓘ</button></div></div>
      <section class="ws-felt" aria-label="Kartentisch mit den vier gespielten Karten">
-       <div class="ws-winner"><b>Stichgewinner</b><span>${esc(winner)}</span></div>
+       ${wastlScoreWidget(game,step)}<div class="ws-winner"><b>Stichgewinner</b><span>${esc(winner)}</span></div>
        ${slot('top')}${slot('left')}${slot('right')}${slot('bottom')}
      </section>
-     <section class="ws-hand" aria-label="Deine verbleibenden Handkarten"><div class="ws-hand-caption">Deine Hand · ${sorted.length} Karte${sorted.length===1?'':'n'} übrig</div><div class="ws-fan">${fan}</div></section>
+     <section class="ws-hand" aria-label="Deine verbleibenden Handkarten"><div class="ws-hand-caption">Deine Hand · ${sorted.length} Karte${sorted.length===1?'':'n'} übrig${step===game.tricks.length-1?` <button class="ws-result-link" data-mentor-step="${game.tricks.length}" type="button">Ergebnis & Bewertung →</button>`:''}</div><div class="ws-fan">${fan}</div></section>
    </main>
    <div class="ws-detail-scrim" data-ws-scrim hidden>
      <div class="ws-detail-sheet" role="region" aria-label="Wastls weitere Hinweise"><button class="ws-detail-close" type="button" data-ws-dismiss aria-label="Zusatzinfos schließen">×</button><h3>Wastl erklärt diesen Stich</h3>${detailText}${alt}${reason}</div>
@@ -1854,7 +1985,9 @@ function mentorUI(){
  <div class="mentor-source-filters" role="group" aria-label="Partien nach Herkunft filtern">${segments.map(([key,label])=>`<button type="button" data-mentor-source="${key}" class="${mentorArchiveFilter===key?'active':''}" aria-pressed="${mentorArchiveFilter===key}">${label}</button>`).join('')}</div>
  <div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small><span class="mentor-source-tag ${mentorSource(x)}">${mentorSource(x)==='palast'?'↗ Schafkopf Palast':'✓ Selbst getrackt'}</span></span><span>→</span></button>`).join('')||'<div class="card empty">Für diese Auswahl sind noch keine Partien gespeichert.</div>'}</div><p class="mentor-rule">Wastl ist ein kostenloser, lokaler Lernbegleiter. Seine Hinweise beruhen auf den gespeicherten Stichen und einfachen Regeln, nicht auf einer Online-KI.</p></div>`;
  }
- const info=mentorGeneral(g),analysis=mentorStichEvidence(g);
+ const info=mentorGeneral(g);
+ if(mentorStep>=g.tricks.length && g.tricks.length===8) return wastlEnding(g,info);
+ const analysis=mentorStichEvidence(g);
  const step=Math.max(0,Math.min(g.tricks.length-1,mentorStep));
  const t=analysis.tricks[step];
  if(!t)return `<div class="content-page mentor-view"><button class="btn ghost" id="mentorBack">← Zur Partieauswahl</button><p>Für diese Partie fehlen Stichdaten.</p></div>`;
@@ -1867,7 +2000,7 @@ document.addEventListener('click',e=>
  const item=e.target.closest('[data-mentor-open]');if(item){mentorMode=true;mentorGameId=item.dataset.mentorOpen;mentorStep=0;switchTab('mentor');return;}
  if(e.target.closest('#mentorStart')){mentorMode=true;mentorGameId='';switchTab('mentor');return;}
  if(e.target.closest('#mentorBack')){mentorGameId='';mentorStep=0;render();scrollTo({top:0,behavior:'instant'});return;}
- const step=e.target.closest('[data-mentor-step]');if(step){const game=mentorSelected();mentorStep=Math.max(0,Math.min((game?.tricks.length||1)-1,Number(step.dataset.mentorStep)));render();return;}
+ const step=e.target.closest('[data-mentor-step]');if(step){const game=mentorSelected();mentorStep=Math.max(0,Math.min((game?.tricks.length||1),Number(step.dataset.mentorStep)));render();return;}
 },true);;
 
 
@@ -1898,6 +2031,7 @@ document.addEventListener('click',e=>{
  if(more){const root=e.target.closest('.ws-fullscreen');const scrim=root?.querySelector('[data-ws-scrim]');if(scrim){scrim.hidden=false;scrim.querySelector('[data-ws-dismiss]')?.focus();}return;}
  const close=e.target.closest('[data-ws-dismiss]');
  if(close||e.target.matches('[data-ws-scrim]')){const root=e.target.closest('.ws-fullscreen');const scrim=root?.querySelector('[data-ws-scrim]');if(scrim){scrim.hidden=true;root.querySelector('[data-ws-more]')?.focus();}return;}
+ if(e.target.closest('#wsCloseResult')){mentorGameId='';mentorStep=0;render();return;}
  if(e.target.closest('#wsClose')){mentorGameId='';mentorStep=0;render();return;}
 },true);
 document.addEventListener('keydown',e=>{
