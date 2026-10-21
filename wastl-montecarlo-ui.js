@@ -96,13 +96,53 @@
    worker.postMessage({requestId:job,options:{cases:count,samples:100,evalRuns:24,seed:0x441022}});
   }catch(e){setRunning(false);const el=container()?.querySelector('[data-bench-output]');if(el)el.innerHTML=`<div class="mc-warning">${esc(e.message||e)}</div>`;}
  }
+ function validationSummary(){
+  let result=null;
+  try{result=JSON.parse(localStorage.getItem('wastl-ab-validation-v46')||'null');}catch{}
+  if(!result||result.version!=='4.6.0')return '<p class="mc-bench-empty">Noch kein A/B-Vergleich durchgeführt. Eine Spielstärkenote ist daraus noch nicht ableitbar.</p>';
+  const pct=n=>(n*100).toFixed(1).replace('.',',')+' Prozentpunkte';
+  const delta=result.test.lift;
+  const groups=[['solo','Solo'],['wenz','Wenz'],['rufspiel','Rufspiel'],['geier','Geier'],['ramsch','Ramsch'],['kreuzrunde','Kreuzrunde']];
+  const rows=groups.map(([key,name])=>{
+   const g=result.groups[key];return `<tr><td>${name}</td><td>${g.count}</td><td>${g.changed}</td><td>${g.count<12?'Zu wenig Daten':`${g.lift>0?'+':''}${pct(g.lift)} ± ${pct(g.margin)}`}</td></tr>`;
+  }).join('');
+  const verdict=result.evidence==='internal-advantage'?'Interner Vorteil gegenüber der alten Heuristik im Test erkennbar.':'Kein ausreichend klarer Vorteil gegenüber der alten Heuristik nachgewiesen.';
+  return `<div class="mc-bench-report"><p><strong>Gepaarter A/B-Test:</strong> ${result.test.count} unbekannte Testentscheidungen, ${result.diagnostic.count} separate Diagnosefälle. Die Monte-Carlo-Wahl wich bei ${result.test.changed} Testentscheidungen von der alten Heuristik ab.</p><p><strong>Änderung der Gewinnquote:</strong> ${delta>0?'+':''}${pct(delta)} ± ${pct(result.test.margin)} (Unsicherheitsbereich zwischen Testfällen).</p><table><thead><tr><th>Spielart</th><th>Tests</th><th>Andere Wahl</th><th>Unterschied</th></tr></thead><tbody>${rows}</tbody></table><p><strong>${esc(verdict)}</strong></p><p class="mc-bench-caution">Dieser Vergleich benutzt zur Fortsetzung noch Wastls heuristische Gegenspieler und künstliche Referenzpartien. Er ist daher KEINE unabhängige menschliche Spielstärkenprüfung und kalibriert keine 1–10-Note.</p></div>`;
+ }
+ function validationProgress(done,total){
+  const el=container()?.querySelector('[data-validation-output]');if(!el)return;
+  el.innerHTML=`<b>A/B-Test läuft: ${done} von ${total} Vergleichssituationen</b><progress class="mc-progress" value="${done}" max="${total}"></progress><p class="mc-progress-note">Dieselben unbekannten Kartenverteilungen werden mit beiden Empfehlungen ausgewertet. Die Daten bleiben auf deinem Gerät.</p>`;
+ }
+ function runValidation(){
+  const modal=container();if(!modal)return;
+  const count=Number(modal.querySelector('[data-validation-count]')?.value)||24;
+  if(worker){worker.terminate();worker=null;}
+  const job=++sequence;
+  setRunning(true);validationProgress(0,count);
+  try{
+   worker=new Worker('./wastl-validation-worker.js');
+   worker.onmessage=event=>{
+    if(!container()||job!==sequence||event.data?.requestId!==job)return;
+    const response=event.data;
+    if(response.kind==='progress'){validationProgress(response.completed,response.total);return;}
+    worker?.terminate();worker=null;setRunning(false);
+    const el=container()?.querySelector('[data-validation-output]');
+    if(response.kind!=='complete'||!response.report?.ok){if(el)el.innerHTML=`<div class="mc-warning">${esc(response.reason||response.report?.reason||'Vergleich fehlgeschlagen')}</div>`;return;}
+    const {cases,errors,...summary}=response.report;
+    try{localStorage.setItem('wastl-ab-validation-v46',JSON.stringify(summary));}catch{}
+    if(el)el.innerHTML=validationSummary();
+   };
+   worker.onerror=()=>{if(job!==sequence||!container())return;worker?.terminate();worker=null;setRunning(false);const el=container()?.querySelector('[data-validation-output]');if(el)el.innerHTML='<div class="mc-warning">A/B-Hintergrundtest konnte nicht geladen werden. Bitte App online aktualisieren.</div>';};
+   worker.postMessage({requestId:job,options:{cases:count,samples:60,evalRuns:12,seed:0x46660801}});
+  }catch(error){setRunning(false);const el=container()?.querySelector('[data-validation-output]');if(el)el.textContent=String(error.message||error);}
+ }
  function overlay(game,automatic=false){
   cleanup();
   activeSelection={game:JSON.parse(JSON.stringify(game))};
   const label=typeof stitchTypeName==='function'?stitchTypeName(game.type):game.type;
   const div=document.createElement('div');div.className='mc-overlay';div.dataset.monteDialog='';
   div.innerHTML=`<section class="mc-dialog" role="dialog" aria-modal="true" aria-label="Wastl Ganze Partie simulieren" tabindex="-1">
-   <div class="mc-head"><div><small>WASTL-ENGINE 4.5 · OFFLINE · MODELLPRÜFUNG</small><h2>Ganze Partie simulieren</h2><p>${esc(label)} · alle acht Stiche in einem Durchlauf</p></div><button type="button" data-monte-close class="mc-close" aria-label="Schließen">×</button></div>
+   <div class="mc-head"><div><small>WASTL-ENGINE 4.6 · OFFLINE · MODELLPRÜFUNG</small><h2>Ganze Partie simulieren</h2><p>${esc(label)} · alle acht Stiche in einem Durchlauf</p></div><button type="button" data-monte-close class="mc-close" aria-label="Schließen">×</button></div>
    ${existingSummary(game)}
    <p class="mc-intro">Wastl simuliert deine Entscheidung bei <strong>allen acht Stichen</strong> mit zum jeweiligen Zeitpunkt plausiblen unbekannten Händen. Die Ergebnisse fließen danach automatisch in seine Erklärungen ein. Bei Ramsch zählt eine möglichst geringe eigene Augenzahl, bei Kreuzrunde die Augen deines Zweierteams. Du musst nicht jeden Zug einzeln anstoßen.</p>
    <div class="mc-controls"><label>Verteilungen je Stich<select data-monte-count>
@@ -113,19 +153,26 @@
     <div class="mc-bench-controls"><label>Prüfumfang<select data-bench-count><option value="24">24 Vergleichssituationen (schnell)</option><option value="48" selected>48 Vergleichssituationen (6 Spielarten)</option><option value="72">72 Vergleichssituationen (mind. 12 je Art)</option></select></label><button type="button" data-bench-run class="mc-bench-button">Modell prüfen</button></div>
     <div data-bench-output aria-live="polite">${benchmarkSummary(game.type)}</div>
    </div></details>
+   <details class="mc-benchmark"><summary>⚖️ Neu: Strategie A/B-Test <small>Monte Carlo gegen bisherige Heuristik</small></summary><div class="mc-bench-body">
+    <p>Gleiche Kartenverteilungen, zwei unterschiedliche Zugempfehlungen: Die alte Heuristik und Wastls Monte-Carlo-Auswahl werden auf getrennten Testfällen überprüft. Die Ergebnisse zeigen, ob sich unter diesen Testbedingungen ein Vorteil nachweisen lässt; keine Aussage über menschliche Spielstärke.</p>
+    <div class="mc-bench-controls"><label>Testumfang<select data-validation-count><option value="24" selected>24 Situationen · 12 zurückgehaltene Tests</option><option value="48">48 Situationen · 24 Tests</option><option value="96">96 Situationen · 48 Tests (langsam)</option></select></label><button type="button" data-validation-run class="mc-bench-button">A/B-Test starten</button></div>
+    <div data-validation-output aria-live="polite">${validationSummary()}</div>
+   </div></details>
    <div class="mc-output" data-monte-output role="status" aria-live="polite"><p>${automatic?'Wähle einmal den Rechenumfang und starte anschließend die Analyse.':'Du kannst die Partie neu berechnen oder die bisherigen Ergebnisse verwenden.'}</p></div>
    <div class="mc-bottom"><button type="button" class="mc-skip" data-monte-close>${cache()?.get(game)?'Zur Analyse zurück':'Ohne Simulation fortfahren'}</button></div>
-   <p class="mc-disclaimer">Die gesamte Berechnung erfolgt auf deinem Gerät. Während des Laufs bleibt die bereits gespeicherte Partie unverändert. Die später tatsächlich gespielten Karten der Gegner werden nicht als Wissen vorweggenommen. Eine 1–10-Modellnote wird nur bei bestandenem Modell-Prüflauf der jeweiligen Spielart freigegeben und bleibt experimentell. Ein solcher Test ersetzt keine Bewertung durch erfahrene Spieler.</p>
+   <p class="mc-disclaimer">Die gesamte Berechnung erfolgt auf deinem Gerät. Während des Laufs bleibt die bereits gespeicherte Partie unverändert. Die später tatsächlich gespielten Karten der Gegner werden nicht als Wissen vorweggenommen. Auch eine freigegebene 1–10-Modellnote ist derzeit nicht gegen menschliche Spielstärke kalibriert; das A/B-Labor allein kann dies nicht ersetzen. Ein solcher Test ersetzt keine Bewertung durch erfahrene Spieler.</p>
   </section>`;
   document.body.appendChild(div);div.querySelector('.mc-dialog')?.focus();
  }
  function setRunning(isRunning){
   const modal=container();if(!modal)return;
-  const run=modal.querySelector('[data-monte-run]'),select=modal.querySelector('[data-monte-count]'),bench=modal.querySelector('[data-bench-run]'),benchSelect=modal.querySelector('[data-bench-count]');
+  const run=modal.querySelector('[data-monte-run]'),select=modal.querySelector('[data-monte-count]'),bench=modal.querySelector('[data-bench-run]'),benchSelect=modal.querySelector('[data-bench-count]'),vButton=modal.querySelector('[data-validation-run]'),vSelect=modal.querySelector('[data-validation-count]');
   if(run){run.disabled=isRunning;run.textContent=isRunning?'Simulation läuft …':'Erneut simulieren';}
   if(select)select.disabled=isRunning;
   if(bench)bench.disabled=isRunning;
   if(benchSelect)benchSelect.disabled=isRunning;
+  if(vButton)vButton.disabled=isRunning;
+  if(vSelect)vSelect.disabled=isRunning;
  }
  function showProgress(completed,total){
   const out=container()?.querySelector('[data-monte-output]');if(!out)return;
@@ -179,6 +226,7 @@
    const g=currentGame();if(!g)return;
    prompted.add(cache().fingerprint(g));overlay(g);return;
   }
+  if(event.target.closest('[data-validation-run]')){event.preventDefault();event.stopImmediatePropagation();runValidation();return;}
   if(event.target.closest('[data-bench-run]')){event.preventDefault();event.stopImmediatePropagation();runBenchmark();return;}
   if(event.target.closest('[data-monte-run]')){event.preventDefault();event.stopImmediatePropagation();simulate();return;}
   if(event.target.closest('[data-monte-close]')||event.target.matches('[data-monte-dialog]')){
