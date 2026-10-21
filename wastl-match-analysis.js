@@ -9,7 +9,7 @@
  if(root)root.WastlMatchAnalysis=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const VERSION='4.3.0', STORAGE='wastl-match-model-v43', BENCH_STORAGE='wastl-benchmark-v44', BENCH_VERSION='4.4.0';
+ const VERSION='4.5.0', STORAGE='wastl-match-model-v45', BENCH_STORAGE='wastl-benchmark-v45', BENCH_VERSION='4.5.0';
  const asNumber=n=>Number.isFinite(Number(n))?Number(n):0;
  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function fingerprint(game){
@@ -29,7 +29,7 @@
  }
  function save(game,reports,samples){
   if(!Array.isArray(reports)||reports.length!==8)throw Error('Es fehlen Stichauswertungen.');
-  const key=fingerprint(game),data={version:VERSION,model:'wastl-policy-4.2',samples,finished:Date.now(),reports};
+  const key=fingerprint(game),data={version:VERSION,model:'wastl-policy-4.5',samples,finished:Date.now(),reports};
   memory.set(key,data);
   try{let values=cacheRead().filter(x=>x.key!==key);values.unshift({key,data});root.localStorage?.setItem(STORAGE,JSON.stringify(values.slice(0,5)));}catch{/* In-memory cache works without available storage. */}
   return data;
@@ -65,7 +65,7 @@
  }
  // Ergebnisse des getrennten Prueflabors; kein Nachweis menschlicher Spielstaerke.
  function saveBenchmark(report){
-  if(!report||report.version!==BENCH_VERSION||report.model!=='wastl-policy-4.2'||!report.ok)throw Error('Pruefprotokoll ungueltig');
+  if(!report||report.version!==BENCH_VERSION||report.model!=='wastl-policy-4.5'||!report.ok)throw Error('Pruefprotokoll ungueltig');
   const {cases,errors,...summary}=report; // Only small, non-personal aggregate data.
   const b={...summary,saved:Date.now()};
   try{root.localStorage?.setItem(BENCH_STORAGE,JSON.stringify(b));}catch{};
@@ -76,7 +76,7 @@
   if(benchmarkMemory)return benchmarkMemory;
   try{
    const b=JSON.parse(root.localStorage?.getItem(BENCH_STORAGE)||'null');
-   if(b?.version===BENCH_VERSION&&b.model==='wastl-policy-4.2'&&b.ok){benchmarkMemory=b;return b;}
+   if(b?.version===BENCH_VERSION&&b.model==='wastl-policy-4.5'&&b.ok){benchmarkMemory=b;return b;}
   }catch{}
   return null;
  }
@@ -111,8 +111,9 @@
   const actual=r.recorded, best=r.reference, n=r.sampleCount;
   if(!actual||!best)return null;
   const diff=Math.max(0,(best.winRate-actual.winRate)*100);
+  const measure=game.type==='ramsch'?'nicht als Ramschverlierer abzuschließen':'die Partie zu gewinnen';
   if(r.clearAlternative){
-   return `I hab ${n} mögliche Kartenverteilungen gerechnet. ${cardLabel(best.card)} lag im Modell um rund ${diff.toFixed(0)} Prozentpunkte vor deiner ${cardLabel(r.actual)} (statistische Schwankung ± ${Math.round(r.pairedUncertainty*100)} Punkte). Das ist a Hinweis, kein Beweis für den besten Zug.`;
+   return `I hab ${n} mögliche Kartenverteilungen gerechnet. ${cardLabel(best.card)} hatte im Modell eine um rund ${diff.toFixed(0)} Prozentpunkte höhere Chance, ${measure}, als deine ${cardLabel(r.actual)} (statistische Schwankung ± ${Math.round(r.pairedUncertainty*100)} Prozentpunkte). Das ist a Hinweis, kein Beweis für den besten Zug.`;
   }
   if(best.card===r.actual)return `In ${n} simulierten Verteilungen liegt deine ${cardLabel(r.actual)} im Modell vorn. Die anderen Möglichkeiten und die Unsicherheit kannst du bei ⓘ nachlesen. Ein sicherer Bestzug is des no ned.`;
   return `${n} Verteilungen gerechnet: Für deine ${cardLabel(r.actual)} lässt sich kein klarer Nachteil nachweisen. ${cardLabel(best.card)} lag zwar im Modell vorn, aber der Abstand ist statistisch noch unsicher.`;
@@ -120,8 +121,9 @@
  function detail(game,step){
   const r=item(game,step);if(!r)return '';
   if(!r.ok)return `<div class="wm43-detail"><strong>Monte-Carlo-Analyse</strong><p>${escape(r.reason||'Kein belastbares Ergebnis.')}</p></div>`;
+  const ramsch=game.type==='ramsch';
   const row=r.candidates.slice(0,8).map(c=>`<tr><td>${escape(cardLabel(c.card))}${c.card===r.actual?' (dein Zug)':''}</td><td>${Math.round(c.winRate*100)} %</td><td>${asNumber(c.meanEyes).toFixed(1)}</td></tr>`).join('');
-  return `<section class="wm43-detail"><h4>🎲 Berechneter Zugvergleich</h4><p>${escape(explanation(game,step))}</p><table><thead><tr><th>Spielzug</th><th>Modell-Siege</th><th>Ø Teamaugen</th></tr></thead><tbody>${row}</tbody></table><p class="wm43-caution">${r.sampleCount} Verteilungen · ${escape(r.method||'Monte-Carlo-Verteilung mit heuristischen Mitspielern')}. Werte sind keine kalibrierten Wahrscheinlichkeiten. Die Unsicherheit bezieht sich nur auf die Stichprobe, nicht auf Modellfehler.</p></section>`;
+  return `<section class="wm43-detail"><h4>🎲 Berechneter Zugvergleich</h4><p>${escape(explanation(game,step))}</p><table><thead><tr><th>Spielzug</th><th>${ramsch?'Nicht Ramschverlierer':'Modell-Siege'}</th><th>${ramsch?'Ø eigene Augen':'Ø Teamaugen'}</th></tr></thead><tbody>${row}</tbody></table><p class="wm43-caution">${r.sampleCount} Verteilungen · ${escape(r.method||'Monte-Carlo-Verteilung mit heuristischen Mitspielern')}. Werte sind keine kalibrierten Wahrscheinlichkeiten. Die Unsicherheit bezieht sich nur auf die Stichprobe, nicht auf Modellfehler.</p></section>`;
  }
  return Object.freeze({VERSION,fingerprint,get,save,grade,modelGrade,saveBenchmark,getBenchmark,benchmarkAssessment,item,explanation,detail});
 });

@@ -820,7 +820,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='4.2';
+const VERSION='4.5';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1225,6 +1225,7 @@ function stitchPartnerSeat(game=stitch){
 }
 function stitchMyDeclarerTeam(game=stitch){
  if(isRamsch(game.type))return null;
+ if(game.type==='kreuzrunde')return ['vh','hh'].includes(game.mySeat);
  const partner=stitchPartnerSeat(game);
  if(partneredStitch(game.type)&&!partner)return null;
  return game.mySeat===game.declarerSeat||(partneredStitch(game.type)&&game.mySeat===partner);
@@ -1233,7 +1234,7 @@ function stitchTeamForSeat(seat,game=stitch){
  if(isRamsch(game.type))return seat===game.mySeat?'us':'them';
  const mySide=stitchMyDeclarerTeam(game);
  if(mySide===null)return null;
- const callerSide=seat===game.declarerSeat||(partneredStitch(game.type)&&seat===stitchPartnerSeat(game));
+ const callerSide=game.type==='kreuzrunde'?['vh','hh'].includes(seat):(seat===game.declarerSeat||(partneredStitch(game.type)&&seat===stitchPartnerSeat(game)));
  return mySide===callerSide?'us':'them';
 }
 function stitchReconcileTeams(game=stitch){
@@ -1309,7 +1310,12 @@ function ramschResult(game){
 function bettelResult(game){const s=stitchSeatTotals(game.tricks);return {declarerTricks:s[game.declarerSeat].tricks,success:s[game.declarerSeat].tricks===0};}
 function stitchOutcomeNote(game){
  if(game.tricks.length!==8)return '';
- if(isRamsch(game.type)){const r=ramschResult(game),jungfrau=` ${r.virgins.length} Jungfrau(en) ohne Stich (Faktor ×${2**r.virgins.length}).`;return (r.highest.length>1?`Gleichstand bei ${r.max} Augen (${r.highest.map(stitchSeatLabel).join(' / ')}) – Hausregel entscheidet.`:`${stitchSeatLabel(r.highest[0])} hat mit ${r.max} Augen die meisten Punkte.`)+jungfrau;}
+ if(isRamsch(game.type)){
+  const rule=window.WastlEngine?.review(game);
+  if(rule?.ok&&rule.result?.status==='known')return rule.result.reason+' Die finanzielle Wertung hängt von den vereinbarten Hausregeln ab.';
+  const r=ramschResult(game);
+  return `Ramsch: ${r.highest.map(stitchSeatLabel).join(' / ')} hat/haben die meisten Augen (${r.max}). ${r.virgins.length} Jungfrau(en). Die genaue Entscheidung ist noch unklar.`;
+ }
  if(isBettel(game.type)){const b=bettelResult(game);return `Bettel: Ansager ${stitchSeatNamed(game.declarerSeat,game)} ${b.success?'erfolgreich (0 Stiche)':'verloren ('+b.declarerTricks+' Stiche)'}.`;}
  const own=stitchMyDeclarerTeam(game);if(own===null)return 'Rufspiel: Partner noch nicht ermittelt. Prüfe die gerufene Farbe.';const tot=stitchTeamTotalsBySeats(game),need=own?61:60;return `Mein Team ${tot.us} : ${tot.them} Gegner · ${tot.us>=need?'mein Team gewinnt':'mein Team verliert'} (${own?'Ansagerpartei braucht mindestens 61':'Gegnerpartei braucht mindestens 60'} Augen).`;
 }
@@ -1317,7 +1323,7 @@ function stitchReplayTotals(game,index){const ts=game.tricks.slice(0,index+1);re
 function stitchTrainingResult(g){
  if(!g.tricks||g.tricks.length!==8||!g.tricks.every(t=>validStitchSeat(t.winnerSeat)))return null;
  if(isRamsch(g.type)){
-  const r=ramschResult(g);return r.highest.length!==1?null:!r.highest.includes(g.mySeat);
+  const test=window.WastlEngine?.review(g);if(!test?.ok||test.result?.status!=='known')return null;const outcome=test.result;return outcome.winner==='durchmarsch'?outcome.winnerSeat===g.mySeat:outcome.loserSeat!==g.mySeat;
  }
  if(isBettel(g.type)){const declared=bettelResult(g).success;return stitchMyDeclarerTeam(g)===declared;}
  const own=stitchMyDeclarerTeam(g);if(own===null)return null;
@@ -1876,10 +1882,14 @@ function wastlResult(game,info){
  if(!result.teamReady&&!result.individual)return {ok:false,reason:result.reason||'Die Teamzuordnung ist noch nicht eindeutig.'};
  // Official formats have game-dependent win conditions. Do not rank skill when rules are uncertain.
  if(result.individual){
-  const top=Math.max(...result.people.map(p=>p.eyes)),losers=result.people.filter(p=>p.eyes===top);
-  return {ok:true,individual:true,people:result.people,winningText:losers.length===1?`${losers[0].name} hat die meisten Augen (${top}).`:`Gleichstand bei ${top} Augen – die Hausregel entscheidet.`,grade:null,gradeReason:'Ramsch wird nach eigenen Regeln gewertet. Eine 1–10-Analyse erfordert gesonderte Bewertungsregeln.'};
+  const check=window.WastlEngine?.review(game);
+  if(!check?.ok||check.result?.status!=='known')return {ok:false,reason:check?.result?.reason||'Ramsch-Gewinner noch nicht eindeutig bestimmbar.'};
+  const r=check.result,decisive=r.winner==='durchmarsch'?r.winnerSeat:r.loserSeat;
+  const who=mentorSeatNameShort(decisive,game),me=r.winner==='durchmarsch'?decisive===game.mySeat:decisive!==game.mySeat;
+  const myResult=r.winner==='durchmarsch'?`Durchmarsch! ${who} hat alle acht Stiche gewonnen. ${me?'Du hast gewonnen.':'Du hast verloren.'}`:`Ramsch: ${who} verliert mit den meisten Augen. ${me?'Du hast gewonnen.':'Du hast verloren.'}`;
+  return {ok:true,individual:true,people:result.people,myResult,winningText:r.reason,grade:null,gradeReason:'Die Augen und der Ramschverlierer sind regelbasiert bestimmt. Eine 1–10-Spielnote für Ramsch ist noch nicht an Expertenentscheidungen kalibriert.'};
  }
- const myWon= result.callerSide===null ? result.myEyes>=61 : (result.callerSide?result.myEyes>=61:result.myEyes>=60);
+ const myWon=game.type==='kreuzrunde' ? (['vh','hh'].includes(game.mySeat)?result.myEyes>=61:result.myEyes>=60) : result.callerSide===null ? result.myEyes>=61 : (result.callerSide?result.myEyes>=61:result.myEyes>=60);
  let myResult='';
  if(game.type==='bettel'){
   const tricks=result.wonStitches[game.declarerSeat];

@@ -11,8 +11,8 @@
  if(root)root.WastlMonteCarlo=api;
 })(typeof globalThis!=='undefined'?globalThis:this, function(E,Policy){
  'use strict';
- const VERSION='4.2.0';
- const SUPPORTED=new Set(['rufspiel','solo','wenz','farbwenz','geier','farbgeier']);
+ const VERSION='4.5.0';
+ const SUPPORTED=new Set(['rufspiel','solo','wenz','farbwenz','geier','farbgeier','ramsch','kreuzrunde']);
  function seeded(seed){let a=seed>>>0;return function(){a=(a+0x6d2b79f5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
  function shuffle(arr,random){for(let i=arr.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
  function seatIndex(leader,seat){return (E.SEATS.indexOf(seat)-E.SEATS.indexOf(leader)+4)%4;}
@@ -22,7 +22,7 @@
   cards.forEach((card,i)=>{if(E.colorClass(card,lead.game)!==clazz){const seat=E.nextSeat(leader,i);voids[seat].add(clazz);}});
  }
  function buildPosition(game,turn){
-  if(!E||!SUPPORTED.has(game?.type))return {ok:false,reason:'Monte-Carlo-Version 4.1 unterstützt zunächst Rufspiel, Solo, Wenz und Geier mit Farbvarianten.'};
+  if(!E||!SUPPORTED.has(game?.type))return {ok:false,reason:'Unterstützt werden Rufspiel, Solo, Wenz, Geier, Kreuzrunde und Ramsch mit den jeweiligen Farbvarianten.'};
   const r=E.review(game);
   if(!r.ok||r.result.status!=='known')return {ok:false,reason:'Die Partie ist nicht vollständig und regelkonform dokumentiert. Bitte zuerst „Regeln prüfen“ verwenden.'};
   if(!E.SEATS.includes(game.mySeat))return {ok:false,reason:'Dein Platz konnte nicht bestimmt werden.'};
@@ -46,7 +46,7 @@
   // Stiche in progress can reveal that an opponent was already void (even before own turn).
   if(prefix.length>1)addVoids(voids,{gameCard:prefix[0],game},prefix,t.leaderSeat);
   const myHand=myFull.filter(c=>!used.has(c));
-  const legal=E.legalMoves(myHand,prefix[0]||null,game);
+  const legal=E.legalMoves(myHand,prefix[0]||null,game,{past,trickIndex:turn});
   if(!legal.includes(t.cards[idx]))return {ok:false,reason:'Deine tatsächlich gespielte Karte ist nach der Rekonstruktion nicht legal.'};
   if(legal.length<=1)return {ok:false,reason:'In diesem Stich hattest du keine Kartenauswahl (Bedienpflicht). Ein Vergleich ist nicht sinnvoll.',onlyLegal:true};
   const reserved=new Set([...used,...myHand]);
@@ -75,6 +75,8 @@
  }
  function worldTeams(pos,hands){
   const g=pos.game;
+  if(g.type==='ramsch')return new Set([pos.seat]);
+  if(g.type==='kreuzrunde')return new Set(['vh','hh']);
   if(g.type!=='rufspiel')return new Set([g.declarerSeat]);
   const ace=pos.knownCalledAce;
   let teammate=null;
@@ -104,6 +106,7 @@
   }
   publicState.partner=publiclyKnownPartner;
   let declarerPoints=pos.past.reduce((n,t)=>n+(team.has(t.winnerSeat)?t.eyes:0),0);
+  const ramschTricks=g.type==='ramsch'?pos.past.map(t=>({...t})):null;
   let trickLeader=pos.t.leaderSeat;
   for(let k=pos.turn;k<8;k++){
    const play=k===pos.turn?[...pos.prefix]:[];
@@ -118,8 +121,16 @@
    }
    const winner=E.nextSeat(trickLeader,E.winnerIndex(play,g));
    if(team.has(winner))declarerPoints+=E.trickEyes(play);
+   if(ramschTricks)ramschTricks.push({leaderSeat:trickLeader,cards:[...play],winnerSeat:winner});
    trickLeader=winner;
    publicState.past.push({leaderSeat:g.__simLeader,cards:[...play]});
+  }
+  if(ramschTricks){
+   const res=E.ramschOutcome(ramschTricks);
+   if(res.status!=='known')return null;
+   const own=res.people.find(x=>x.seat===pos.seat);
+   const success=res.winner==='durchmarsch'?Number(res.winnerSeat===pos.seat):Number(res.loserSeat!==pos.seat);
+   return {myWin:success,myPoints:own.eyes};
   }
   const myPoints=actualSide?declarerPoints:120-declarerPoints;
   const myWin=actualSide?declarerPoints>=61:declarerPoints<=60;
@@ -150,7 +161,7 @@
    }
   }
   const evaluated=Object.values(totals).filter(x=>x.count>0).map(x=>({card:x.card,samples:x.count,winRate:x.wins/x.count,meanEyes:x.eyes/x.count}))
-   .sort((a,b)=>b.winRate-a.winRate||b.meanEyes-a.meanEyes);
+   .sort((a,b)=>b.winRate-a.winRate||(pos.game.type==='ramsch'?a.meanEyes-b.meanEyes:b.meanEyes-a.meanEyes));
   if(!evaluated.length)return {ok:false,version:VERSION,reason:'Unter den bisherigen Beobachtungen konnte keine konsistente Kartenverteilung erzeugt werden.'};
   const recorded=evaluated.find(x=>x.card===pos.actual),best=evaluated[0],n=best.samples;
   const diff=paired[best.card],gain=diff.reduce((x,y)=>x+y,0)/Math.max(1,diff.length);
@@ -165,11 +176,11 @@
     ? 'Die Alternative erzielte in diesem Modell häufiger einen Sieg; der Unterschied ist innerhalb dieser Stichprobe erkennbar.'
     : 'Mehrere Karten liegen im Bereich der statistischen Unsicherheit. Kein klar besserer Zug nachweisbar.';
   return {ok:true,version:VERSION,turn:turn+1,actual:pos.actual,candidates:evaluated,
-   sampleCount:n,rejected,supported:game.type,method:'Wiederholte Kartenzuteilung mit öffentlicher Bedienpflicht-Information; rollen- und situationsabhängige Offline-Mitspieler (Wastl Policy 4.2)',
+   sampleCount:n,rejected,supported:game.type,method:'Wiederholte Kartenzuteilung und Stichsimulation mit öffentlicher Bedienpflicht-Information; situationsabhängige Offline-Mitspieler (Wastl Policy 4.5)',
    estimated:true,confidence:lowSamples?'low':'experimental',policyVersion:Policy.VERSION,clearAlternative:clear,
    note:'Modellergebnis, keine kalibrierte Gewinnwahrscheinlichkeit oder sichere Bestzug-Aussage. Die simulierten Mitspieler sind heuristisch; Kartenverteilungen und Annahmen bleiben vereinfacht.',
    comparison,pairedWinGap:gain,pairedUncertainty:margin,
-   pointsGap:Math.max(0,best.meanEyes-recorded.meanEyes),recorded,reference:best};
+   pointsGap:Math.max(0,game.type==='ramsch'?recorded.meanEyes-best.meanEyes:best.meanEyes-recorded.meanEyes),recorded,reference:best};
  }
  return Object.freeze({VERSION,analyze,buildPosition,assignUnknown});
 });

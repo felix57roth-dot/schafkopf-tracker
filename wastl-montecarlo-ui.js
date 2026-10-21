@@ -47,7 +47,7 @@
   if(!b)return '<p class="mc-bench-empty">Noch kein Prüflauf vorhanden. Eine validierte Spielnote kann Wastl deshalb noch nicht vergeben.</p>';
   const pct=n=>(n*100).toFixed(1).replace('.',',')+' Prozentpunkte';
   const eyes=n=>n.toFixed(1).replace('.',',');
-  const types=[['solo','Solo'],['wenz','Wenz'],['rufspiel','Rufspiel'],['geier','Geier']];
+  const types=[['solo','Solo (inkl. Kreuz)'],['wenz','Wenz'],['rufspiel','Rufspiel'],['geier','Geier'],['ramsch','Ramsch'],['kreuzrunde','Kreuzrunde']];
   const rows=types.map(([id,name])=>{
    const x=b.types?.[id];if(!x||!x.count)return '';
    const delta=x.lift;
@@ -55,7 +55,7 @@
   }).join('');
   const assessment=cache().benchmarkAssessment(type);
   const status=assessment.status==='passed'?'Für diese Spielart: Modellprüfung bestanden.':assessment.status==='too-few'?'Für diese Spielart: noch zu wenige Tests.':'Für diese Spielart: keine ausreichend klare Überlegenheit nachgewiesen.';
-  return `<div class="mc-bench-report"><p><strong>${b.usable} von ${b.requested} Testfällen ausgewertet.</strong> Modellvorteil gegen zufällig legale Karten: ${b.lift>0?'+':''}${pct(b.lift)} (Schwankungsbereich ± ${pct(b.margin)}). Ø ${b.eyeLift>=0?'+':''}${eyes(b.eyeLift)} Teamaugen gegenüber einer zufällig legalen Karte.</p><table><thead><tr><th>Spielart</th><th>Fälle</th><th>Modellvorteil</th></tr></thead><tbody>${rows}</tbody></table><p><strong>${esc(status)}</strong> ${esc(assessment.reason)}</p><p class="mc-bench-caution">Prüfung nur gegen künstliche Spielverläufe desselben Modellumfelds – kein menschlicher Schafkopf-Spielstärkenachweis. Ein Minuswert ist ein Warnsignal.</p></div>`;
+  return `<div class="mc-bench-report"><p><strong>${b.usable} von ${b.requested} Testfällen ausgewertet.</strong> Modellvorteil gegen zufällig legale Karten: ${b.lift>0?'+':''}${pct(b.lift)} (Schwankungsbereich ± ${pct(b.margin)}). Ø ${b.eyeLift>=0?'+':''}${eyes(b.eyeLift)} Zielwert-Punkte gegenüber einer zufällig legalen Karte (Ramsch: 120 minus eigene Augen; sonst Teamaugen).</p><table><thead><tr><th>Spielart</th><th>Fälle</th><th>Modellvorteil</th></tr></thead><tbody>${rows}</tbody></table><p><strong>${esc(status)}</strong> ${esc(assessment.reason)}</p><p class="mc-bench-caution">Ramsch: Ziel ist, nicht Ramschverlierer zu werden und wenig eigene Augen zu sammeln. Kreuzrunde: Gegenübersitzende spielen zusammen. Prüfung nur gegen künstliche Spielverläufe desselben Modellumfelds – kein menschlicher Schafkopf-Spielstärkenachweis. Ein Minuswert ist ein Warnsignal.</p></div>`;
  }
  function benchProgress(completed,total){
   const el=container()?.querySelector('[data-bench-output]');if(!el)return;
@@ -102,15 +102,15 @@
   const label=typeof stitchTypeName==='function'?stitchTypeName(game.type):game.type;
   const div=document.createElement('div');div.className='mc-overlay';div.dataset.monteDialog='';
   div.innerHTML=`<section class="mc-dialog" role="dialog" aria-modal="true" aria-label="Wastl Ganze Partie simulieren" tabindex="-1">
-   <div class="mc-head"><div><small>WASTL-ENGINE 4.4 · OFFLINE · MODELLPRÜFUNG</small><h2>Ganze Partie simulieren</h2><p>${esc(label)} · alle acht Stiche in einem Durchlauf</p></div><button type="button" data-monte-close class="mc-close" aria-label="Schließen">×</button></div>
+   <div class="mc-head"><div><small>WASTL-ENGINE 4.5 · OFFLINE · MODELLPRÜFUNG</small><h2>Ganze Partie simulieren</h2><p>${esc(label)} · alle acht Stiche in einem Durchlauf</p></div><button type="button" data-monte-close class="mc-close" aria-label="Schließen">×</button></div>
    ${existingSummary(game)}
-   <p class="mc-intro">Wastl simuliert deine Entscheidung bei <strong>allen acht Stichen</strong> mit zum jeweiligen Zeitpunkt plausiblen unbekannten Händen. Die Ergebnisse fließen danach automatisch in seine Erklärungen ein. Du musst nicht jeden Zug einzeln anstoßen.</p>
+   <p class="mc-intro">Wastl simuliert deine Entscheidung bei <strong>allen acht Stichen</strong> mit zum jeweiligen Zeitpunkt plausiblen unbekannten Händen. Die Ergebnisse fließen danach automatisch in seine Erklärungen ein. Bei Ramsch zählt eine möglichst geringe eigene Augenzahl, bei Kreuzrunde die Augen deines Zweierteams. Du musst nicht jeden Zug einzeln anstoßen.</p>
    <div class="mc-controls"><label>Verteilungen je Stich<select data-monte-count>
     <option value="80">Schnell · 80 × 8 · ohne Spielnote</option><option value="160" selected>Normal · 160 × 8 · Modellnote möglich</option><option value="350">Gründlicher · 350 × 8 · Modellnote möglich</option>
    </select></label><button type="button" data-monte-run class="mc-run">Gesamte Partie simulieren</button></div>
    <details class="mc-benchmark"><summary>🧪 Engine-Prüflabor <small>Optional: Modellqualität untersuchen</small></summary><div class="mc-bench-body">
     <p>Vergleiche Wastls Vorschläge mit getrennt ausgewerteten Fortsetzungen auf vollständig bekannten Referenzhänden. Erst wenn das Modell für eine Spielart ausreichend überzeugt, darf es eine vorläufige 1–10-Note anzeigen.</p>
-    <div class="mc-bench-controls"><label>Prüfumfang<select data-bench-count><option value="24">24 Vergleichssituationen (schnell)</option><option value="48" selected>48 Vergleichssituationen (gründlicher)</option></select></label><button type="button" data-bench-run class="mc-bench-button">Modell prüfen</button></div>
+    <div class="mc-bench-controls"><label>Prüfumfang<select data-bench-count><option value="24">24 Vergleichssituationen (schnell)</option><option value="48" selected>48 Vergleichssituationen (6 Spielarten)</option><option value="72">72 Vergleichssituationen (mind. 12 je Art)</option></select></label><button type="button" data-bench-run class="mc-bench-button">Modell prüfen</button></div>
     <div data-bench-output aria-live="polite">${benchmarkSummary(game.type)}</div>
    </div></details>
    <div class="mc-output" data-monte-output role="status" aria-live="polite"><p>${automatic?'Wähle einmal den Rechenumfang und starte anschließend die Analyse.':'Du kannst die Partie neu berechnen oder die bisherigen Ergebnisse verwenden.'}</p></div>

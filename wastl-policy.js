@@ -11,7 +11,7 @@
  if(root)root.WastlPolicy=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(E){
  'use strict';
- const VERSION='4.2.0';
+ const VERSION='4.5.0';
  const TRUMP_CACHE=new Map();
  function trumpsOrdered(game){
   const key=game.type+':'+(game.trumpSuit||'');
@@ -30,6 +30,8 @@
   return ({A:1,'10':.83,K:.57,O:.7,U:.62,'9':.3,'8':.16,'7':0})[r]??0;
  }
  function teamOf(seat,hand,game,publicPartner){
+  if(game.type==='ramsch')return 'solo-'+seat;
+  if(game.type==='kreuzrunde')return ['vh','hh'].includes(seat)?'attack':'defense';
   if(game.type!=='rufspiel')return seat===game.declarerSeat?'attack':'defense';
   if(seat===game.declarerSeat||seat===publicPartner)return 'attack';
   if(publicPartner)return 'defense';
@@ -59,7 +61,7 @@
   return {seen,partner};
  }
  function evaluate(hand,played,seat,leader,game,publicState,random=()=>.5){
-  const options=E.legalMoves(hand,played[0]||null,game);
+  const options=E.legalMoves(hand,played[0]||null,game,{...publicState,trickIndex:publicState?.past?.length||0});
   const past=publicState?.past||[];
   const knowledge=publicKnowledge({...game,__simLeader:leader},past,played);
   const publiclyRevealed=publicState?.partner??knowledge.partner;
@@ -82,7 +84,22 @@
    const keepStrength=trump?(1.4+3.8*strength):(.3+1.8*strength);
    const scarcity=trump&&myTrumps.length<=2?1.4:0;
    let score=0,reason='';
-   if(leads){
+   if(game.type==='ramsch'){
+    // Alle gegen alle: möglichst wenig Augen sammeln, hohe Augen bei
+    // bereits verlorenen Stichen abwerfen; ohne Wissen über spätere Karten.
+    if(leads){
+      score=6.5-strength*3.5-pc.eyes*.45-(trump?1.1:0);
+      reason='Ramsch: klein ausspielen und keine Augen unnötig übernehmen';
+    }else if(outranks){
+      score=1.5-pc.eyes*.85-prefixEyes*.38-strength*2.0;
+      if(remain===0)score-=8; // Sicher eigener Stich: Augen vermeiden.
+      reason='Ramsch: Stich möglichst nicht übernehmen';
+    }else{
+      score=6+pc.eyes*.73-strength*.35;
+      if(remain===0)score+=2.5;
+      reason='Ramsch: Augen günstig abwerfen, wenn der Stich fremd bleibt';
+    }
+   }else if(leads){
     const nontrump=hand.filter(c=>!E.isTrump(c,game)&&E.colorClass(c,game)===E.colorClass(card,game));
     const topUnseen=!knowledge.seen.has(card)&&strength>.85;
     if(trump){
