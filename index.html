@@ -820,7 +820,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='4.8.1';
+const VERSION='4.9.1';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1838,14 +1838,16 @@ function wastlCardOrder(cards,game){
  });
 }
 function wastlCompactSpeech(game,t,step,valid){
- const modelSpeech=window.WastlMatchAnalysis?.explanation(game,step);
+ const modelSpeech=window.WastlMatchAnalysis?.shortExplanation(game,step);
  if(modelSpeech)return modelSpeech;
  if(!valid.ready)return 'Des schau ma uns an. Manche Karten sind noch nicht ganz eindeutig erfasst.';
  if(t.notes?.some(n=>n.type==='warn'))return 'Bei diesem Stich passt möglicherweise die Kartenfolge nicht. Schau ma genauer hin!';
- if(t.myPlay&&t.winTeam==='us'&&CARD_MAP[t.myPlay.id]?.eyes>=10)return `Deine ${CARD_MAP[t.myPlay.id].name} bringt ${CARD_MAP[t.myPlay.id].eyes} eigene Augen in einen Stich für dein Team. Entscheidend ist, ob du damit auf Dauer mehr gewinnst, als wenn du die Karte aufgehoben hättest. Der Zugvergleich hilft dir dabei.`;
- if(t.alternative)return `Eine mögliche Alternative wäre ${CARD_MAP[t.alternative.cardId].name}. ${t.alternative.reason} Das ist zunächst nur eine Überlegung, kein bewiesener Fehler.`;
- if(t.winTeam==='us')return `Dein Team erhält in Stich ${step+1} ${t.eye} Augen. Überlege bei der Nachbesprechung, ob der Stich auch mit einer günstigeren Karte gewonnen worden wäre und welche Augen du damit später sichern könntest.`;
- return `In Stich ${step+1} sind ${t.eye} Augen gefallen. Entscheidend ist, welche Alternativen du mit deinen damaligen Handkarten hattest; der simulierte Vergleich zeigt dir den erwarteten Unterschied.`;
+ const own=t.myPlay?.id&&CARD_MAP[t.myPlay.id];
+ if(own&&t.winTeam==='us'&&own.eyes>=10)return `Du hast mit ${own.name} ${own.eyes} eigene Augen sicher ins Team gebracht. I würd noch schauen, ob du die Karte später gebraucht hättest.`;
+ if(own&&t.winTeam==='us')return `Mit ${own.name} habt ihr den Stich geholt. Ob du dafür die richtige Karte eingesetzt hast, hängt von deinen übrigen Trümpfen ab.`;
+ if(own&&t.winTeam==='them')return `Mit ${own.name} ging der Stich an die Gegner. Des muss kein Fehler sein: Manchmal spart man bewusst die stärkeren Karten auf.`;
+ if(t.alternative)return `I seh da noch einen anderen Zug. Den schauen wir uns genauer an – allein aus dem gewonnenen Stich lässt sich wenig ableiten.`;
+ return 'Schaun wir uns deine Karte im Zusammenhang mit den übrigen Stichen an. Ein guter Zug ist nicht immer gleich ein gewonnener Stich.';
 }
 
 /* Version 4.0: Stich-fuer-Stich-Augen und vorsichtige Endbewertung.

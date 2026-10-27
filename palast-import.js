@@ -33,7 +33,7 @@ function palastNew(){
  return {image:null,small:null,name:'',tricks:Array(32).fill(''),scores:Array(32).fill(999),alternatives:Array.from({length:32},()=>[]),userEdited:Array(32).fill(false),uncertain:Array(32).fill(false),fileName:'',fileSize:0,
  type:'',calledSuit:'',trumpSuit:'',firstSeat:'vh',leaders:Array(8).fill('auto'),declarerSeat:'',mySeat:'',selfSeatManual:false,matchedSeat:'',alias:palastGetAlias(),metaConfirmed:false,handConfirmed:false,
  seatNames:{vh:'',mh:'',hh:'',g:''},startHands:null,handRecognized:false,handMatching:null,
- date:nowISO(),gameId:'',recognized:false,notice:'',selected:0,picking:-1};
+ date:nowISO(),gameId:'',recognized:false,notice:'',loading:false,recognizing:false,loadError:'',selected:0,picking:-1};
 }
 function palastImageCanvas(img){const c=document.createElement('canvas');c.width=600;c.height=1350;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,600,1350);return c;}
 // Compare original screenshot pixels to compact 14 × 22 corner signatures.
@@ -318,23 +318,55 @@ function palastRefresh(keepY=true){
  // Let the native change/blur event finish before replacing its active input node.
  palastRefreshTimer=setTimeout(()=>{render();if(keepY)window.scrollTo(0,y);},0);
 }
+// Jede Dateiauswahl bekommt einen eigenen Importzustand. Verspaetete FileReader-
+// und Image-Callbacks duerfen NIE einen neueren Upload ueberschreiben.
+let palastLoadGeneration=0;
 function palastLoad(file){
- if(!file||!/^image\/(png|jpeg|webp)$/.test(file.type)){alert('Bitte ein JPG-, PNG- oder WebP-Bild wählen.');return;}
- if(file.size>12*1024*1024){alert('Das Bild ist größer als 12 MB. Bitte als normales Screenshot-JPG exportieren.');return;}
- const reader=new FileReader();reader.onerror=()=>alert('Die Datei konnte nicht gelesen werden.');reader.onload=()=>{
-  const img=new Image();img.onerror=()=>alert('Das Bild konnte nicht geöffnet werden.');img.onload=()=>{
-   const ratio=img.width/img.height;if(Math.abs(ratio-600/1350)>.055){alert('Dieses Bild hat eine andere Aufteilung als die bekannten geteilten Palast-Spielbilder (ca. 600 × 1350). Der Import kann die Kartenbereiche eventuell nicht richtig finden.');}
-   palastDraft.small=palastImageCanvas(img);palastDraft.image=reader.result;palastDraft.fileName=file.name;palastDraft.fileSize=file.size;palastDraft.recognized=false;palastDraft.tricks=Array(32).fill('');palastDraft.scores=Array(32).fill(999);palastDraft.userEdited=Array(32).fill(false);palastDraft.uncertain=Array(32).fill(false);palastDraft.alternatives=Array.from({length:32},()=>[]);palastDraft.startHands=null;palastDraft.handMatching=null;palastDraft.handRecognized=false;palastResetMeta(palastDraft);
-   // Automatisch erkennen: Der Kreuzvergleich macht manuelles Abhaken überflüssig,
-   // solange Karten, Ausspieler und Spielart widerspruchsfrei zusammenpassen.
-   const draft=palastDraft;
-   palastRefresh(false);window.scrollTo(0,0);
-   setTimeout(()=>{if(palastDraft!==draft||!draft.small)return;
-    try{palastApplyRecognition(draft);palastRefresh();}catch(err){console.error(err);flash('Automatische Kartenerkennung nicht möglich: bitte erneut starten.');}
-   },60);
-  };img.src=reader.result;
- };reader.readAsDataURL(file);
+ const isImage=file && (/^image\/(?:png|jpeg|webp)$/i.test(file.type)||(/\.(?:png|jpe?g|webp)$/i.test(file.name)&&(!file.type||file.type==='application/octet-stream')));
+ if(!isImage){alert('Bitte ein JPG-, PNG- oder WebP-Bild auswählen.');return;}
+ if(!file.size||file.size>20*1024*1024){alert('Bitte einen gültigen Screenshot bis 20 MB auswählen.');return;}
+ const generation=++palastLoadGeneration;
+ const draft=palastNew();draft.loading=true;draft.fileName=file.name;draft.fileSize=file.size;
+ palastDraft=draft;palastRefresh(false);
+ const current=()=>generation===palastLoadGeneration&&palastDraft===draft;
+ const fail=reason=>{if(!current())return;draft.loading=false;draft.recognizing=false;draft.loadError=String(reason);console.warn('Palast-Import:',reason);palastRefresh(false);};
+ const reader=new FileReader();
+ reader.onerror=()=>fail('Die Bilddatei konnte nicht eingelesen werden. Bitte erneut auswählen.');
+ reader.onabort=()=>fail('Das Einlesen wurde abgebrochen.');
+ reader.onload=()=>{
+  if(!current())return;
+  const img=new Image();
+  img.onerror=()=>fail('Der Screenshot konnte nicht geöffnet werden. Bitte ein JPG oder PNG aus Schafkopf Palast verwenden.');
+  img.onload=()=>{
+   if(!current())return;
+   try{
+    if(!img.width||!img.height)throw Error('Die Datei enthält kein lesbares Bild.');
+    const ratio=img.width/img.height;
+    if(Math.abs(ratio-600/1350)>.055)throw Error('Das Bild hat nicht das erwartete Hochformat (Palast-Spielbericht ca. 600 × 1350). Bitte den vollständigen Spielbericht auswählen.');
+    draft.small=palastImageCanvas(img);
+    draft.image=reader.result;draft.loading=false;draft.recognizing=true;draft.loadError='';
+    palastRefresh(false);window.scrollTo(0,0);
+    // Erst die Fortschrittsansicht zeichnen lassen, dann die aufwendige Erkennung starten.
+    setTimeout(()=>palastRunRecognition(draft),80);
+   }catch(error){fail(error?.message||'Bildverarbeitung fehlgeschlagen.');}
+  };
+  img.src=reader.result;
+ };
+ try{reader.readAsDataURL(file);}catch(error){fail(error?.message||'Der Screenshot konnte nicht eingelesen werden.');}
 }
+function palastRunRecognition(draft){
+ if(palastDraft!==draft||!draft?.small)return;
+ draft.recognizing=true;draft.loadError='';
+ try{
+  const locked=Object.fromEntries(draft.userEdited.flatMap((yes,i)=>yes&&draft.tricks[i]?[[i,draft.tricks[i]]]:[]));
+  palastApplyRecognition(draft,locked);draft.recognizing=false;draft.loadError='';palastRefresh(false);
+ }catch(error){
+  console.error('Palast-Erkennung fehlgeschlagen',error);
+  draft.recognizing=false;draft.loadError='Automatische Erkennung fehlgeschlagen: '+(error?.message||'Unbekannter Fehler')+'. Du kannst die Erkennung ohne erneuten Upload starten.';
+  palastRefresh(false);
+ }
+}
+
 function palastSave(skipConfirm=false){
  const p=palastDraft,check=palastReview();if(!check.valid){alert('Bitte prüfe die Karten: '+check.errors.join(' '));palastRefresh();return;}
  if(!skipConfirm&&!confirm('Sind Spielart, Ansager und dein Name korrekt? Die Karten wurden soweit möglich mit den vier Starthänden abgeglichen. Speicherung nur lokal.'))return;
@@ -354,6 +386,7 @@ document.addEventListener('click',e=>{
  if(jump){const target=document.getElementById(jump.getAttribute('href').slice(1));const details=target?.closest('details.palast-trick');if(details)details.open=true;}
  if(e.target.closest('#palastStart')){palastDraft=palastNew();mentorGameId='';palastRefresh(false);window.scrollTo(0,0);return;}
  if(e.target.closest('#palastCancel')){palastDraft=null;palastRefresh(false);window.scrollTo(0,0);return;}
+ if(e.target.closest('#palastRetry')){if(palastDraft?.small){const d=palastDraft;d.recognizing=true;d.loadError='';palastRefresh(false);setTimeout(()=>palastRunRecognition(d),80);}return;}
  if(e.target.closest('#palastRecognize')){
   if(!palastDraft?.small)return;const button=e.target.closest('button');button.disabled=true;button.textContent='Erkennung läuft …';
   setTimeout(()=>{try{const locked=Object.fromEntries(palastDraft.userEdited.flatMap((is,i)=>is&&palastDraft.tricks[i]?[[i,palastDraft.tricks[i]]]:[]));palastApplyRecognition(palastDraft,locked);palastRefresh();flash('Kartenvorschläge aktualisiert · Änderungen bleiben erhalten');}catch(err){console.error(err);alert(err?.message||'Erkennung fehlgeschlagen. Bitte die Karten manuell auswählen.');button.disabled=false;}},50);return;

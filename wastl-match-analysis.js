@@ -134,6 +134,42 @@
   if(game.type==='wenz')return 'Beim Wenz sind nur die vier Unter dauerhafte Trümpfe. Die Kontrolle der Fehlfarben und der spätere Einsatz der Unter sind deshalb besonders wichtig.';
   return step<3?'Gerade am Anfang ist der Erhalt hoher Trümpfe eine mögliche Alternative. Entscheidend ist ihr erwarteter Nutzen über die restlichen Stiche.':'In der Schlussphase wird wichtig, welche Augen und Trümpfe für die letzten Stiche noch offen sein können.';
  }
+ function shortExplanation(game,step){
+  const r=item(game,step);
+  if(!r)return null;
+  if(r.onlyLegal)return 'Da hattest du keine Wahl: Du musstest diese Karte spielen. Den Zug zähl i dir natürlich nicht als Fehler.';
+  if(!r.ok)return 'Da kann i dir noch keinen sicheren Rat geben. Schau ma erst, ob die Karten und die Spielart richtig erfasst sind.';
+  if(!r.recorded||!r.reference||!r.actual)return null;
+  const actual=cardLabel(r.actual),alternative=cardLabel(r.reference.card);
+  const change=r.reference.card!==r.actual;
+  const highTrump=id=>isTrump(id,game)&&(/-(?:O|U|A|10)$/.test(id));
+  const eyesGain=eyes(r.actual)>=10;
+  // Die geschaetzten Gewinnquoten bleiben in den Rechendetails, nicht in der Sprechblase.
+  if(!change){
+   if(eyesGain)return `Die ${actual} gefällt mir hier: Du bringst eigene Augen ins Spiel. Wichtig is, dass der Stich auf eurer Seite bleibt.`;
+   if(highTrump(r.actual))return `Dein ${actual} war nach meiner Rechnung eine gute Wahl. So behältst du die Kontrolle über diesen Stich.`;
+   return `Des schaut ordentlich aus! Die ${actual} war nach meiner Rechnung eine der besten Möglichkeiten.`;
+  }
+  const choiceTrump=isTrump(r.reference.card,game),playedTrump=isTrump(r.actual,game);
+  let why='';
+  if(highTrump(r.actual)&&(!choiceTrump||!highTrump(r.reference.card)))
+   why=`Deinen starken Trumpf könntest du für einen späteren, wichtigen Stich aufheben.`;
+  else if(playedTrump&&!choiceTrump)
+   why='So sparst du dir einen Trumpf für später.';
+  else if(!playedTrump&&choiceTrump)
+   why='Damit hättest du eine andere Chance, den Stich zu übernehmen.';
+  else if(eyes(r.reference.card)>=10&&eyes(r.actual)<10)
+   why='Damit könntest du mehr eigene Augen einbringen – vorausgesetzt, der Stich bleibt bei euch.';
+  else if(eyesGain)
+   why='Deine Karte bringt zwar eigene Augen mit, könnte aber später noch wertvoll sein.';
+  else if(game.type==='wenz')
+   why='Gerade beim Wenz muss man die wenigen Trümpfe gut einteilen.';
+  else if(game.type==='rufspiel')
+   why='Dabei kommt es auch darauf an, wer dein Partner ist und welche Karten schon gefallen sind.';
+  else why='Damit hältst du dir möglicherweise mehr Möglichkeiten für die nächsten Stiche offen.';
+  if(r.clearAlternative)return `I hätt hier eher ${alternative} statt ${actual} gespielt. ${why}`;
+  return `Bei deiner ${actual} bin i mir nicht sicher. ${alternative} wär auch eine Möglichkeit – ${why.charAt(0).toLowerCase()+why.slice(1)}`;
+ }
  function explanation(game,step){
   const r=item(game,step);if(!r)return null;
   if(r.onlyLegal)return `Stich ${step+1}: Du hattest nur eine legale Karte. Das ist keine freie Entscheidung und beeinflusst Wastls Spielnote nicht.`;
@@ -181,5 +217,5 @@
   const row=r.candidates.slice(0,8).map(c=>`<tr><td>${escape(cardLabel(c.card))}${c.card===r.actual?' (dein Zug)':''}</td><td>${Math.round(c.winRate*100)} %</td><td>${asNumber(c.meanEyes).toFixed(1)}</td></tr>`).join('');
   return `<section class="wm43-detail"><h4>🎲 Berechneter Zugvergleich</h4><p>${escape(explanation(game,step))}</p><table><thead><tr><th>Spielzug</th><th>${ramsch?'Nicht Ramschverlierer':'Modell-Siege'}</th><th>${ramsch?'Ø eigene Augen':'Ø Teamaugen'}</th></tr></thead><tbody>${row}</tbody></table><p class="wm43-caution">${r.sampleCount} Verteilungen · ${escape(r.method||'Monte-Carlo-Verteilung mit heuristischen Mitspielern')}. Werte sind keine kalibrierten Wahrscheinlichkeiten. Die Unsicherheit bezieht sich nur auf die Stichprobe, nicht auf Modellfehler.</p></section>`;
  }
- return Object.freeze({VERSION,fingerprint,get,save,grade,modelGrade,saveBenchmark,getBenchmark,benchmarkAssessment,item,explanation,learningPoints,detail});
+ return Object.freeze({VERSION,fingerprint,get,save,grade,modelGrade,saveBenchmark,getBenchmark,benchmarkAssessment,item,explanation,shortExplanation,learningPoints,detail});
 });

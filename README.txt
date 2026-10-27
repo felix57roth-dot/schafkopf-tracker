@@ -1,3 +1,13 @@
+Schafkopftracker 4.9.1 – Importstabilität, Originalbild, Wastls Mentorensprache
+
+- Sicherer Bildimport: Jeder Upload hat einen getrennten Zustand. Langsam eintreffende Dateien können neuere Auswahlen nicht überschreiben.
+- Fehlermeldungen und „Erkennung erneut starten“ direkt im Import; kein erneutes Hochladen notwendig, wenn lediglich die Kartenerkennung scheitert.
+- Bei unklarer Sitzposition wird der Spielerbereich des Originalbilds angezeigt. Über „Originalbild ansehen“ lässt sich jederzeit der ganze Spielbericht ansehen.
+- Wastl spricht im Tischdialog in kurzen, zugbezogenen Mentoren-Sätzen ohne Prozentwerte. Zahlen und Unsicherheiten bleiben über ⓘ verfügbar.
+- Geprüfte Spielart, gespeicherte Partien, bestehende Daten und Offline-Kartensatz bleiben erhalten. Keine weiteren Abhängigkeiten.
+
+KLEINES UPDATE: Alle enthaltenen Dateien ins Repository-Hauptverzeichnis kopieren und bestehende ersetzen. cards-Ordner nicht ändern.
+Vorher unter Einstellungen → Datensicherung die Daten exportieren.
 Schafkopftracker Version 4.9 – Klassische Spielarten, nachvollziehbarer Entscheidungsindex
 - Spielart-Erkennung: Rufspiel Eichel/Gras/Schellen; Farbsolo Eichel/Gras/Herz/Schellen; Wenz.
 - Vollstaendig simulierte Partien erhalten einen vorläufigen 1–10-Modellindex, ohne globales Benchmark-Gate.

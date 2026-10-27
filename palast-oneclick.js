@@ -114,6 +114,11 @@ palastImportUI=function(){
   <div><small>KARTEN</small><strong>${audit?.ok?'32 + 32 ✓':p.recognized?`${p.tricks.filter(Boolean).length}/32`:'Werden gelesen …'}</strong></div></div>`;
  }
  const needed=image&&problems.length>0;
+ const loadingMessage=p.loading?'⏳ Screenshot wird geöffnet …':p.recognizing?'⏳ Wastl gleicht Anfangshände und Stiche ab …':'';
+ const imageError=p.loadError?`<div class="fast-load-error" role="alert">⚠ ${escFast(p.loadError)} ${p.small?'<button type="button" class="btn secondary" id="palastRetry">↻ Erkennung erneut starten</button>':''}</div>`:'';
+ const originalButton=image?`<div class="fast-original-tools"><button type="button" class="btn ghost" data-fast-photo-open>🖼️ Originalbild ansehen</button>${!p.mySeat?'<span>Schau oben bei den vier Spielern nach deiner Position (VH, MH, HH oder G).</span>':''}</div>`:'';
+ const originalPreview=image&&!p.mySeat?`<div class="fast-seat-preview"><img src="${palastImageSlice(p.small,0,0,600,600,420)}" alt="Originalausschnitt mit den vier Spielern und ihren Positionen"><span>Spielerübersicht aus deinem Screenshot</span></div>`:'';
+ const photoOverlay=image?`<div class="fast-photo-overlay" data-fast-photo-dialog role="dialog" aria-modal="true" aria-label="Originalbild aus Schafkopf Palast" hidden><div class="fast-photo-top"><strong>Dein Original-Screenshot</strong><button type="button" class="btn" data-fast-photo-close>Schließen ✕</button></div><div class="fast-photo-scroll"><img src="${p.image}" alt="Vollständiger Palast-Spielbericht mit vier Anfangshänden und acht Stichen"></div></div>`:'';
  const metadata=`<div class="fast-fixes">
  <p>${needed?'Bitte nur die fehlenden Informationen ergänzen:':'Du kannst die erkannten Angaben bei Bedarf korrigieren:'}</p>
  <div class="fast-fix-grid">
@@ -128,10 +133,11 @@ palastImportUI=function(){
  const advanced=content?Array.from(content.querySelectorAll('.palast-section')).slice(1).map(n=>n.outerHTML).join(''):'';
  const help=needed?`<p class="fast-warning" role="status">${problems.map(s=>`<span>⚠ ${escFast(s)}</span>`).join(' ')}</p>`:image?'<p class="fast-ok">✓ Beide Kartenquellen und die Spielerpositionen passen zusammen. Kein Abhaken nötig.</p>':'';
  return `<div class="content-page palast-import fast-import"><button type="button" class="btn ghost" id="palastCancel">← Zu Wastl</button><div class="fast-heading"><div class="fast-mark">🃏</div><div><h2>Partie mit Wastl analysieren</h2><p>Screenshot auswählen · Spiel analysieren · fertig</p></div></div>
- <section class="card fast-upload"><label class="fast-file">📷 ${image?'Anderen Screenshot auswählen':'Schafkopf-Palast-Bild auswählen'}<input id="palastFile" type="file" accept="image/png,image/jpeg,image/webp"></label>${image?`<small>${escFast(p.fileName)} · ${Math.round(p.fileSize/1024)} KB</small>`:'<p>Offline und ohne Konto. Die 4 Anfangshände und 8 Stiche werden automatisch erkannt.</p>'}</section>
- ${image?`<section class="card fast-summary">${status}${help}${needed?metadata:`<details class="fast-optional"><summary>Erkannte Angaben korrigieren</summary>${metadata}</details>`}
- <button id="palastOneClick" type="button" class="btn fast-main" ${p.recognized?'':'disabled'}>${needed?'🔍 Spiel prüfen und analysieren':'🎲 Spiel analysieren'}</button>
+ <section class="card fast-upload"><label class="fast-file">📷 ${image?'Anderen Screenshot auswählen':'Schafkopf-Palast-Bild auswählen'}<input id="palastFile" type="file" accept="image/png,image/jpeg,image/webp"></label>${image?`<small>${escFast(p.fileName)} · ${Math.round(p.fileSize/1024)} KB</small>`:'<p>Offline und ohne Konto. Die 4 Anfangshände und 8 Stiche werden automatisch erkannt.</p>'}${loadingMessage?`<p class="fast-loading" role="status">${loadingMessage}</p>`:''}${imageError}</section>
+ ${image?`<section class="card fast-summary">${status}${help}${originalButton}${originalPreview}${needed?metadata:`<details class="fast-optional"><summary>Erkannte Angaben korrigieren</summary>${metadata}</details>`}
+ <button id="palastOneClick" type="button" class="btn fast-main" ${p.recognized&&!p.recognizing?'':'disabled'}>${needed?'🔍 Spiel prüfen und analysieren':'🎲 Spiel analysieren'}</button>
  <p class="fast-note">Wastl berechnet automatisch 350 Kartenverteilungen pro Stich. Nur bei nicht erkannten Angaben oder Widersprüchen ist eine Korrektur nötig.</p></section>`:''}
+ ${photoOverlay}
  ${image?`<details class="fast-advanced" ${needed&&audit&&!audit.ok?'open':''}><summary>🛠 Detailkorrektur der Karten und erweiterten Angaben</summary><div class="fast-advanced-inner">${advanced}</div></details>`:''}</div>`;
 };
 function oneClick(){
@@ -157,6 +163,8 @@ function oneClick(){
  }
 }
 document.addEventListener('click',e=>{
+ if(e.target.closest('[data-fast-photo-open]')){e.preventDefault();e.stopImmediatePropagation();const dialog=document.querySelector('[data-fast-photo-dialog]');if(dialog){dialog.hidden=false;dialog.querySelector('[data-fast-photo-close]')?.focus();}return;}
+ if(e.target.closest('[data-fast-photo-close]')){e.preventDefault();e.stopImmediatePropagation();const dialog=document.querySelector('[data-fast-photo-dialog]');if(dialog)dialog.hidden=true;return;}
  if(e.target.closest('#palastOneClick')){e.preventDefault();e.stopImmediatePropagation();oneClick();}
 },true);
 window.WastlFastImport=Object.freeze({guessSeat,guessDeclarer,guessGame,prefill,issues});
