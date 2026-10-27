@@ -1,4 +1,4 @@
-/* Wastl Stammtisch 6.1 – eigenständige Offline-Tischoberfläche.
+/* Wastl Stammtisch 6.2 – eigenständige Offline-Tischoberfläche.
  * Ein Bot = eine sichtbare Entscheidung. Keine Eingriffe ins Kassenbuch.
  */
 (function(){
@@ -140,7 +140,7 @@
   return `<div class="bots-player bots-player-${pos} ${acting?'bots-player-active':''}">
    ${bubble}
    <img src="${esc(person.portrait)}" alt="${esc(person.name)}" draggable="false">
-   <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc(POSITIONS[seat])} · ${g.hands[seat].length} Karten</small></div>
+   <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc({vh:'VH',mh:'MH',hh:'HH',g:'G'}[seat])}</small></div>
    </div>`;
  }
  function playedCards(g){
@@ -156,6 +156,7 @@
    g.phase==='playing'?`Stich ${g.tricks.length+1} / 8`:`Runde ${g.round} · ${turnAnnouncement(g)}`;
   return `<div class="bots-scene">
    <div class="bots-wood" aria-label="Bayerischer Schafkopftisch">
+    <img class="bots-reference-scene" src="./players/stammtisch-szene.webp" alt="" aria-hidden="true" draggable="false">
     ${portrait(g,'left')}${portrait(g,'top')}${portrait(g,'right')}
     <div class="bots-playing-area" aria-label="Ausgelegte Karten">
       ${playedCards(g)}
@@ -246,5 +247,11 @@
   }catch(ex){error=String(ex?.message||ex);renderApp();}
  }
  document.addEventListener('click',click);
- window.WastlBotsUI={render,version:'6.1.0'};
+ // Die perspektivische Szenengrafik ist optional: Solange sie nicht geladen
+ // werden kann, bleiben die einzelnen Originalportraits über dem Holztisch sichtbar.
+ document.addEventListener('load',event=>{
+  const img=event.target;
+  if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
+ },true);
+ window.WastlBotsUI={render,version:'6.2.0'};
 })();
