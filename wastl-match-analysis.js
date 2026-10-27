@@ -34,34 +34,42 @@
   try{let values=cacheRead().filter(x=>x.key!==key);values.unshift({key,data});root.localStorage?.setItem(STORAGE,JSON.stringify(values.slice(0,5)));}catch{/* In-memory cache works without available storage. */}
   return data;
  }
- // Interpretable relative anchor: a random LEGAL decision corresponds to 5/10,
- // highest modeled win rate to 10/10. This is not validated human calibration.
- // Ignore apparent regret when it does not exceed paired-sample uncertainty.
+ // Ein REPRODUZIERBARER Entscheidungsindex – kein kalibrierter Nachweis menschlicher Spielstaerke.
+ // 5/10 ist die ausdruecklich neutrale Basis. Nur von der Simulation unterscheidbare
+ // Alternativen koennen den Index bewegen; wenig Evidenz wird zur 5 hin geschrumpft.
+ // Der Sieg oder die Niederlage ist KEIN Eingangsparameter der Note.
  function modelGrade(data){
-  if(!data?.reports||data.reports.length!==8)return {grade:null,reason:'Bitte zuerst die ganze Partie simulieren.'};
-  const considered=data.reports.filter(x=>x?.ok&&x.candidates?.length>1&&x.sampleCount>=160);
-  if(considered.length<3)return {grade:null,reason:`Nur ${considered.length} auswertbare eigene Entscheidungen mit mindestens 160 Verteilungen. Keine belastbare 1–10-Note möglich.`};
-  let randomRegret=0,observedRegret=0,informed=0,clear=0,meanSample=0;
-  for(const r of considered){
-   const best=r.reference?.winRate??r.candidates[0]?.winRate;
-   const played=r.recorded?.winRate;
-   if(!Number.isFinite(best)||!Number.isFinite(played))continue;
-   const baseline=r.candidates.reduce((n,c)=>n+c.winRate,0)/r.candidates.length;
+  if(!data?.reports||data.reports.length!==8)return {grade:null,reason:'Bitte zuerst die komplette Partie simulieren.'};
+  const reported=data.reports;
+  const eligible=reported.filter(r=>r?.ok&&Array.isArray(r.candidates)&&r.candidates.length>1&&Number.isFinite(r.recorded?.winRate)&&Number.isFinite(r.reference?.winRate));
+  const forced=reported.filter(r=>r?.onlyLegal||r?.ok&&r.candidates?.length===1).length;
+  const missing=reported.filter(r=>!r?.ok&&!r?.onlyLegal).length;
+  let meaningful=0,regret=0,roomSum=0,penalties=0,meanSamples=0;
+  for(const r of eligible){
+   const best=r.reference.winRate,played=r.recorded.winRate;
+   const baseline=r.candidates.reduce((sum,c)=>sum+c.winRate,0)/r.candidates.length;
    const room=Math.max(0,best-baseline);
-   if(room<.035)continue; // Nothing informative to rank this turn by.
-   informed++;meanSample+=r.sampleCount;
-   randomRegret+=room;
-   // Winner's curse and sampling noise: require uncertainty-separated gap.
-   const measured=Math.max(0,(best-played)-Math.max(0,r.pairedUncertainty||0));
-   observedRegret+=Math.min(room*2.5,measured);
-   if(r.clearAlternative)clear++;
+   if(room<.035)continue;
+   meaningful++;meanSamples+=r.sampleCount||0;
+   roomSum+=room;
+   // Paired uncertainty protects against promoting a noisy alternative to a certain error.
+   const excess=Math.max(0,best-played-Math.max(0,r.pairedUncertainty||0)*.5);
+   regret+=Math.min(2.25*room,excess);
+   if(r.clearAlternative)penalties++;
   }
-  if(informed<3||randomRegret<.18)return {grade:null,reason:`Nur ${informed} ausreichend trennscharfe Entscheidungen. Die Modellunterschiede sind für eine Spielnote zu klein.`};
-  const relative=observedRegret/randomRegret;
-  const value=Math.max(1,Math.min(10,Math.round(10-5*relative)));
-  const averageN=Math.round(meanSample/informed);
-  return {grade:value,informative:informed,considered:considered.length,clear,averageN,relative,
-   reason:`Vorläufige Modellnote: ${informed} unterscheidbare Entscheidungen (Ø ${averageN} Verteilungen), ${clear} erkennbar schlechtere Züge. Skala: 10 = beste Modellalternativen; 5 ≈ zufällig gewählte legale Karten. Gemessene Nachteile werden um die Stichprobenunsicherheit reduziert. Keine validierte menschliche Spielstärkenote.`};
+  const relative=roomSum>0?regret/roomSum:0;
+  const raw=roomSum?Math.max(1,Math.min(10,10-5*relative)):5;
+  const coverage=meaningful/(meaningful+2.5); // conservative partial pooling
+  const sampleFactor=meaningful?Math.min(1,meanSamples/meaningful/200):0;
+  const qualityWeight=coverage*sampleFactor;
+  const score=5+(raw-5)*qualityWeight;
+  const grade=Math.max(1,Math.min(10,Math.round(score)));
+  const evidence=meaningful>=4&&sampleFactor>=.8&&missing===0?'mittel':'gering';
+  const msg=meaningful===0?'Keine Entscheidung zeigte im Modell klar unterscheidbare Alternativen. 5/10 ist hier ausdrücklich ein neutraler Platzhalter und keine Aussage über deine Spielstärke.'
+   :`${meaningful} von 8 Stichen mit unterscheidbaren Alternativen, ${penalties} deutliche Modellabweichungen. Der Entscheidungsindex wird wegen begrenzter Evidenz zur neutralen 5/10 gedämpft.`;
+  return {grade,modelIndex:true,informative:meaningful,considered:eligible.length,forced,missing,clear:penalties,
+   averageN:meaningful?Math.round(meanSamples/meaningful):0,quality:evidence,relative,rawIndex:Math.round(raw*10)/10,
+   reason:`${msg} Datengrundlage: ${eligible.length} vergleichbare Züge, ${forced} erzwungene Züge${missing?`, ${missing} nicht berechenbare Stiche`:''}. Modellzuverlässigkeit: ${evidence}. Keine an Schafkopf-Experten kalibrierte Leistungsnote; selbst bei 10/10 ist kein fehlerfreies Spiel bewiesen.`};
  }
  // Ergebnisse des getrennten Prueflabors; kein Nachweis menschlicher Spielstaerke.
  function saveBenchmark(report){
@@ -92,10 +100,14 @@
  function grade(data,type){
   const raw=modelGrade(data);
   if(raw.grade==null)return raw;
-  const assessment=benchmarkAssessment(type);
-  if(assessment.status!=='passed')return {grade:null,provisionalIndex:raw.grade,assessment:assessment.status,
-   reason:`1–10-Note aus Sicherheitsgruenden zurueckgehalten: ${assessment.reason} Der rechnerische Zufallsvergleich ergibt einen experimentellen Index, aber keine nachgewiesene Spielstaerke.`};
-  return {...raw,reason:raw.reason+' '+assessment.reason};
+  // Die Benchmarks bewerten das SIMULATIONSMODELL, nicht den jeweiligen Spieler.
+  // Daher niemals die Partienote hinter einem globalen Benchmark-Gate verstecken.
+  // Transparenz ueber die Modellguete bleibt Pflicht.
+  const b=benchmarkAssessment(type);
+  return {...raw,assessment:b.status,
+   reason:raw.reason+' '+(b.status==='passed'
+    ?'Der kuenstliche Modellvergleich fuer diese Spielart bestand die internen Mindestkriterien.'
+    :'Fuer diese Spielart ist ein Vorteil der Engine gegenueber der Testreferenz weiterhin nicht sicher nachgewiesen.')};
  }
  function cardLabel(id){
   const parts=String(id||'').split('-');
@@ -104,19 +116,63 @@
   return `${suit} ${rank}`;
  }
  function item(game,step){return get(game)?.reports?.[step]||null;}
+ function eyes(id){return ({A:11,'10':10,K:4,O:3,U:2,'9':0,'8':0,'7':0})[String(id).split('-')[1]]??0;}
+ function isTrump(id,game){
+  const [suit,rank]=String(id).split('-');
+  if(game.type==='wenz'||game.type==='farbwenz')return rank==='U'||(game.type==='farbwenz'&&suit===game.trumpSuit);
+  if(rank==='O'||rank==='U')return true;
+  if(game.type==='solo'||game.type==='tout'||game.type==='farbgeier')return suit===game.trumpSuit;
+  return suit==='herz';
+ }
+ function tacticalHint(game,step,actual,best){
+  const mine=eyes(actual),choice=eyes(best);
+  if(mine>=10)return `${cardLabel(actual)} bringt ${mine} eigene Augen mit. Ein niedrigerer Trumpf ist nicht allein deshalb besser, weil er denselben Stich gewonnen hätte: Ein hoher Trumpf kann eigene Augen sichern, aber später fehlen.`;
+  if(choice>=10&&choice>mine)return `${cardLabel(best)} bringt ${choice} eigene Augen mit. Das hilft nur dann, wenn der Stich auf deiner Seite bleibt; andernfalls droht ein Augenverlust.`;
+  if(isTrump(actual,game)&&!isTrump(best,game))return `Du hast einen Trumpf eingesetzt, während ${cardLabel(best)} keinen Trumpf kostet. Überlege beim nächsten Mal, wie wichtig deine Trumpfreserve für die letzten Stiche ist.`;
+  if(!isTrump(actual,game)&&isTrump(best,game))return `Ein Trumpfeinsatz hätte hier eine andere Stichkontrolle ermöglicht. Wäge den möglichen Gewinn gegen die fehlende Trumpfreserve in späteren Stichen ab.`;
+  if(game.type==='rufspiel')return 'Im Rufspiel ist der Partner vor dem Fallen des gerufenen Asses nicht immer bekannt. Beachte, welche Karten du bei deiner Entscheidung bereits gesehen hast.';
+  if(game.type==='wenz')return 'Beim Wenz sind nur die vier Unter dauerhafte Trümpfe. Die Kontrolle der Fehlfarben und der spätere Einsatz der Unter sind deshalb besonders wichtig.';
+  return step<3?'Gerade am Anfang ist der Erhalt hoher Trümpfe eine mögliche Alternative. Entscheidend ist ihr erwarteter Nutzen über die restlichen Stiche.':'In der Schlussphase wird wichtig, welche Augen und Trümpfe für die letzten Stiche noch offen sein können.';
+ }
  function explanation(game,step){
   const r=item(game,step);if(!r)return null;
-  if(r.onlyLegal)return 'Da gab’s koa Auswahl: Du musstest die Farbe beziehungsweise Trumpf bedienen. Für diesen Stich gibt es deshalb keine bessere legale Alternative.';
-  if(!r.ok)return `Hier kann i noch keinen seriösen Zugvergleich machen: ${r.reason||'zu wenige Daten'}`;
-  const actual=r.recorded, best=r.reference, n=r.sampleCount;
-  if(!actual||!best)return null;
-  const diff=Math.max(0,(best.winRate-actual.winRate)*100);
-  const measure=game.type==='ramsch'?'nicht als Ramschverlierer abzuschließen':'die Partie zu gewinnen';
-  if(r.clearAlternative){
-   return `I hab ${n} mögliche Kartenverteilungen gerechnet. ${cardLabel(best.card)} hatte im Modell eine um rund ${diff.toFixed(0)} Prozentpunkte höhere Chance, ${measure}, als deine ${cardLabel(r.actual)} (statistische Schwankung ± ${Math.round(r.pairedUncertainty*100)} Prozentpunkte). Das ist a Hinweis, kein Beweis für den besten Zug.`;
+  if(r.onlyLegal)return `Stich ${step+1}: Du hattest nur eine legale Karte. Das ist keine freie Entscheidung und beeinflusst Wastls Spielnote nicht.`;
+  if(!r.ok)return `Stich ${step+1}: Hier ist kein verlässlicher Kartenvergleich gelungen (${r.reason||'unzureichende Daten'}). Bitte prüfe die Aufzeichnung; die Note wird entsprechend vorsichtiger.`;
+  const chosen=r.recorded,best=r.reference;
+  if(!chosen||!best)return null;
+  const winPlayed=Math.round(chosen.winRate*100),winBest=Math.round(best.winRate*100);
+  const delta=Math.max(0,winBest-winPlayed);
+  const uncertainty=Math.round(Math.max(0,r.pairedUncertainty||0)*100);
+  const eyesDifference=Math.round((best.meanEyes-chosen.meanEyes)*10)/10;
+  let comparison='';
+  if(best.card===r.actual){
+   comparison=`Deine ${cardLabel(r.actual)} liegt unter ${r.sampleCount} getesteten Verteilungen im Modell vorn (${winPlayed}% modellierte Siege). Ein sicher optimaler Zug ist damit noch nicht belegt.`;
+  }else if(r.clearAlternative){
+   comparison=`Wastl empfiehlt hier eher ${cardLabel(best.card)} statt deiner ${cardLabel(r.actual)}: ${winBest}% gegenüber ${winPlayed}% simulierte Siege (Abstand ${delta} Prozentpunkte; Stichprobenunsicherheit ±${uncertainty} Punkte).`;
+  }else{
+   comparison=`Deine ${cardLabel(r.actual)} ist nicht eindeutig schlechter als ${cardLabel(best.card)}: ${winPlayed}% gegenüber ${winBest}% modellierte Siege. Der Unterschied von ${delta} Punkten ist mit ±${uncertainty} Punkten unsicher. Das ist kein nachgewiesener Fehler.`;
   }
-  if(best.card===r.actual)return `In ${n} simulierten Verteilungen liegt deine ${cardLabel(r.actual)} im Modell vorn. Die anderen Möglichkeiten und die Unsicherheit kannst du bei ⓘ nachlesen. Ein sicherer Bestzug is des no ned.`;
-  return `${n} Verteilungen gerechnet: Für deine ${cardLabel(r.actual)} lässt sich kein klarer Nachteil nachweisen. ${cardLabel(best.card)} lag zwar im Modell vorn, aber der Abstand ist statistisch noch unsicher.`;
+  const pointContext=Math.abs(eyesDifference)>=2&&best.card!==r.actual
+   ?` In diesen Fortsetzungen erzielte dein Team mit ${cardLabel(best.card)} im Mittel ${Math.abs(eyesDifference).toFixed(1).replace('.',',')} Augen ${eyesDifference>0?'mehr':'weniger'}; Gewinnquote und Augen können also unterschiedlich ausfallen.`:'';
+  const why=tacticalHint(game,step,r.actual,best.card);
+  return `${comparison}${pointContext} ${why}`;
+ }
+ function learningPoints(game){
+  const data=get(game);if(!data?.reports)return [];
+  const candidates=data.reports.map((r,i)=>({r,i})).filter(x=>x.r?.ok&&x.r?.candidates?.length>1);
+  const clear=candidates.filter(x=>x.r.clearAlternative&&x.r.reference?.card!==x.r.actual)
+   .sort((a,b)=>(b.r.pairedWinGap||0)-(a.r.pairedWinGap||0));
+  if(clear.length)return clear.slice(0,2).map(({r,i})=>({title:`Stich ${i+1}: ${cardLabel(r.actual)} oder ${cardLabel(r.reference.card)}?`,
+    body:`${Math.round(r.recorded.winRate*100)}% gegen ${Math.round(r.reference.winRate*100)}% modellierte Siege, bei ${r.sampleCount} Verteilungen. ${tacticalHint(game,i,r.actual,r.reference.card)}`}));
+  if(!candidates.length)return [{title:'Wenig Wahlmöglichkeiten',body:'Die aufgezeichnete Partie enthält zu wenige berechnete Alternativen für konkretes Zugfeedback. Das ist keine Aussage über deine Spielstärke.'}];
+  const relevant=candidates.sort((a,b)=>(b.r.reference.winRate-b.r.recorded.winRate)-(a.r.reference.winRate-a.r.recorded.winRate))[0];
+  const r=relevant.r;
+  if(r.reference.card===r.actual){
+   return [{title:`Stich ${relevant.i+1}: ${cardLabel(r.actual)} war vorne`,
+    body:`Unter ${r.sampleCount} möglichen Kartenverteilungen lag dein Zug im Modell vorn (${Math.round(r.recorded.winRate*100)}% simulierte Siege). ${tacticalHint(game,relevant.i,r.actual,r.reference.card)} Das belegt jedoch noch keinen fehlerfreien Zug.`}];
+  }
+  return [{title:`Stich ${relevant.i+1}: ${cardLabel(r.actual)} oder ${cardLabel(r.reference.card)}?`,
+   body:`Beide Züge liegen im Bereich der Stichprobenunsicherheit. ${tacticalHint(game,relevant.i,r.actual,r.reference.card)} Deshalb wertet Wastl deine Karte hier nicht als nachgewiesenen Fehler.`}];
  }
  function detail(game,step){
   const r=item(game,step);if(!r)return '';
@@ -125,5 +181,5 @@
   const row=r.candidates.slice(0,8).map(c=>`<tr><td>${escape(cardLabel(c.card))}${c.card===r.actual?' (dein Zug)':''}</td><td>${Math.round(c.winRate*100)} %</td><td>${asNumber(c.meanEyes).toFixed(1)}</td></tr>`).join('');
   return `<section class="wm43-detail"><h4>🎲 Berechneter Zugvergleich</h4><p>${escape(explanation(game,step))}</p><table><thead><tr><th>Spielzug</th><th>${ramsch?'Nicht Ramschverlierer':'Modell-Siege'}</th><th>${ramsch?'Ø eigene Augen':'Ø Teamaugen'}</th></tr></thead><tbody>${row}</tbody></table><p class="wm43-caution">${r.sampleCount} Verteilungen · ${escape(r.method||'Monte-Carlo-Verteilung mit heuristischen Mitspielern')}. Werte sind keine kalibrierten Wahrscheinlichkeiten. Die Unsicherheit bezieht sich nur auf die Stichprobe, nicht auf Modellfehler.</p></section>`;
  }
- return Object.freeze({VERSION,fingerprint,get,save,grade,modelGrade,saveBenchmark,getBenchmark,benchmarkAssessment,item,explanation,detail});
+ return Object.freeze({VERSION,fingerprint,get,save,grade,modelGrade,saveBenchmark,getBenchmark,benchmarkAssessment,item,explanation,learningPoints,detail});
 });

@@ -51,3 +51,13 @@
 .mc-benchmark>summary{font-weight:800;cursor:pointer;list-style-position:inside;font-size:14px;color:#264a35;padding:9px 0}
 .mc-benchmark>summary small{display:block;margin-left:22px;font-size:11px;color:#728071;font-weight:500}
 .mc-bench-body{padding-bottom:8px}
+
+/* 4.9: Lernpunkte in der Abschlussansicht, zurückhaltend platzsparend. */
+.ws-lessons{margin-top:14px;text-align:left;display:grid;gap:8px}
+.ws-lessons h3{margin:0;font-size:15px}
+.ws-lessons>div{background:rgba(255,255,255,.55);border-radius:10px;padding:10px 12px;border:1px solid rgba(89,106,76,.2)}
+.ws-lessons b{font-size:12px}.ws-lessons p{font-size:12px;line-height:1.45;margin:5px 0 0}
+
+.ws-grade-method{width:100%;border-top:1px solid #dfd3b7;padding-top:7px;color:#506458;font-size:12px;text-align:left}
+.ws-grade-method summary{font-weight:750;cursor:pointer}
+.ws-grade-method p{margin:7px 0 0;line-height:1.45}

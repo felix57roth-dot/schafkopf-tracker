@@ -1,11 +1,11 @@
 /* Wastl 4.8 – Ein-Klick-Import. Lokal, ohne OCR-Cloud, ohne unbegründete Gewissheit.
- * Exakte Binär-Textmuster nur für bereits vorliegende Palast-Spielansagen.
+ * Referenzmerkmale für die drei klassischen Palast-Spielarten in acht Varianten.
  * Unbekannte Schrift-/Spielvarianten gehen ausschließlich in die Korrekturansicht. */
 (function(){
 'use strict';
 const escFast=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const labels={vh:'Vorhand',mh:'Mittelhand',hh:'Hinterhand',g:'Geber'};
-const types=[['rufspiel','Rufspiel'],['solo','Farbsolo'],['wenz','Wenz'],['geier','Geier'],['farbwenz','Farbwenz'],['farbgeier','Farbgeier'],['ramsch','Ramsch'],['kreuzrunde','Kreuzrunde'],['hochzeit','Hochzeit'],['bettel','Bettel']];
+const types=[['rufspiel','Rufspiel'],['solo','Farbsolo'],['wenz','Wenz']];
 const suits=[['eichel','Eichel'],['gras','Gras'],['herz','Herz'],['schell','Schellen']];
 function select(key,opts,value,required=true){return `<select data-palast-config="${key}">${required?'<option value="">Bitte wählen</option>':''}${opts.map(([v,label])=>`<option value="${v}" ${value===v?'selected':''}>${label}</option>`).join('')}</select>`;}
 // Spielnamen: gepackte, farbunabhängige Helltext-Silhouetten aus den eigenen Palast-Referenzscreenshots.

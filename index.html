@@ -1842,10 +1842,10 @@ function wastlCompactSpeech(game,t,step,valid){
  if(modelSpeech)return modelSpeech;
  if(!valid.ready)return 'Des schau ma uns an. Manche Karten sind noch nicht ganz eindeutig erfasst.';
  if(t.notes?.some(n=>n.type==='warn'))return 'Bei diesem Stich passt möglicherweise die Kartenfolge nicht. Schau ma genauer hin!';
- if(t.myPlay&&t.winTeam==='us'&&CARD_MAP[t.myPlay.id]?.eyes>=10)return `Guad! Mit ${CARD_MAP[t.myPlay.id].name} hast du ${CARD_MAP[t.myPlay.id].eyes} Augen auf eure Seite gebracht. Des kann ein sehr guter Zug sein!`;
- if(t.alternative)return `Es gäb da noch eine andere Möglichkeit. Ob die besser war, is ned sicher – i erklär's dir gern.`;
- if(t.winTeam==='us')return 'Gut! Die Augen gehen an dein Team. So kann ma weiterspielen!';
- return 'Interessanter Stich! Für eine sichere Bewertung müsst ma die ganze Spielsituation betrachten.';
+ if(t.myPlay&&t.winTeam==='us'&&CARD_MAP[t.myPlay.id]?.eyes>=10)return `Deine ${CARD_MAP[t.myPlay.id].name} bringt ${CARD_MAP[t.myPlay.id].eyes} eigene Augen in einen Stich für dein Team. Entscheidend ist, ob du damit auf Dauer mehr gewinnst, als wenn du die Karte aufgehoben hättest. Der Zugvergleich hilft dir dabei.`;
+ if(t.alternative)return `Eine mögliche Alternative wäre ${CARD_MAP[t.alternative.cardId].name}. ${t.alternative.reason} Das ist zunächst nur eine Überlegung, kein bewiesener Fehler.`;
+ if(t.winTeam==='us')return `Dein Team erhält in Stich ${step+1} ${t.eye} Augen. Überlege bei der Nachbesprechung, ob der Stich auch mit einer günstigeren Karte gewonnen worden wäre und welche Augen du damit später sichern könntest.`;
+ return `In Stich ${step+1} sind ${t.eye} Augen gefallen. Entscheidend ist, welche Alternativen du mit deinen damaligen Handkarten hattest; der simulierte Vergleich zeigt dir den erwarteten Unterschied.`;
 }
 
 /* Version 4.0: Stich-fuer-Stich-Augen und vorsichtige Endbewertung.
@@ -1945,7 +1945,8 @@ function wastlResult(game,info){
  const model=window.WastlMatchAnalysis?.grade(match,game.type);
  grade=match?(model?.grade??null):null;
  gradeReason=match?(model?.reason||'Modellbewertung derzeit nicht möglich.'):'Noch keine ganze Partie simuliert. Eine Ergebnisnote allein aus Sieg oder Niederlage wäre irreführend.';
- return {ok:true,individual:false,myEyes:result.myEyes,theirEyes:result.theirEyes,teamWinner,myResult,grade,gradeReason};
+ const gradeBrief=grade!==null?`${model?.informative||0} von 8 Stichen mit unterscheidbaren Modellalternativen · Evidenz ${model?.quality||'gering'}. Keine Expertennote.`:'Zum Berechnen der Note zunächst die Partie vollständig simulieren.';
+ return {ok:true,individual:false,myEyes:result.myEyes,theirEyes:result.theirEyes,teamWinner,myResult,grade,gradeReason,gradeBrief};
 }
 function wastlScoreWidget(game,step){
  const p=wastlScoreProgress(game,step+1);
@@ -1958,10 +1959,10 @@ function wastlEnding(game,info){
  const result=wastlResult(game,info);
  const score=result.individual?`<div class="ws-result-people">${result.people.map(p=>`<span>${esc(p.name)} <b>${p.eyes}</b></span>`).join('')}</div>`:`<div class="ws-result-tally"><div><small>Dein Team</small><strong>${result.myEyes??'–'}</strong><small>Augen</small></div><span>:</span><div><small>Gegner</small><strong>${result.theirEyes??'–'}</strong><small>Augen</small></div></div>`;
  const title=result.ok?result.myResult:'Spielauswertung prüfen';
- const speech=result.ok?(result.grade!==null?`Servus! ${result.myResult} Für dein Spiel geb i dir vorläufig ${result.grade} von 10 Punkten. Frag mi gern, worauf die Note beruht.`:`Servus! ${result.myResult} Für eine faire Spielnote fehlen ma noch sichere Anhaltspunkte.`):`Da stimmt noch etwas nicht. ${result.reason}`;
+ const speech=result.ok?(result.grade!==null?`Servus! ${result.myResult} Dein vorläufiger Entscheidungsindex ist ${result.grade}/10. Unten zeig i dir, welche Züge dahinterstecken.`:`Servus! ${result.myResult} Ohne abgeschlossene Simulation gibts noch keinen Entscheidungsindex.`):`Da stimmt noch etwas nicht. ${result.reason}`;
  return `<div class="ws-fullscreen ws-result-screen" role="dialog" aria-modal="true" aria-label="Wastls Endauswertung">
   <header class="ws-topbar"><button type="button" id="wsClose" aria-label="Zur Partieübersicht">←</button><div class="ws-step-label"><strong>Partie beendet</strong><small>${esc(stitchTypeName(game.type))} · 8 von 8 Stichen</small></div><div class="ws-nav"><button type="button" data-mentor-step="7" aria-label="Zum letzten Stich">‹</button></div></header>
-  <main class="ws-result-body"><div class="ws-result-mentor"><img src="wastl.png" alt="Wastl"><div class="ws-result-speech">${esc(speech)}</div></div><section class="ws-result-card"><div class="ws-result-trophy" aria-hidden="true">🏆</div><h2>${esc(title)}</h2>${result.ok?score:`<p>${esc(result.reason)}</p>`}<div class="ws-result-grade"><span>Wastls Modellbewertung (experimentell)</span><strong>${result.grade===null||result.grade===undefined?'–':result.grade}<small>/10</small></strong></div><p class="ws-result-note">${esc(result.gradeReason||'Bitte prüfe zuerst die Aufzeichnung.')}</p></section><button type="button" class="ws-result-done" id="wsCloseResult">Zurück zu meinen Partien</button></main>
+  <main class="ws-result-body"><div class="ws-result-mentor"><img src="wastl.png" alt="Wastl"><div class="ws-result-speech">${esc(speech)}</div></div><section class="ws-result-card"><div class="ws-result-trophy" aria-hidden="true">🏆</div><h2>${esc(title)}</h2>${result.ok?score:`<p>${esc(result.reason)}</p>`}<div class="ws-result-grade"><span>Wastls Entscheidungsindex (vorläufig)</span><strong>${result.grade===null||result.grade===undefined?'–':result.grade}<small>/10</small></strong></div><p class="ws-result-note">${esc(result.gradeBrief||result.gradeReason||'Bitte prüfe zuerst die Aufzeichnung.')}</p>${result.ok&&result.gradeReason?`<details class="ws-grade-method"><summary>Wie entsteht diese Bewertung?</summary><p>${esc(result.gradeReason)}</p></details>`:''}${result.ok?`<section class="ws-lessons"><h3>🎯 Wastls Lernpunkte</h3>${(window.WastlMatchAnalysis?.learningPoints(game)||[]).map(x=>`<div><b>${esc(x.title)}</b><p>${esc(x.body)}</p></div>`).join('')}</section>`:''}</section><button type="button" class="ws-result-done" id="wsCloseResult">Zurück zu meinen Partien</button></main>
  </div>`;
 }
 

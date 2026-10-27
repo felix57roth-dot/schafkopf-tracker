@@ -1,3 +1,12 @@
+Schafkopftracker Version 4.9 – Klassische Spielarten, nachvollziehbarer Entscheidungsindex
+- Spielart-Erkennung: Rufspiel Eichel/Gras/Schellen; Farbsolo Eichel/Gras/Herz/Schellen; Wenz.
+- Vollstaendig simulierte Partien erhalten einen vorläufigen 1–10-Modellindex, ohne globales Benchmark-Gate.
+- Auch bei wenigen bewertbaren Zuegen wird der neutrale Wert 5 klar als nicht interpretierbar gekennzeichnet.
+- Konkrete Zugkommentare mit Kartenalternativen, Modell-Siegquoten, Augen und Unsicherheit.
+- Wastls Abschlussansicht zeigt Lernpunkte.
+- Alle Daten bleiben lokal; keine Schueler- oder Nutzerdaten werden versendet.
+- 1–10 ist kein Expertenurteil und muss weiter kalibriert werden.
+
 Schafkopftracker – Version 4.8
 Wastl Engine: reproduzierbares Offline-Prueflabor und Bewertungsschutz
 
