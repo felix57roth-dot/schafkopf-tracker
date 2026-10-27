@@ -66,7 +66,15 @@
    return `<div class="bots-table-slot bots-${pos}">${item?face(item.id):'<span class="bots-empty-slot">♣</span>'}</div>`;
   };
   const tag=g.phase==='trickDone'||g.phase==='done'?`Stich gewonnen: ${esc(seatLabel(g.lastTrick?.winnerSeat))} · ${g.lastTrick?.eyes||0} Augen`:g.current.length?`Gespielt: ${g.current.length} von 4 Karten`:'Neue Runde · Ausspiel';
-  return `<div class="bots-table"><div class="bots-table-center">${slot('top')}${slot('left')}${slot('right')}${slot('bottom')}<span class="bots-table-caption">${tag}</span></div></div>`;
+  const portrait=pos=>{
+   const seat=B.SEATS.find(id=>seatRelative(id)===pos);
+   const player=B.personAt(g,seat);
+   return `<div class="bots-character bots-character-${pos}" aria-label="${esc(player.name)}">
+    <div class="bots-character-image bots-character-${esc(player.id)}"><span>🃏</span></div>
+    <strong>${esc(player.name)}</strong><small>${esc(names[seat])}</small>
+   </div>`;
+  };
+  return `<div class="bots-table">${portrait('top')}${portrait('left')}${portrait('right')}<div class="bots-table-center">${slot('top')}${slot('left')}${slot('right')}${slot('bottom')}<span class="bots-table-caption">${tag}</span></div></div>`;
  }
  function hand(g){
   const playable=g.phase==='playing'&&g.turn===g.mySeat?new Set(B.playable(g,g.mySeat)):new Set();
@@ -77,7 +85,7 @@
   const saved=!!g.savedId&&stitch.archive.some(x=>x.id===g.savedId);
   const scores=teamScores(g),result=scores?`${scores.us} : ${scores.them} Augen`:'Spiel abgeschlossen';
   const win=scores?scores.us>=(scores.own?61:60):null;
-  return `<section class="bots-finish"><h2>${win===true?'🏆 Gewonnen!':win===false?'Partie verloren':'Partie beendet'}</h2><p>${esc(gameLabel(g))} · ${result}</p><p class="help">Alle acht Stiche sind dokumentiert${saved?' und bei Wastl gespeichert':''}. Diese Runde beeinflusst deine finanzielle Statistik nicht.</p><div class="bots-finish-actions"><button type="button" class="btn" data-bots-analyze ${saved?'':'disabled'}>Mit Wastl analysieren →</button><button type="button" class="btn secondary" data-bots-rematch>Gleiche Karten erneut</button><button type="button" class="btn ghost" data-bots-round>🃏 Nächste Runde</button></div></section>`;
+  return `<section class="bots-finish"><h2>${win===true?'🏆 Gewonnen!':win===false?'Partie verloren':'Partie beendet'}</h2><p>${esc(gameLabel(g))} · ${result}</p><p class="help">Alle acht Stiche sind dokumentiert${saved?' und bei Wastl gespeichert':''}. Diese Runde beeinflusst deine finanzielle Statistik nicht.</p><div class="bots-finish-actions"><button type="button" class="btn" data-bots-analyze ${saved?'':'disabled'}>Mit Wastl analysieren →</button><button type="button" class="btn ghost" data-bots-round>🃏 Nächste Runde</button></div></section>`;
  }
  function render(){
   if(!game)return `<div class="bots-page">${choice()}</div>`;
