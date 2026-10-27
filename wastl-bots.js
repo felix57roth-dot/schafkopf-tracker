@@ -16,9 +16,9 @@
  const SUIT_LABEL={eichel:'Eichel',gras:'Gras',herz:'Herz',schell:'Schellen'};
  const PEOPLE=Object.freeze([
   {id:'you',name:'Du',portrait:null},
-  {id:'sepp',name:'Sepp',portrait:'./players/sepp.svg'},
-  {id:'ludwig',name:'Ludwig',portrait:'./players/ludwig.svg'},
-  {id:'theresa',name:'Theresa',portrait:'./players/theresa.svg'}
+  {id:'sepp',name:'Sepp',portrait:'./players/sepp.png'},
+  {id:'xaver',name:'Xaver',portrait:'./players/xaver.png'},
+  {id:'resi',name:'Resi',portrait:'./players/resi.png'}
  ]);
  const rank=c=>E.parse(c).rank;
  const copyHands=h=>Object.fromEntries(SEATS.map(s=>[s,[...h[s]]]));
@@ -36,7 +36,12 @@
  }
  function sortHand(hand,game={type:'rufspiel'}){
   const g=game.type?game:{type:'rufspiel'};
-  const trump=E.trumpOrder?E.trumpOrder(g):[];
+  const core=g.type==='wenz'?['U']:['O','U'];
+  const trump=core.flatMap(r=>SUITS.map(s=>s+'-'+r));
+  if(g.type!=='wenz'){
+   const suit=g.type==='solo'?g.trumpSuit:'herz';
+   trump.push(...['A','10','K','9','8','7'].map(r=>suit+'-'+r));
+  }
   const other=['A','10','K','O','U','9','8','7'];
   function key(card){
    if(E.isTrump(card,g)){
