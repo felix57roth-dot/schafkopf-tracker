@@ -1,4 +1,4 @@
-/* Schafkopftracker v3.6: fully local screenshot-assisted Schafkopf Palast import.
+/* Schafkopftracker v4.7: locally matched reference corners for Schafkopf Palast import.
  * The recognizer makes fallible SUGGESTIONS. Never save without full user review.
  * No network requests, third-party APIs, uploads or external card art.
  */
@@ -36,22 +36,23 @@ function palastNew(){
  date:nowISO(),gameId:'',recognized:false,notice:'',selected:0,picking:-1};
 }
 function palastImageCanvas(img){const c=document.createElement('canvas');c.width=600;c.height=1350;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,600,1350);return c;}
-function palastPatch(ctx,x,y){
- const c=document.createElement('canvas');c.width=10;c.height=20;
- c.getContext('2d',{willReadFrequently:true}).drawImage(ctx.canvas,x+1,y+3,14,27,0,0,10,20);
- const rgba=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,10,20).data;
- const rgb=new Uint8Array(600);for(let i=0,j=0;i<rgba.length;i+=4){rgb[j++]=rgba[i];rgb[j++]=rgba[i+1];rgb[j++]=rgba[i+2];}return rgb;
-}
-function palastPixelDistance(a,b){
- // Lettering and suit symbol carry more information than the picture detail below.
- let value=0,weightSum=0;
- for(let px=0;px<200;px++){
-  const j=px*3,y=Math.floor(px/10),w=y<9?1.5:1;
-  // Equal channel balance; RGB keeps red hearts distinct from green leaves.
-  value+=w*(Math.abs(a[j]-b[j])+Math.abs(a[j+1]-b[j+1])+Math.abs(a[j+2]-b[j+2]));
-  weightSum+=w*3;
+// Compare original screenshot pixels to compact 14 × 22 corner signatures.
+// Emphasize the printed rank in the upper-left corner (7/9, 8/9 etc.).
+// Coordinates always refer to the 600 × 1350 normalized Palast screenshot.
+const PALAST_CORNER_W=14, PALAST_CORNER_H=22;
+function palastCornerCost(data,canvasWidth,x,y,template,best){
+ let sum=0,pos=0;
+ for(let py=0;py<PALAST_CORNER_H;py++){
+  let off=((y+py)*canvasWidth+x)*4;
+  for(let px=0;px<PALAST_CORNER_W;px++){
+   const w=py<2?2:(py<13?(px<7?3:6):3);
+   sum+=w*(Math.abs(data[off]-template[pos])+Math.abs(data[off+1]-template[pos+1])+Math.abs(data[off+2]-template[pos+2]));
+   pos+=3;off+=4;
+  }
+  // A current offset cannot outperform a prior offset once all partial costs exceed it.
+  if(sum>=best)return sum;
  }
- return value/weightSum;
+ return sum;
 }
 // Returns optimal non-repeating proposals. Hungarian algorithm, O(n^3).
 function palastAssign(cost){
@@ -68,37 +69,53 @@ function palastAssign(cost){
  const assignment=new Array(n);for(let j=1;j<=n;j++)assignment[p[j]-1]=j-1;return assignment;
 }
 function palastRecognize(c,locked={}){
- const ctx=c.getContext('2d',{willReadFrequently:true}),matrix=[];
- // Schafkopf Palast stacks the cards at slightly different vertical positions.
- // Wider offsets improve tolerance without internet/OCR or fixed external APIs.
+ if(c.width!==600||c.height!==1350)throw new Error('Das Palast-Bild muss auf 600 × 1350 Pixel normalisiert werden.');
+ if(PALAST_TEMPLATE_PIXELS.length!==32||PALAST_TEMPLATE_PIXELS.some(ref=>ref.bits.length!==PALAST_CORNER_W*PALAST_CORNER_H*3))throw new Error('Die 32 Referenz-Kartenecken konnten nicht geladen werden.');
+ const rgba=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;
+ const matrix=[];
+ // Cards overlap by 33 pixels, not 40: previously this shifted the entire card scan.
  for(let t=0;t<8;t++)for(let k=0;k<4;k++){
-  const [bx,by]=PALAST_POSITIONS[t],x=bx+k*40;
-  const crops=[];
-  for(const dx of [-4,-2,0,2,4])for(const dy of [-13,-10,-7,-4,-1,2,5,8])crops.push(palastPatch(ctx,x+dx,by+dy));
-  matrix.push(PALAST_TEMPLATE_PIXELS.map(ref=>{
-   let best=Infinity;for(const pix of crops)best=Math.min(best,palastPixelDistance(pix,ref.bits));return best;
-  }));
+  const [bx,by]=PALAST_POSITIONS[t],x=bx+k*33;
+  const costs=PALAST_TEMPLATE_PIXELS.map(ref=>{
+   let best=Infinity;
+   for(let dx=-3;dx<=3;dx++)for(let dy=-4;dy<=6;dy++){
+    const score=palastCornerCost(rgba,c.width,x+dx,by+dy,ref.bits,best);
+    if(score<best)best=score;
+   }
+   return best/(1127*3);
+  });
+  matrix.push(costs);
  }
- // Preserve manual corrections when recognition is run again.
  const fixedIndices=Object.keys(locked).map(Number).filter(i=>i>=0&&i<32&&PALAST_TEMPLATE_PIXELS.some(r=>r.id===locked[i]));
  const reserved=new Set(fixedIndices.map(i=>locked[i]));
  if(reserved.size!==fixedIndices.length)throw new Error('Einige manuell ausgewählte Karten sind doppelt vergeben. Bitte erst die doppelten Karten korrigieren.');
  const variable=Array.from({length:32},(_,i)=>i).filter(i=>!fixedIndices.includes(i));
  const reference=PALAST_TEMPLATE_PIXELS.map((r,i)=>i).filter(i=>!reserved.has(PALAST_TEMPLATE_PIXELS[i].id));
  const result=new Array(32);
- fixedIndices.forEach(i=>{result[i]={id:locked[i],score:0,alternatives:[locked[i]],uncertain:false};});
+ fixedIndices.forEach(i=>{result[i]={id:locked[i],score:0,alternatives:[{id:locked[i],score:0}],uncertain:false};});
  if(variable.length&&variable.length===reference.length){
-  const match=palastAssign(variable.map(i=>reference.map(j=>matrix[i][j])));
+  const reduced=variable.map(i=>reference.map(j=>matrix[i][j]));
+  const match=palastAssign(reduced),baseCost=match.reduce((sum,j,i)=>sum+reduced[i][j],0);
+  // Assignment stability: how much more expensive is the next legal 32-card allocation
+  // if we forbid this one card at this position? A low margin means ambiguous.
+  const globalMargins=variable.map((_,row)=>{
+   if(variable.length<2)return Infinity;
+   const alternative=reduced.map((costs,i)=>i===row?costs.map((v,j)=>j===match[row]?1000000:v):costs);
+   const next=palastAssign(alternative);
+   return Math.max(0,next.reduce((sum,j,i)=>sum+alternative[i][j],0)-baseCost);
+  });
   variable.forEach((i,rank)=>{
    const assignedIndex=reference[match[rank]],selected=PALAST_TEMPLATE_PIXELS[assignedIndex];
    const shortlist=reference.map(j=>({id:PALAST_TEMPLATE_PIXELS[j].id,score:matrix[i][j]})).sort((a,b)=>a.score-b.score).slice(0,4);
-   result[i]={id:selected.id,score:matrix[i][assignedIndex],alternatives:shortlist,uncertain:matrix[i][assignedIndex]>=40||assignedIndex!==reference.find(j=>PALAST_TEMPLATE_PIXELS[j].id===shortlist[0]?.id)||(shortlist.length>1&&shortlist[1].score-shortlist[0].score<3)};
+   const selectedScore=matrix[i][assignedIndex],margin=globalMargins[rank];
+   // This is allocation STABILITY, not an empirically calibrated error probability.
+   result[i]={id:selected.id,score:selectedScore,alternatives:shortlist,margin,uncertain:selectedScore>=62||margin<=1.5};
   });
  }
  return result;
 }
 function palastImageSlice(c,x,y,width=164,height=105,targetWidth=328){const crop=document.createElement('canvas');crop.width=targetWidth;crop.height=Math.round(targetWidth*height/width);crop.getContext('2d').drawImage(c,x,y,width,height,0,0,crop.width,crop.height);return crop.toDataURL('image/jpeg',.82);}
-function palastScoreLabel(score){return score<26?'Vorschlag':score<46?'bitte prüfen':'unsicher';}
+function palastScoreLabel(score){return score<45?'Referenzabgleich':score<62?'bitte prüfen':'unsicher';}
 function palastSeatSelect(value,attr){return `<option value="" ${!value?'selected':''}>Bitte auswählen</option>`+PALAST_SEATS.map(s=>`<option value="${s}" ${s===value?'selected':''}>${palastSeatLabel(s)}</option>`).join('');}
 function palastReview(){
  const p=palastDraft;if(!p)return {errors:['Kein Bild geladen.'],notes:[],valid:false};
@@ -148,7 +165,7 @@ function palastReview(){
    }
   }
  }
- if(p.recognized){const low=p.scores.filter((n,i)=>!p.userEdited[i]&&n>=46).length;notes.unshift(`${low} Vorschläge sind besonders unsicher. Auch die übrigen erkannten Karten bitte anhand des Screenshots kontrollieren.`);}
+ if(p.recognized){const low=p.uncertain.filter((uncertain,i)=>uncertain&&!p.userEdited[i]).length;notes.unshift(`${low} Zuordnungen sind im Referenzabgleich mehrdeutig. Auch die übrigen Karten bitte am Screenshot kontrollieren; die Einschätzung ist noch nicht kalibriert.`);}
  return {errors,notes,valid:errors.length===0,eyes};
 }
 function palastBuildTricks(p){
@@ -218,9 +235,9 @@ function palastImportUI(){
  ${p.recognized&&!p.userEdited[at]&&p.alternatives[at]?.length?`<div class="palast-proposals"><span>Andere Vorschläge:</span>${p.alternatives[at].filter(v=>v.id!==id).slice(0,3).map(v=>`<button type="button" data-palast-suggest="${at}" data-card="${v.id}">${esc(CARD_MAP[v.id].name)}</button>`).join('')}</div>`:''}
  ${p.userEdited[at]?'<span class="palast-manual-label">✓ Manuell korrigiert</span>':''}<button type="button" class="palast-pick-open" data-palast-pick="${at}">🃏 Karte aus Bildern wählen</button></label>`;}).join('')}</div></section>`;}).join(''):'';
  const picker=p.picking>=0?`<div class="palast-picker-backdrop" role="dialog" aria-modal="true" aria-label="Spielkarte auswählen"><div class="palast-picker"><div class="palast-picker-top"><strong>Stich ${Math.floor(p.picking/4)+1} · Karte ${p.picking%4+1}</strong><button type="button" id="palastPickClose" aria-label="Kartenwahl schließen">✕</button></div><p>Tippe die passende Karte an. Schon in anderen Stichen vergebene Karten sind markiert.</p><div class="palast-picker-suits">${['eichel','gras','herz','schell'].map(suit=>`<section><h4>${PALAST_SUIT_LABEL[suit]}</h4><div class="palast-picker-grid">${['A','10','K','O','U','9','8','7'].map(rank=>{const id=suit+'-'+rank,used=p.tricks.some((v,i)=>v===id&&i!==p.picking);return `<button type="button" class="palast-picker-card ${used?'used':''}" data-palast-pick-choice="${id}" aria-label="${esc(CARD_MAP[id].name)}${used?', bereits verwendet':''}"><img loading="lazy" src="cards/${id}.webp" alt=""><span>${used?'Bereits':'Wählen'}</span></button>`;}).join('')}</div></section>`).join('')}</div></div></div>`:'';
- return `<div class="content-page palast-import">${picker}<button type="button" class="btn ghost" id="palastCancel">← Zurück zu Wastl</button><div class="palast-hero"><h2>Schafkopf Palast importieren</h2><p>Alle Daten bleiben auf deinem Gerät. Die Kartenerkennung macht nur Vorschläge. <b>Spielart, Spielernamen und deine Hand werden nicht sicher automatisch erkannt</b> – diese Angaben bestätigen wir deshalb ausdrücklich vor dem Speichern.</p></div>
+ return `<div class="content-page palast-import">${picker}<button type="button" class="btn ghost" id="palastCancel">← Zurück zu Wastl</button><div class="palast-hero"><h2>Schafkopf Palast importieren</h2><p>Alle Daten bleiben auf deinem Gerät. 32 Palast-Referenzkarten verbessern die Erkennung. Die Zuordnungen bleiben Vorschläge. <b>Spielart, Spielernamen und deine Hand werden nicht sicher automatisch erkannt</b> – diese Angaben bestätigen wir deshalb ausdrücklich vor dem Speichern.</p></div>
  <section class="card palast-section"><label class="palast-upload"><span>📷 Geteiltes Spielbild auswählen</span><input id="palastFile" type="file" accept="image/png,image/jpeg,image/webp"></label>${!hasPicture?'<p class="help">Wähle das vollständige Hochformatbild aus Schafkopf Palast mit vier Spielerhänden und allen acht Stichen. Unterstützt wird vorerst die bekannte Bildaufteilung im Format ca. 600 × 1350.</p>':`<p class="palast-image-meta">${esc(p.fileName)} · ${Math.round(p.fileSize/1024)} KB</p><img class="palast-screenshot" src="${p.image}" alt="Importiertes Schafkopf-Palast-Bild"><div class="palast-actions"><button type="button" class="btn" id="palastRecognize">↻ Karten automatisch vorschlagen</button><button type="button" class="btn secondary" id="palastClearCards">Kartenzuordnung leeren</button></div>`}</section>
- ${hasPicture?`<section class="card palast-section"><h3>Spielangaben</h3>${fields}</section><section class="card palast-section"><div class="palast-section-title"><h3>Stiche und Karten kontrollieren</h3><span class="badge">${p.tricks.filter(Boolean).length}/32</span></div><p class="help">Links nach rechts: Reihenfolge, in der die Karten gespielt wurden. Vergleiche jeden Bildausschnitt mit den Vorschlägen und korrigiere Fehler. Der Stichgewinner wird aus den Karten berechnet.</p>${questionable.length?`<div class="palast-suspects"><b>${questionable.length} besonders unsichere Zuordnungen – zuerst kontrollieren:</b><div>${questionable.map(i=>`<a href="#palast-card-${i}">Stich ${Math.floor(i/4)+1} · Karte ${i%4+1}</a>`).join('')}</div></div>`:''}${renders}</section><section class="card palast-section"><h3>Prüfergebnis</h3>${review}<button id="palastSave" class="btn" type="button" ${!valid.valid?'disabled':''}>✓ Geprüfte Partie bei Wastl speichern</button><p class="help">Erst nach deiner Bestätigung wird die Partie als Training gespeichert. Es werden keine Geldbeträge oder Spielabende verändert.</p></section>`:''}</div>`;
+ ${hasPicture?`<section class="card palast-section"><h3>Spielangaben</h3>${fields}</section><section class="card palast-section"><div class="palast-section-title"><h3>Stiche und Karten kontrollieren</h3><span class="badge">${p.tricks.filter(Boolean).length}/32</span></div><p class="help">Links nach rechts: Reihenfolge, in der die Karten gespielt wurden. Vergleiche jeden Bildausschnitt mit den Vorschlägen und korrigiere Fehler. Der Stichgewinner wird aus den Karten berechnet.</p>${questionable.length?`<div class="palast-suspects"><b>${questionable.length} mehrdeutige Zuordnungen – zuerst kontrollieren:</b><div>${questionable.map(i=>`<a href="#palast-card-${i}">Stich ${Math.floor(i/4)+1} · Karte ${i%4+1}</a>`).join('')}</div></div>`:''}${renders}</section><section class="card palast-section"><h3>Prüfergebnis</h3>${review}<button id="palastSave" class="btn" type="button" ${!valid.valid?'disabled':''}>✓ Geprüfte Partie bei Wastl speichern</button><p class="help">Erst nach deiner Bestätigung wird die Partie als Training gespeichert. Es werden keine Geldbeträge oder Spielabende verändert.</p></section>`:''}</div>`;
 }
 let palastRefreshTimer=0;
 function palastRefresh(keepY=true){

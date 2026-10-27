@@ -81,3 +81,5 @@ PRUEFUNG
 Version 4.6: Zusaetzlicher lokaler A/B-Test der Monte-Carlo-Empfehlung gegen die vorherige Heuristik. Die Testhaende sind der Empfehlung unbekannt. Nur interne Modellguete, keine validierte 1-10-Spielstaerke.
 
 Referenzbilder fuer die Palast-Bilderkennung: Bitte fuer jede der 32 ORIGINAL-Palastkarten die obere Ecke mit Wert und Farbzeichen gut lesbar aufnehmen. Zwei getrennte Referenzsaetze fuer Hand- und Stichansicht waeren noch besser. Ein Referenzbilder-Datensatz wurde in 4.6 NICHT behauptet oder beigelegt: ohne verifizierte Vorlagen darf die Erkennung keine 100%-Sicherheit vortaeuschen.
+
+Version 4.7: Referenz-Eckenerkennung (32 nutzerseitig erstellte Eckenausschnitte als verkleinerte Merkmale). Vor dem Speichern weiterhin Spielart/Sitzposition/Hand und Karten kontrollieren. Original-Vorlagenbilder werden nicht mitveröffentlicht.
