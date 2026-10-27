@@ -1,4 +1,5 @@
 /* Wastl Botspiel 6.0: fortlaufender, lokaler Schafkopftisch.
+ * Aktionen der Mitspieler werden einzeln vom UI-Taktgeber ausgelöst.
  * Tischmitspieler bleiben auf ihrem Stuhl; Vorhand/Mittelhand/Hinterhand/Geber
  * rotieren nach jeder Runde im Uhrzeigersinn. Bots kennen nur ihre Karten und
  * offen liegende Stiche. Keine Änderung an Kassenbuch oder anderen Daten.
@@ -96,9 +97,9 @@
    version:6,phase:'bidding',started:new Date().toISOString(),round,session:session||{played:0,won:0,lost:0,passed:0},
    mySeat,initialHands:copyHands(initial),hands:copyHands(initial),
    bids:[],bidCursor:0,best:null,type:null,calledSuit:'eichel',trumpSuit:'herz',
-   declarerSeat:null,leaderSeat:'vh',turn:null,current:[],tricks:[],lastTrick:null
+   declarerSeat:null,leaderSeat:'vh',turn:null,current:[],tricks:[],lastTrick:null,lastAction:null
   };
-  return advance(game,random);
+  return game;
  }
  function chooseToPlay(g){
   if(g.phase!=='bidding'||SEATS[g.bidCursor]!==g.mySeat)throw Error('Du bist gerade nicht mit der Ansage an der Reihe.');
@@ -109,36 +110,57 @@
   if(g.phase!=='chooseGame')throw Error('Es gibt gerade keine Spielwahl.');
   g.phase='bidding';return g;
  }
- function submitBid(g,choice,random=Math.random){
+ function finishBidding(g){
+  if(g.phase!=='bidding'||g.bidCursor!==4)return g;
+  if(!g.best){g.phase='noGame';return g;}
+  g.type=g.best.type;g.trumpSuit=g.best.trumpSuit||'herz';
+  g.calledSuit=g.best.calledSuit||'eichel';g.declarerSeat=g.best.seat;
+  g.phase='playing';g.turn='vh';g.leaderSeat='vh';g.current=[];
+  return g;
+ }
+ function submitBid(g,choice){
   if(!['bidding','chooseGame'].includes(g.phase)||SEATS[g.bidCursor]!==g.mySeat)
    throw Error('Du bist gerade nicht mit der Ansage an der Reihe.');
   if(choice){
    const opt=bidOptions(g.hands[g.mySeat],g.best).find(x=>
-    x.type===choice.type&&x.trumpSuit===choice.trumpSuit&&x.calledSuit===choice.calledSuit);
+     x.type===choice.type&&x.trumpSuit===choice.trumpSuit&&x.calledSuit===choice.calledSuit);
    if(!opt)throw Error('Diese Ansage ist mit deiner Hand oder nach der vorigen Ansage nicht zulässig.');
    g.best={...opt,seat:g.mySeat};
   }
   g.bids.push({seat:g.mySeat,offer:choice?{...g.best}:null});
+  g.lastAction={seat:g.mySeat,text:choice?'Spiele '+g.best.label+'!':'Weiter!',kind:'bid'};
   g.bidCursor++;g.phase='bidding';
-  return advance(g,random);
+  return finishBidding(g);
  }
- function advance(g,random=Math.random){
-  let guard=0;
-  while(g.phase==='bidding'&&g.bidCursor<4&&SEATS[g.bidCursor]!==g.mySeat){
-   if(++guard>5)throw Error('Ansagerunde hängt.');
-   const seat=SEATS[g.bidCursor],choice=botBid(g.hands[seat],g.best,random);
+ // Genau EINE Botaktion pro Aufruf. Auf den nächsten Spieler wird erst
+ // nach der im UI sichtbaren Sprechblasen-/Kartenspielpause gewechselt.
+ function stepBot(g,random=Math.random){
+  if(g.phase==='bidding'){
+   if(g.bidCursor>=4)return finishBidding(g);
+   const seat=SEATS[g.bidCursor];
+   if(seat===g.mySeat)return g;
+   const choice=botBid(g.hands[seat],g.best,random);
    if(choice)g.best={...choice,seat};
-   g.bids.push({seat,offer:choice?{...choice,seat}:null});g.bidCursor++;
+   g.bids.push({seat,offer:choice?{...choice,seat}:null});
+   g.lastAction={seat,text:choice?'Spiele '+choice.label+'!':'Weiter!',kind:'bid'};
+   g.bidCursor++;
+   return finishBidding(g);
   }
-  if(g.phase==='bidding'&&g.bidCursor===4){
-   if(!g.best){g.phase='noGame';return g;}
-   g.type=g.best.type;g.trumpSuit=g.best.trumpSuit||'herz';
-   g.calledSuit=g.best.calledSuit||'eichel';g.declarerSeat=g.best.seat;
-   g.phase='playing';g.turn='vh';g.leaderSeat='vh';g.current=[];
+  if(g.phase==='playing'&&g.turn!==g.mySeat){
+   const seat=g.turn,hand=g.hands[seat],cards=g.current.map(x=>x.card);
+   const view={type:g.type,trumpSuit:g.trumpSuit,calledSuit:g.calledSuit,declarerSeat:g.declarerSeat};
+   const options=playable(g,seat);
+   if(!options.length)throw Error('Bot hat keine spielbare Karte.');
+   let chosen;
+   try{chosen=P.choose(hand,cards,seat,g.leaderSeat,view,{past:g.tricks},random);}catch{chosen=null;}
+   if(!options.includes(chosen))chosen=options[0];
+   put(g,seat,chosen);
+   g.lastAction={seat,text:'Legt eine Karte',card:chosen,kind:'card'};
   }
-  if(g.phase==='playing')runBots(g,random);
   return g;
  }
+ // Öffentliche, rückwärtskompatible Einzelschrittfunktion.
+ function advance(g,random=Math.random){return stepBot(g,random);}
  function playable(g,seat){
   if(g.phase!=='playing'||g.turn!==seat)return [];
   return E.legalMoves(g.hands[seat],g.current[0]?.card||null,g,
@@ -159,23 +181,14 @@
   }else g.turn=E.nextSeat(seat);
   return g;
  }
- function runBots(g,random=Math.random){
-  let guard=0;
-  while(g.phase==='playing'&&g.turn!==g.mySeat){
-   if(++guard>36)throw Error('Bot-Spielzug endet nicht.');
-   const seat=g.turn,hand=g.hands[seat],cards=g.current.map(x=>x.card);
-   const view={type:g.type,trumpSuit:g.trumpSuit,calledSuit:g.calledSuit,declarerSeat:g.declarerSeat};
-   const options=playable(g,seat);let chosen=null;
-   try{chosen=P.choose(hand,cards,seat,g.leaderSeat,view,{past:g.tricks},random);}catch(e){chosen=null;}
-   if(!options.includes(chosen))chosen=options[0];
-   put(g,seat,chosen);
-  }
+ function play(g,card){
+  put(g,g.mySeat,card);
+  g.lastAction={seat:g.mySeat,text:'Karte gelegt',card,kind:'card'};
   return g;
  }
- function play(g,card,random=Math.random){put(g,g.mySeat,card);return advance(g,random);}
- function nextTrick(g,random=Math.random){
+ function nextTrick(g){
   if(g.phase!=='trickDone')throw Error('Der Stich ist noch nicht abgeschlossen.');
-  g.phase='playing';return advance(g,random);
+  g.phase='playing';g.lastAction=null;return g;
  }
  function result(g){
   if(g.phase!=='done')return null;
@@ -213,6 +226,6 @@
   if(!review.ok)throw Error('Die Partie konnte nicht regelkonform gespeichert werden: '+(review.errors[0]?.message||'Unbekannter Fehler'));
   return record;
  }
- return Object.freeze({VERSION:'6.0.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
-  create,chooseToPlay,cancelChoice,submitBid,advance,play,playable,nextTrick,nextRound,result,toRecord});
+ return Object.freeze({VERSION:'6.1.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
+  create,chooseToPlay,cancelChoice,submitBid,stepBot,advance,play,playable,nextTrick,nextRound,result,toRecord});
 });
