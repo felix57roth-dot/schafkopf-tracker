@@ -16,9 +16,9 @@
  const SUIT_LABEL={eichel:'Eichel',gras:'Gras',herz:'Herz',schell:'Schellen'};
  const PEOPLE=Object.freeze([
   {id:'you',name:'Du',portrait:null},
-  {id:'sepp',name:'Sepp',portrait:'./players/sepp.png'},
-  {id:'xaver',name:'Xaver',portrait:'./players/xaver.png'},
-  {id:'resi',name:'Resi',portrait:'./players/resi.png'}
+  {id:'sepp',name:'Sepp',portrait:'./players/sepp_sitzend.png'},
+  {id:'xaver',name:'Xaver',portrait:'./players/xaver_sitzend.png'},
+  {id:'resi',name:'Resi',portrait:'./players/resi_sitzend.png'}
  ]);
  const rank=c=>E.parse(c).rank;
  const copyHands=h=>Object.fromEntries(SEATS.map(s=>[s,[...h[s]]]));

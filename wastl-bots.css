@@ -20,9 +20,9 @@
 .bots-character strong{background:#fbf2da;padding:1px 7px;border-radius:8px}
 .bots-character-image{width:clamp(74px,17vw,135px);height:clamp(74px,17vw,135px);background-size:contain;background-repeat:no-repeat;background-position:center bottom;display:grid;place-items:end center}
 .bots-character-image span{font-size:27px;opacity:.5}
-.bots-character-sepp{background-image:url('./players/sepp.png')}
-.bots-character-xaver{background-image:url('./players/xaver.png')}
-.bots-character-resi{background-image:url('./players/resi.png')}
+.bots-character-sepp{background-image:url('./players/sepp_sitzend.png')}
+.bots-character-xaver{background-image:url('./players/xaver_sitzend.png')}
+.bots-character-resi{background-image:url('./players/resi_sitzend.png')}
 .bots-character-top{top:-124px;left:50%;transform:translateX(-50%)}
 .bots-character-left{left:-62px;top:21%}
 .bots-character-right{right:-62px;top:21%}
