@@ -96,7 +96,7 @@
   const progress=g.phase==='noGame'?'Alle haben gepasst.':['bidding','chooseGame'].includes(g.phase)?`Ansage ${g.bidCursor+1} von 4`: `Stich ${Math.min(8,g.tricks.length+(g.phase==='playing'?1:0))} von 8`;
   return `<div class="bots-page"><div class="bots-game-heading"><div><p class="bots-kicker">🃏 Offline gegen Bots</p><h2>${esc(label)}</h2><p>${esc(progress)} · Runde ${g.round} · Du bist ${esc(names[g.mySeat])}</p></div><button type="button" class="bots-outline" data-bots-abandon>↻ Neu</button></div>${notice}
    ${g.phase==='noGame'?`<section class="card formcard"><h3>Alle vier haben gepasst</h3><p>Es kam kein Spiel zustande. In der nächsten Runde rückt der Geber weiter.</p><button class="btn" type="button" data-bots-round>🃏 Nächste Runde</button></section>`:''}
-   ${['bidding','chooseGame'].includes(g.phase)?bidding(g):''}
+   ${['bidding','chooseGame'].includes(g.phase)?`${bidding(g)}${hand(g)}`:''}
    ${g.phase==='playing'||g.phase==='trickDone'||g.phase==='done'?`<div class="bots-scoreline">${score?`<strong>Dein Team: ${score.us} Augen</strong><span>Gegner: ${score.them} Augen</span>`:'<span>Rufspiel: Partner noch nicht aufgedeckt</span>'}</div>${board(g)}${g.phase==='trickDone'?`<div class="bots-next"><button class="btn" data-bots-next>Nächsten Stich spielen →</button></div>`:''}${g.phase==='playing'?`<p class="bots-turn-hint">${g.turn===g.mySeat?'Du bist dran – tippe auf eine markierte Karte.':esc(seatLabel(g.turn))+' überlegt …'}</p>`:''}${hand(g)}${g.phase==='done'?finish(g):''}`:''}
    <div class="bots-players">${seatSummary(g)}</div><p class="bots-disclaimer">Die Bots spielen mit einfachen Strategieregeln. Sie sehen weder deine Karten noch die anderen verdeckten Hände. Die Bots verwenden eine vereinfachte Reizordnung.</p></div>`;
  }
