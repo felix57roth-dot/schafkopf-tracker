@@ -5,6 +5,12 @@ const ASSETS=["./", "./index.html", "./icon.png", "./icon.svg", "./wastl.png", "
 self.addEventListener('install',event=>{event.waitUntil((async()=>{
  const cache=await caches.open(CACHE);
  await cache.addAll(ASSETS);
+ // Optionale perspektivische Stammtisch-Grafik: darf die Offline-Installation
+ // auch dann nicht blockieren, wenn die Datei noch nicht hochgeladen ist.
+ try{
+  const scene=await fetch('./players/stammtisch-szene.webp',{cache:'no-store'});
+  if(scene.ok)await cache.put('./players/stammtisch-szene.webp',scene);
+ }catch{/* Figuren bleiben als einzelne PNGs offline verfügbar. */}
  await self.skipWaiting();
 })());});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{
