@@ -17,9 +17,9 @@
  const SUIT_LABEL={eichel:'Eichel',gras:'Gras',herz:'Herz',schell:'Schellen'};
  const PEOPLE=Object.freeze([
   {id:'you',name:'Du',portrait:null},
+  {id:'resi',name:'Resi',portrait:'./players/resi_sitzend.png'},
   {id:'sepp',name:'Sepp',portrait:'./players/sepp_sitzend.png'},
-  {id:'xaver',name:'Xaver',portrait:'./players/xaver_sitzend.png'},
-  {id:'resi',name:'Resi',portrait:'./players/resi_sitzend.png'}
+  {id:'xaver',name:'Xaver',portrait:'./players/xaver_sitzend.png'}
  ]);
  const rank=c=>E.parse(c).rank;
  const copyHands=h=>Object.fromEntries(SEATS.map(s=>[s,[...h[s]]]));
@@ -226,6 +226,6 @@
   if(!review.ok)throw Error('Die Partie konnte nicht regelkonform gespeichert werden: '+(review.errors[0]?.message||'Unbekannter Fehler'));
   return record;
  }
- return Object.freeze({VERSION:'6.1.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
+ return Object.freeze({VERSION:'6.2.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
   create,chooseToPlay,cancelChoice,submitBid,stepBot,advance,play,playable,nextTrick,nextRound,result,toRecord});
 });
