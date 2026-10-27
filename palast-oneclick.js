@@ -143,15 +143,6 @@ palastImportUI=function(){
 function oneClick(){
  const p=palastDraft;if(!p?.small||!p.recognized){alert('Bitte zuerst ein Palast-Spielbild auswählen.');return;}
  prefill(p);
- if(!p.alias.trim())p.alias='Ich';
- if(p.mySeat&&!p.seatNames[p.mySeat])p.seatNames[p.mySeat]=p.alias;
- p.metaConfirmed=!!p.type&&!!p.mySeat&&(['ramsch','kreuzrunde'].includes(p.type)||!!p.declarerSeat);
- const {problems,audit}=issues(p);
- if(problems.length){palastRefresh();flash('Bitte nur die markierten Angaben ergänzen');return;}
- if(!audit?.ok){palastRefresh();return;}
- p.handConfirmed=true;
- const reviewed=palastReview();
- if(!reviewed.valid){palastRefresh();flash('Einige Angaben widersprechen den Spielregeln – bitte Detailkorrektur öffnen.');return;}
  const existing=p.imageHash?stitch.archive.find(g=>g.imageHash===p.imageHash):null;
  if(existing){
   palastDraft=null;mentorGameId=String(existing.id);mentorStep=0;mentorTab='tricks';switchTab('mentor');
@@ -162,6 +153,16 @@ function oneClick(){
   });
   return;
  }
+ if(!p.alias.trim())p.alias='Ich';
+ if(p.mySeat&&!p.seatNames[p.mySeat])p.seatNames[p.mySeat]=p.alias;
+ p.metaConfirmed=!!p.type&&!!p.mySeat&&(['ramsch','kreuzrunde'].includes(p.type)||!!p.declarerSeat);
+ const {problems,audit}=issues(p);
+ if(problems.length){palastRefresh();flash('Bitte nur die markierten Angaben ergänzen');return;}
+ if(!audit?.ok){palastRefresh();return;}
+ p.handConfirmed=true;
+ const reviewed=palastReview();
+ if(!reviewed.valid){palastRefresh();flash('Einige Angaben widersprechen den Spielregeln – bitte Detailkorrektur öffnen.');return;}
+
  palastSave(true);
  if(!palastDraft&&mentorGameId){
   const id=mentorGameId;
