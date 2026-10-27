@@ -1,3 +1,39 @@
+SCHAFKOPFTRACKER 5.0 – Gegen Bots spielen (erste spielbare Offline-Version)
+
+NEU
+- Eigenständiger Menüpunkt „Spielen“ und Schnellstart auf der Startseite.
+- Du spielst mit acht Originalkarten gegen drei lokale Bots.
+- Sitzplatz wählen, neue Karten austeilen, vereinfachte Ansage (Rufspiel,
+  Wenz, Farbsolo), alle acht Stiche durchspielen.
+- Schafkopfregeln und Bedienpflicht werden vom eigenen Wastl-Regelkern geprüft.
+- Jeder Bot erhält für seinen Zug nur seine eigene Hand und die öffentlich
+  bekannten Karten. Keine versteckten Hände als Entscheidungshilfe.
+- Abgeschlossene Runden werden automatisch als „Bot-Partie“ im Wastl-Archiv
+  gespeichert und verändern niemals die Finanzstatistik.
+- Anschließend direkt „Mit Wastl analysieren“: 350 Verteilungen pro Stich
+  starten ohne zusätzliche Auswahl.
+- Aktuelle Spielrunde wird lokal gespeichert und nach dem Öffnen der App fortgesetzt.
+- Nach Spielende dieselben Anfangskarten erneut spielen oder neue mischen.
+
+GRENZEN UND HINWEISE
+- Die Ansage ist in Version 5.0 als einfaches Bietverfahren mit
+  Rangfolge Rufspiel < Wenz < Farbsolo umgesetzt. Noch keine vollständige
+  Palast-/Turnier-Reizmechanik oder Hausregel-Auswahl.
+- Die drei Bots nutzen die eigene Wastl-Heuristik. Sie haben keine garantierte
+  Spielstärke oder optimalen Strategien. Auch die spätere 1–10-Bewertung ist
+  ein experimenteller Modellindex, keine validierte Expertennote.
+- Spielarchiv, Karten, Bilder und Berechnung bleiben offline. Es werden weder
+  externe KI-Dienste noch fremde Schafkopf-Engines benötigt.
+- VOR dem Update im Profil unter Datensicherung ein Backup exportieren.
+- Das kleine Update in die HAUPTEBENE des GitHub-Repositories laden.
+  Den cards-Ordner NICHT erneut hochladen.
+- Bestehende Stichdaten/Tracker-Einträge bleiben unverändert.
+
+DATEIEN DIESES UPDATES: index.html, sw.js, README.txt,
+  wastl-bots.js, wastl-bots-ui.js, wastl-bots.css.
+
+--- HISTORISCHE VERSIONEN ---
+
 Schafkopftracker 4.9.1 – Importstabilität, Originalbild, Wastls Mentorensprache
 
 - Sicherer Bildimport: Jeder Upload hat einen getrennten Zustand. Langsam eintreffende Dateien können neuere Auswahlen nicht überschreiben.

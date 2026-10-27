@@ -820,7 +820,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='4.9.1';
+const VERSION='5.0';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1268,16 +1268,16 @@ function stitchNormalize(raw){
  };
  const tricks=normTricks(data.tricks),used=new Set(tricks.flatMap(t=>t.cards));
  const current=[];if(Array.isArray(data.current))for(const id of data.current.slice(0,4).map(String)){if(CARD_MAP[id]&&!used.has(id)){current.push(id);used.add(id);}}
- const archives=[];if(Array.isArray(data.archive))for(const x of data.archive.slice(-100)){
+ const archives=[];if(Array.isArray(data.archive))for(const x of data.archive.slice(-500)){
   if(!x||typeof x!=='object')continue;const ts=normTricks(x.tricks);
   if(ts.length!==8||ts.reduce((n,t)=>n+t.eyes,0)!==120)continue;
   const t=STITCH_TYPES.find(y=>y[0]===x.type)?.[0]||(/solo/i.test(String(x.type||''))?'solo':String(x.type||'unbekannt'));
   const iso=typeof x.started==='string'&&!isNaN(Date.parse(x.started))?x.started:new Date().toISOString();
-  archives.push({seatNames:x.seatNames&&typeof x.seatNames==='object'?Object.fromEntries(STITCH_SEAT_IDS.map(k=>[k,String(x.seatNames[k]||'').slice(0,28)])):null,dealerChair:[0,1,2,3].includes(x.dealerChair)?x.dealerChair:null,id:String(x.id||uid()).slice(0,80),source:x.source==='palast'||String(x.id||'').startsWith('palast-')?'palast':'tracked',palastGameId:x.palastGameId?String(x.palastGameId).slice(0,42):'',imageHash:/^p[0-9a-f]{8}$/.test(String(x.imageHash||''))?x.imageHash:'',type:t,trumpSuit:CARD_SUITS.some(y=>y.id===x.trumpSuit)?x.trumpSuit:'herz',role:x.role==='defender'?'defender':'declarer',mySeat:validStitchSeat(x.mySeat)?x.mySeat:'vh',firstSeat:validStitchSeat(x.firstSeat)?x.firstSeat:'vh',declarerSeat:validStitchSeat(x.declarerSeat)?x.declarerSeat:'vh',partnerSeat:validStitchSeat(x.partnerSeat)&&x.partnerSeat!==x.declarerSeat?x.partnerSeat:null,partnerMode:x.partnerMode==='auto'?'auto':'manual',calledSuit:['eichel','gras','schell'].includes(x.calledSuit)?x.calledSuit:'eichel',started:iso,finished:typeof x.finished==='string'?x.finished:iso,tricks:ts,linkedGameId:x.linkedGameId?String(x.linkedGameId).slice(0,90):null});
+  archives.push({seatNames:x.seatNames&&typeof x.seatNames==='object'?Object.fromEntries(STITCH_SEAT_IDS.map(k=>[k,String(x.seatNames[k]||'').slice(0,28)])):null,dealerChair:[0,1,2,3].includes(x.dealerChair)?x.dealerChair:null,id:String(x.id||uid()).slice(0,80),source:x.source==='bot'||String(x.id||'').startsWith('bots-')?'bot':x.source==='palast'||String(x.id||'').startsWith('palast-')?'palast':'tracked',palastGameId:x.palastGameId?String(x.palastGameId).slice(0,42):'',imageHash:/^p[0-9a-f]{8}$/.test(String(x.imageHash||''))?x.imageHash:'',type:t,trumpSuit:CARD_SUITS.some(y=>y.id===x.trumpSuit)?x.trumpSuit:'herz',role:x.role==='defender'?'defender':'declarer',mySeat:validStitchSeat(x.mySeat)?x.mySeat:'vh',firstSeat:validStitchSeat(x.firstSeat)?x.firstSeat:'vh',declarerSeat:validStitchSeat(x.declarerSeat)?x.declarerSeat:'vh',partnerSeat:validStitchSeat(x.partnerSeat)&&x.partnerSeat!==x.declarerSeat?x.partnerSeat:null,partnerMode:x.partnerMode==='auto'?'auto':'manual',calledSuit:['eichel','gras','schell'].includes(x.calledSuit)?x.calledSuit:'eichel',started:iso,finished:typeof x.finished==='string'?x.finished:iso,tricks:ts,linkedGameId:x.linkedGameId?String(x.linkedGameId).slice(0,90):null});
   // Archiv beim Neustart/Backup laden: nur tatsächlich zu den Stichen passende
   // Originalhände des Palast-Screenshots als Verifikationsquelle beibehalten.
-  if((x.source==='palast'||String(x.id||'').startsWith('palast-'))&&
-      x.initialHandsSource==='palast-photo-crosschecked-v4.8'&&
+  if((x.source==='palast'||String(x.id||'').startsWith('palast-')||x.source==='bot'||String(x.id||'').startsWith('bots-'))&&
+      ['palast-photo-crosschecked-v4.8','bots-known-deal-v5.0'].includes(x.initialHandsSource)&&
       x.initialHands&&STITCH_SEAT_IDS.every(seat=>Array.isArray(x.initialHands[seat])&&x.initialHands[seat].length===8)){
    const observed=Object.fromEntries(STITCH_SEAT_IDS.map(s=>[s,[]]));
    for(const trick of ts)if(validStitchSeat(trick.leaderSeat)){
@@ -1288,7 +1288,7 @@ function stitchNormalize(raw){
       original.every(id=>CARD_MAP[id])&&
       original.slice().sort().join('|')===observed[seat].slice().sort().join('|');
    });
-   if(consistent){const record=archives[archives.length-1];record.initialHands=Object.fromEntries(STITCH_SEAT_IDS.map(s=>[s,[...x.initialHands[s]]]));record.initialHandsSource='palast-photo-crosschecked-v4.8';}
+   if(consistent){const record=archives[archives.length-1];record.initialHands=Object.fromEntries(STITCH_SEAT_IDS.map(s=>[s,[...x.initialHands[s]]]));record.initialHandsSource=x.initialHandsSource;}
   }
  }
  const declarerSeat=validStitchSeat(data.declarerSeat)?data.declarerSeat:'vh';
@@ -1561,7 +1561,7 @@ document.addEventListener('change',ev=>{if(ev.target.matches('[data-fair-mode]')
  }if(stitchChange(ev.target))return;if(ev.target.id==='counterType'){counter.type=ev.target.value;saveCounter();refreshCounter();}else if(ev.target.id==='counterSuit'){counter.trumpSuit=ev.target.value;saveCounter();refreshCounter();}},true);
 
 /* v3.0 – bewusst getrennte Arbeitsbereiche; Daten- und Preislogik unverändert. */
-function captureHub(){return `<div class="content-page capture-hub"><p class="hub-intro">Was möchtest du heute festhalten?</p><button type="button" class="workspace-option" data-workspace="history"><span class="workspace-icon">${symbol('history')}</span><span><b>Spielabend</b><small>Abendbilanz manuell erfassen oder automatisch übernommene Abende ansehen</small></span><span class="workspace-arrow">→</span></button><button type="button" class="workspace-option" data-workspace="entry"><span class="workspace-icon">${symbol('plus')}</span><span><b>Einzelspiel</b><small>Spielart, Punkte und Einsatz – schnelle automatische Preisberechnung</small></span><span class="workspace-arrow">→</span></button><button type="button" class="workspace-option" data-workspace="training"><span class="workspace-icon">${symbol('stats')}</span><span><b>Partie mit Karten tracken</b><small>Einfach zählen oder Stich für Stich erfassen · Training oder Fair Play</small></span><span class="workspace-arrow">→</span></button><div class="capture-tip"><strong>Gut zu wissen</strong><p>Manuelle Abende und automatisch berechnete Abende bleiben erhalten. Eine abgeschlossene Trainingspartie verändert deine Geldbilanz erst nach bewusster Übernahme.</p></div></div>`;}
+function captureHub(){return `<div class="content-page capture-hub"><p class="hub-intro">Was möchtest du heute festhalten?</p><button type="button" class="workspace-option" data-workspace="history"><span class="workspace-icon">${symbol('history')}</span><span><b>Spielabend</b><small>Abendbilanz manuell erfassen oder automatisch übernommene Abende ansehen</small></span><span class="workspace-arrow">→</span></button><button type="button" class="workspace-option" data-workspace="entry"><span class="workspace-icon">${symbol('plus')}</span><span><b>Einzelspiel</b><small>Spielart, Punkte und Einsatz – schnelle automatische Preisberechnung</small></span><span class="workspace-arrow">→</span></button><button type="button" class="workspace-option" data-workspace="training"><span class="workspace-icon">${symbol('stats')}</span><span><b>Partie mit Karten tracken</b><small>Einfach zählen oder Stich für Stich erfassen · Training oder Fair Play</small></span><span class="workspace-arrow">→</span></button><button type="button" class="workspace-option" data-tab="bots"><span class="workspace-icon">🃏</span><span><b>Gegen Bots spielen</b><small>Offline-Schafkopf gegen drei Computergegner · Rufspiel, Farbsolo und Wenz</small></span><span class="workspace-arrow">→</span></button><div class="capture-tip"><strong>Gut zu wissen</strong><p>Manuelle Abende und automatisch berechnete Abende bleiben erhalten. Eine abgeschlossene Trainingspartie verändert deine Geldbilanz erst nach bewusster Übernahme.</p></div></div>`;}
 function captureBack(){return `<button type="button" class="workspace-back" data-capture-back="1">← Zurück zur Auswahl</button>`;}
 function goWorkspace(where){
  editId=null;chartSelected=null;
@@ -1571,7 +1571,7 @@ function goWorkspace(where){
 }
 function homeV3(){
  const ss=summary(sessionEntries()),gamesSum=summary(gameEntries()),latest=sorted(sessionEntries()).reverse().slice(0,2),trained=[...stitch.archive].sort((a,b)=>String(b.started).localeCompare(String(a.started)))[0];
- return `<div class="home-v3"><div class="card balance balance-v3"><div class="small">Gesamtbilanz deiner Abende</div><strong class="${amountColor(ss.amount)}">${euro(ss.amount)}</strong><div class="balance-counters"><span>${ss.count} Spielabende</span><span>${gamesSum.count} Einzelspiele</span></div></div><section class="section"><div class="sectionhead"><h2>Schnell starten</h2></div><div class="quick-grid"><button class="quick-action" data-workspace="history">${symbol('history')}<b>Abend</b><small>Eintragen</small></button><button class="quick-action" data-workspace="entry">${symbol('plus')}<b>Einzelspiel</b><small>Erfassen</small></button><button class="quick-action" data-workspace="training">${symbol('stats')}<b>Karten</b><small>Tracken</small></button></div></section><section class="section"><div class="sectionhead"><h2>Deine Entwicklung</h2><button type="button" class="btn ghost small-button" data-stat-target="finances">Statistik →</button></div><div class="card chartcard" id="chartContainer">${chart()}</div></section><section class="section"><div class="sectionhead"><h2>Letzte Spielabende</h2><button type="button" class="btn ghost small-button" data-workspace="history">Alle →</button></div>${list(latest)}</section>${trained?`<section class="section"><button type="button" class="mentor-home" data-open-wastl="${esc(trained.id)}"><img src="wastl.png" alt="Wastl"><span><b>Wastl hat Zeit für deine Partie</b><small>${esc(stitchTypeName(trained.type))} · ${new Date(trained.started).toLocaleDateString('de-DE')} · Gemeinsam analysieren</small></span><span>→</span></button></section>`:''}${backupReminder()?`<div class="section notice">${backupReminder()}</div>`:''}</div>`;
+ return `<div class="home-v3"><div class="card balance balance-v3"><div class="small">Gesamtbilanz deiner Abende</div><strong class="${amountColor(ss.amount)}">${euro(ss.amount)}</strong><div class="balance-counters"><span>${ss.count} Spielabende</span><span>${gamesSum.count} Einzelspiele</span></div></div><section class="section"><div class="sectionhead"><h2>Schnell starten</h2></div><div class="quick-grid"><button class="quick-action" data-workspace="history">${symbol('history')}<b>Abend</b><small>Eintragen</small></button><button class="quick-action" data-workspace="entry">${symbol('plus')}<b>Einzelspiel</b><small>Erfassen</small></button><button class="quick-action" data-workspace="training">${symbol('stats')}<b>Karten</b><small>Tracken</small></button><button class="quick-action" data-tab="bots">🃏<b>Bots</b><small>Offline spielen</small></button></div></section><section class="section"><div class="sectionhead"><h2>Deine Entwicklung</h2><button type="button" class="btn ghost small-button" data-stat-target="finances">Statistik →</button></div><div class="card chartcard" id="chartContainer">${chart()}</div></section><section class="section"><div class="sectionhead"><h2>Letzte Spielabende</h2><button type="button" class="btn ghost small-button" data-workspace="history">Alle →</button></div>${list(latest)}</section>${trained?`<section class="section"><button type="button" class="mentor-home" data-open-wastl="${esc(trained.id)}"><img src="wastl.png" alt="Wastl"><span><b>Wastl hat Zeit für deine Partie</b><small>${esc(stitchTypeName(trained.type))} · ${new Date(trained.started).toLocaleDateString('de-DE')} · Gemeinsam analysieren</small></span><span>→</span></button></section>`:''}${backupReminder()?`<div class="section notice">${backupReminder()}</div>`:''}</div>`;
 }
 let statView='finances';
 function statsV3(){
@@ -1598,16 +1598,16 @@ function profileV3(){
 let settingsPanel='';
 function wastlV3(){return `<div class="wastl-v3">${mentorUI()}</div>`;}
 function renderV3(){
- const titles={home:'Servus '+(state.name?state.name+'!':'am Kartentisch!'),capture:'Was steht heute an?',history:'Spielabend',games:gamesSubtab==='counter'?'Karten tracken':'Einzelspiel erfassen',stats:'Deine Statistik',mentor:'Mit Wastl lernen',profile:'Einstellungen'};
- const subs={home:'Deine Ergebnisse auf einen Blick.',capture:'Abend, Einzelspiel oder Karten-Tracking.',history:'Manuelle und automatisch erfasste Abende.',games:gamesSubtab==='counter'?'Karten zählen oder vollständige Stiche verfolgen.':'Punkte erfassen und Preis berechnen.',stats:'Finanzen, Spielarten und Trainingsfortschritt.',mentor:'Dein digitaler Schafkopf-Ratgeber.',profile:'Tarife, Daten und App-Einstellungen.'};
+ const titles={bots:'Gegen Bots spielen',home:'Servus '+(state.name?state.name+'!':'am Kartentisch!'),capture:'Was steht heute an?',history:'Spielabend',games:gamesSubtab==='counter'?'Karten tracken':'Einzelspiel erfassen',stats:'Deine Statistik',mentor:'Mit Wastl lernen',profile:'Einstellungen'};
+ const subs={bots:'Deine kostenlose Offline-Trainingsrunde.',home:'Deine Ergebnisse auf einen Blick.',capture:'Abend, Einzelspiel oder Karten-Tracking.',history:'Manuelle und automatisch erfasste Abende.',games:gamesSubtab==='counter'?'Karten zählen oder vollständige Stiche verfolgen.':'Punkte erfassen und Preis berechnen.',stats:'Finanzen, Spielarten und Trainingsfortschritt.',mentor:'Dein digitaler Schafkopf-Ratgeber.',profile:'Tarife, Daten und App-Einstellungen.'};
  const mainArea=['history','games','capture'].includes(tab)?'capture':tab==='profile'?'':tab;
  const app=document.getElementById('app');app.classList.toggle('is-subpage',tab!=='home');app.classList.toggle('is-game',tab==='games');app.classList.toggle('is-mentor',tab==='mentor');
  document.getElementById('brandSuit').innerHTML='<img src="icon.png" alt="Schafkopftracker Logo">';
  document.getElementById('headerTitle').textContent=titles[tab]||titles.home;
  document.getElementById('headerSub').textContent=subs[tab]||subs.home;
  document.getElementById('suits').innerHTML='<button id="settingsGear" type="button" aria-label="Einstellungen öffnen" title="Einstellungen">⚙</button>';
- document.getElementById('main').innerHTML=(tab==='home'?homeV3():tab==='capture'?captureHub():tab==='history'?captureBack()+history():tab==='games'?captureBack()+games():tab==='stats'?statsV3():tab==='mentor'?wastlV3():tab==='profile'?profileV3():homeV3());
- document.getElementById('nav').innerHTML=[['home','Start','home'],['capture','Erfassen','plus'],['stats','Statistik','stats'],['mentor','Wastl','mentor']].map(([id,label,ico])=>`<button type="button" data-tab="${id}" class="${id===mainArea?'active':''}" ${id===mainArea?'aria-current="page"':''}>${symbol(ico)}${label}</button>`).join('');
+ document.getElementById('main').innerHTML=(tab==='home'?homeV3():tab==='capture'?captureHub():tab==='history'?captureBack()+history():tab==='games'?captureBack()+games():tab==='stats'?statsV3():tab==='mentor'?wastlV3():tab==='bots'?window.WastlBotsUI?.render()||'<section class="card formcard">Botmodus wird geladen.</section>':tab==='profile'?profileV3():homeV3());
+ document.getElementById('nav').innerHTML=[['home','Start','home'],['capture','Erfassen','plus'],['bots','Spielen','cards'],['stats','Statistik','stats'],['mentor','Wastl','mentor']].map(([id,label,ico])=>`<button type="button" data-tab="${id}" class="${id===mainArea?'active':''}" ${id===mainArea?'aria-current="page"':''}>${symbol(ico)}${label}</button>`).join('');
  if(tab==='profile'&&importCandidate)importPreview();if(tab==='history')updateManualDateInfo();
 }
 function render(){return renderV3();}
@@ -1666,7 +1666,7 @@ if('serviceWorker' in navigator){let controlled=!!navigator.serviceWorker.contro
 /* Wastl 2.7 – nur eigene Regeln und lokal gespeicherte Trainingsdaten; keine KI-API. */
 let mentorMode=false,mentorGameId='',mentorStep=0,mentorTab='overview',mentorArchiveFilter='all';
 function mentorPromo(){return `<div class="mentor-teaser"><img src="wastl.png" alt="Wastl, dein bayerischer Schafkopf-Mentor"><div class="mentor-teaser-info"><b>Servus, i bin da Wastl!</b><p>I schau mit dir deine aufgezeichneten Stiche an – mit Lob, Hinweisen und erklärbaren Regeln.</p></div><button type="button" class="btn" id="mentorStart">Partie analysieren →</button></div>`;}
-function mentorSource(g){return g?.source==='palast'||String(g?.id||'').startsWith('palast-')?'palast':'tracked';}
+function mentorSource(g){if(g?.source==='bot'||String(g?.id||'').startsWith('bots-'))return 'bot';return g?.source==='palast'||String(g?.id||'').startsWith('palast-')?'palast':'tracked';}
 function mentorGameList(){return [...stitch.archive].filter(g=>g&&Array.isArray(g.tricks)&&(mentorArchiveFilter==='all'||mentorSource(g)===mentorArchiveFilter)).sort((a,b)=>String(b.started).localeCompare(String(a.started)));}
 function mentorSelected(){return stitch.archive.find(g=>String(g.id)===String(mentorGameId))||null;}
 function mentorComplete(g){return !!g&&g.tricks.length===8&&g.tricks.every(t=>Array.isArray(t.cards)&&t.cards.length===4&&t.cards.every(id=>CARD_MAP[id]));}
@@ -2017,11 +2017,11 @@ function mentorUI(){
  if(typeof palastDraft!=='undefined'&&palastDraft)return palastImportUI();
  const g=mentorSelected();
  if(!g){
- const all=stitch.archive.filter(x=>Array.isArray(x?.tricks)),imported=all.filter(x=>mentorSource(x)==='palast').length,local=all.length-imported;
- const segments=[['all',`Alle (${all.length})`],['palast',`Schafkopf Palast (${imported})`],['tracked',`Selbst getrackt (${local})`]];
+ const all=stitch.archive.filter(x=>Array.isArray(x?.tricks)),imported=all.filter(x=>mentorSource(x)==='palast').length,bots=all.filter(x=>mentorSource(x)==='bot').length,local=all.length-imported-bots;
+ const segments=[['all',`Alle (${all.length})`],['palast',`Schafkopf Palast (${imported})`],['tracked',`Selbst getrackt (${local})`],['bot',`Bot-Partien (${bots})`]];
  return `<div class="content-page mentor-view"><div class="wastl-single-intro"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><div class="ey">Dein Schafkopf-Mentor</div><h2>Servus! I bin da Wastl.</h2><p>Such dir eine gespeicherte Partie aus, dann schauen wir uns Stich für Stich gemeinsam an, was die Karten hergeben.</p></div></div><div class="palast-entry"><button class="btn" id="palastStart" type="button">📷 Schafkopf-Palast-Partie importieren</button><p class="help">Geteiltes Spielbild auswählen, Karten prüfen und mit Wastl analysieren – kostenlos und offline.</p></div><div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${all.length} Partien</span></div>
  <div class="mentor-source-filters" role="group" aria-label="Partien nach Herkunft filtern">${segments.map(([key,label])=>`<button type="button" data-mentor-source="${key}" class="${mentorArchiveFilter===key?'active':''}" aria-pressed="${mentorArchiveFilter===key}">${label}</button>`).join('')}</div>
- <div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small><span class="mentor-source-tag ${mentorSource(x)}">${mentorSource(x)==='palast'?'↗ Schafkopf Palast':'✓ Selbst getrackt'}</span></span><span>→</span></button>`).join('')||'<div class="card empty">Für diese Auswahl sind noch keine Partien gespeichert.</div>'}</div><p class="mentor-rule">Wastl ist ein kostenloser, lokaler Lernbegleiter. Seine Hinweise beruhen auf den gespeicherten Stichen und einfachen Regeln, nicht auf einer Online-KI.</p></div>`;
+ <div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small><span class="mentor-source-tag ${mentorSource(x)}">${mentorSource(x)==='palast'?'↗ Schafkopf Palast':mentorSource(x)==='bot'?'🃏 Gegen Bots':'✓ Selbst getrackt'}</span></span><span>→</span></button>`).join('')||'<div class="card empty">Für diese Auswahl sind noch keine Partien gespeichert.</div>'}</div><p class="mentor-rule">Wastl ist ein kostenloser, lokaler Lernbegleiter. Seine Hinweise beruhen auf den gespeicherten Stichen und einfachen Regeln, nicht auf einer Online-KI.</p></div>`;
  }
  const info=mentorGeneral(g);
  if(mentorStep>=g.tricks.length && g.tricks.length===8) return wastlEnding(g,info);
@@ -2097,4 +2097,7 @@ document.addEventListener('keydown',e=>{
 <script src="./palast-game-labels.js"></script>
 <link rel="stylesheet" href="./palast-oneclick.css">
 <script src="./palast-oneclick.js"></script>
+<link rel="stylesheet" href="./wastl-bots.css">
+<script src="./wastl-bots.js"></script>
+<script src="./wastl-bots-ui.js"></script>
 </body></html>
