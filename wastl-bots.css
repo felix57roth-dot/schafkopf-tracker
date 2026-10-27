@@ -12,3 +12,27 @@
 .bots-turn-hint{font-size:14px;font-weight:700;color:#28583e;margin:0;text-align:center}.bots-next{display:flex;justify-content:center}.bots-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.bots-players-chip{border:1px solid #c6cfc1;background:#f6f5ef;border-radius:10px;padding:8px 10px;font-weight:700;font-size:13px;display:grid;gap:2px}.bots-players-chip small{font-size:11px;font-weight:400;color:#65766b}.bots-players-chip.active{border-color:#178158;background:#e1f2e6}.bots-finish{padding:18px;border:1px solid #c0ccb6;background:#f3f8ed;border-radius:16px;text-align:center;display:grid;gap:8px}.bots-finish h2,.bots-finish p{margin:0}.bots-finish-actions{display:grid;gap:8px;margin-top:8px}.bots-disclaimer{font-size:12px;line-height:1.55;color:#607269;margin:0}
 @media(min-width:650px){.bots-table{height:450px}.bots-hand-row{gap:8px}.bots-card-button{max-width:90px}.bots-players{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:355px){.bots-table{height:285px;border-width:5px;padding:9px}.bots-table-caption{font-size:10px}.bots-intro img{width:70px;height:70px}.bots-intro h2{font-size:19px}.bots-page{gap:10px}}
+
+/* Portraits der fest besetzten Stammtischrunde; PNGs werden in players/ gespeichert. */
+.bots-table{overflow:visible;margin-top:95px;margin-left:54px;margin-right:54px;height:clamp(290px,66vw,430px)}
+.bots-character{position:absolute;z-index:2;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-width:85px;color:#274832;font-size:13px;text-shadow:0 1px #fff9}
+.bots-character small{font-size:10px;background:#f2e7d1;border-radius:8px;padding:2px 6px}
+.bots-character strong{background:#fbf2da;padding:1px 7px;border-radius:8px}
+.bots-character-image{width:clamp(74px,17vw,135px);height:clamp(74px,17vw,135px);background-size:contain;background-repeat:no-repeat;background-position:center bottom;display:grid;place-items:end center}
+.bots-character-image span{font-size:27px;opacity:.5}
+.bots-character-sepp{background-image:url('./players/sepp.png')}
+.bots-character-xaver{background-image:url('./players/xaver.png')}
+.bots-character-resi{background-image:url('./players/resi.png')}
+.bots-character-top{top:-124px;left:50%;transform:translateX(-50%)}
+.bots-character-left{left:-62px;top:21%}
+.bots-character-right{right:-62px;top:21%}
+.bots-table .bots-top{top:19%}
+.bots-table .bots-left,.bots-table .bots-right{top:62%}
+@media(max-width:480px){
+ .bots-table{margin-left:31px;margin-right:31px;margin-top:84px;padding:8px;border-width:5px;height:clamp(250px,74vw,345px)}
+ .bots-character{min-width:62px;font-size:11px}
+ .bots-character-image{width:75px;height:77px}
+ .bots-character-top{top:-100px}
+ .bots-character-left{left:-41px}
+ .bots-character-right{right:-41px}
+}
