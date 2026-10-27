@@ -220,6 +220,20 @@
    worker.postMessage({requestId:job,game:g,wholeGame:true,options:{samples:n,seed:0x4302026}});
   }catch(e){showError('Dein Browser konnte den Hintergrundprozess nicht starten: '+String(e.message||e));}
  }
+ // Von der Ein-Klick-Importansicht: kein Simulationsdialog mit eigener Auswahl erforderlich.
+ // Die maximal angebotenen 350 Verteilungen je Stich werden sofort gestartet.
+ window.WastlAutoSimulation={startFor(id,n=350){
+  const g=currentGame();if(!g||String(g.id)!==String(id)||!cache())return false;
+  prompted.add(cache().fingerprint(g));overlay(g,true);
+  const choice=container()?.querySelector('[data-monte-count]');if(choice)choice.value=String(n);
+  const modal=container();
+  // Ein-Klick-Modus: keine erneute Auswahl und keine Labor-Optionen im Weg.
+  const top=modal?.querySelector('.mc-head h2');if(top)top.textContent='Wastl analysiert deine Partie';
+  const intro=modal?.querySelector('.mc-intro');if(intro)intro.textContent='Alle acht Stiche werden mit 350 Verteilungen pro Stich verglichen. Wastl übernimmt die Ergebnisse direkt in die Stichkommentare.';
+  const controls=modal?.querySelector('.mc-controls');if(controls)controls.hidden=true;
+  modal?.querySelectorAll('.mc-benchmark').forEach(el=>el.hidden=true);
+  simulate();return true;
+ }};
  document.addEventListener('click',event=>{
   if(event.target.closest('[data-monte-start]')){
    event.preventDefault();event.stopImmediatePropagation();

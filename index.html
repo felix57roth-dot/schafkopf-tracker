@@ -820,7 +820,7 @@ function normalizeEntry(e){const today=new Date();const fallbackDate=[today.getF
   gameType:GAME_MAP[e.gameType]?e.gameType:''
  };}
 
-const VERSION='4.7';
+const VERSION='4.8.1';
 const KEY='schafkopf-tracker-v1'; // unveraendert seit v1.1
 const defaultRates=()=>({rufspiel:10,solo:50,bettel:50,hochzeit:20,kreuzrunde:20,ramsch:10,schneider:10,schwarz:10,laeufer:10});
 const defaultRules=()=>({allowSchuss:false,allowKontra:false,rufMinRunners:3});
@@ -1273,7 +1273,23 @@ function stitchNormalize(raw){
   if(ts.length!==8||ts.reduce((n,t)=>n+t.eyes,0)!==120)continue;
   const t=STITCH_TYPES.find(y=>y[0]===x.type)?.[0]||(/solo/i.test(String(x.type||''))?'solo':String(x.type||'unbekannt'));
   const iso=typeof x.started==='string'&&!isNaN(Date.parse(x.started))?x.started:new Date().toISOString();
-  archives.push({seatNames:x.seatNames&&typeof x.seatNames==='object'?Object.fromEntries(STITCH_SEAT_IDS.map(k=>[k,String(x.seatNames[k]||'').slice(0,28)])):null,dealerChair:[0,1,2,3].includes(x.dealerChair)?x.dealerChair:null,id:String(x.id||uid()).slice(0,80),source:x.source==='palast'||String(x.id||'').startsWith('palast-')?'palast':'tracked',palastGameId:x.palastGameId?String(x.palastGameId).slice(0,42):'',type:t,trumpSuit:CARD_SUITS.some(y=>y.id===x.trumpSuit)?x.trumpSuit:'herz',role:x.role==='defender'?'defender':'declarer',mySeat:validStitchSeat(x.mySeat)?x.mySeat:'vh',firstSeat:validStitchSeat(x.firstSeat)?x.firstSeat:'vh',declarerSeat:validStitchSeat(x.declarerSeat)?x.declarerSeat:'vh',partnerSeat:validStitchSeat(x.partnerSeat)&&x.partnerSeat!==x.declarerSeat?x.partnerSeat:null,partnerMode:x.partnerMode==='auto'?'auto':'manual',calledSuit:['eichel','gras','schell'].includes(x.calledSuit)?x.calledSuit:'eichel',started:iso,finished:typeof x.finished==='string'?x.finished:iso,tricks:ts,linkedGameId:x.linkedGameId?String(x.linkedGameId).slice(0,90):null});
+  archives.push({seatNames:x.seatNames&&typeof x.seatNames==='object'?Object.fromEntries(STITCH_SEAT_IDS.map(k=>[k,String(x.seatNames[k]||'').slice(0,28)])):null,dealerChair:[0,1,2,3].includes(x.dealerChair)?x.dealerChair:null,id:String(x.id||uid()).slice(0,80),source:x.source==='palast'||String(x.id||'').startsWith('palast-')?'palast':'tracked',palastGameId:x.palastGameId?String(x.palastGameId).slice(0,42):'',imageHash:/^p[0-9a-f]{8}$/.test(String(x.imageHash||''))?x.imageHash:'',type:t,trumpSuit:CARD_SUITS.some(y=>y.id===x.trumpSuit)?x.trumpSuit:'herz',role:x.role==='defender'?'defender':'declarer',mySeat:validStitchSeat(x.mySeat)?x.mySeat:'vh',firstSeat:validStitchSeat(x.firstSeat)?x.firstSeat:'vh',declarerSeat:validStitchSeat(x.declarerSeat)?x.declarerSeat:'vh',partnerSeat:validStitchSeat(x.partnerSeat)&&x.partnerSeat!==x.declarerSeat?x.partnerSeat:null,partnerMode:x.partnerMode==='auto'?'auto':'manual',calledSuit:['eichel','gras','schell'].includes(x.calledSuit)?x.calledSuit:'eichel',started:iso,finished:typeof x.finished==='string'?x.finished:iso,tricks:ts,linkedGameId:x.linkedGameId?String(x.linkedGameId).slice(0,90):null});
+  // Archiv beim Neustart/Backup laden: nur tatsächlich zu den Stichen passende
+  // Originalhände des Palast-Screenshots als Verifikationsquelle beibehalten.
+  if((x.source==='palast'||String(x.id||'').startsWith('palast-'))&&
+      x.initialHandsSource==='palast-photo-crosschecked-v4.8'&&
+      x.initialHands&&STITCH_SEAT_IDS.every(seat=>Array.isArray(x.initialHands[seat])&&x.initialHands[seat].length===8)){
+   const observed=Object.fromEntries(STITCH_SEAT_IDS.map(s=>[s,[]]));
+   for(const trick of ts)if(validStitchSeat(trick.leaderSeat)){
+    trick.cards.forEach((id,k)=>observed[stitchPositionFromLeader(trick.leaderSeat,k)].push(id));
+   }
+   const consistent=STITCH_SEAT_IDS.every(seat=>{
+    const original=x.initialHands[seat];return new Set(original).size===8&&
+      original.every(id=>CARD_MAP[id])&&
+      original.slice().sort().join('|')===observed[seat].slice().sort().join('|');
+   });
+   if(consistent){const record=archives[archives.length-1];record.initialHands=Object.fromEntries(STITCH_SEAT_IDS.map(s=>[s,[...x.initialHands[s]]]));record.initialHandsSource='palast-photo-crosschecked-v4.8';}
+  }
  }
  const declarerSeat=validStitchSeat(data.declarerSeat)?data.declarerSeat:'vh';
  const partnerMode=data.partnerMode==='auto'?'auto':(data.partnerMode==='manual'?'manual':(Object.prototype.hasOwnProperty.call(data,'partnerSeat')?'manual':'auto'));
@@ -2075,4 +2091,7 @@ document.addEventListener('keydown',e=>{
 <script src="./wastl-match-analysis.js"></script>
 <script src="./wastl-montecarlo-ui.js"></script>
 <link rel="stylesheet" href="./wastl-montecarlo-ui.css">
+<script src="./palast-game-labels.js"></script>
+<link rel="stylesheet" href="./palast-oneclick.css">
+<script src="./palast-oneclick.js"></script>
 </body></html>

@@ -62,3 +62,13 @@
 .palast-suspects{background:#fff5e0;border:1px solid #e8bd72;color:#67451b;border-radius:13px;padding:12px;margin-bottom:15px;font-size:13px}
 .palast-suspects>div{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .palast-suspects a{border:1px solid #dcc490;background:#fff9ed;color:#6b4a18;border-radius:9px;padding:6px 9px;text-decoration:none;font-size:12px;font-weight:700}
+
+/* v4.8: Starthände unabhängig von den Stichkarten geprüft */
+.palast-hands-details{padding:12px;border:1px solid #d0e4d4;border-radius:12px;background:#f9fdf9;margin-top:12px}
+.palast-hands-details summary{cursor:pointer;font-weight:800;color:#24573e}
+.palast-hands-details p{margin:13px 0 7px;font-size:13px;color:#285741}
+.palast-hands-details .palast-my-hand{margin-bottom:8px}
+
+.palast-trick>summary{cursor:pointer;list-style:none;padding:5px 0;margin-bottom:0}
+.palast-trick>summary::-webkit-details-marker{display:none}
+.palast-trick[open]>summary{margin-bottom:10px}

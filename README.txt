@@ -1,4 +1,4 @@
-Schafkopftracker – Version 4.4
+Schafkopftracker – Version 4.8
 Wastl Engine: reproduzierbares Offline-Prueflabor und Bewertungsschutz
 
 WAS IST NEU?
@@ -83,3 +83,36 @@ Version 4.6: Zusaetzlicher lokaler A/B-Test der Monte-Carlo-Empfehlung gegen die
 Referenzbilder fuer die Palast-Bilderkennung: Bitte fuer jede der 32 ORIGINAL-Palastkarten die obere Ecke mit Wert und Farbzeichen gut lesbar aufnehmen. Zwei getrennte Referenzsaetze fuer Hand- und Stichansicht waeren noch besser. Ein Referenzbilder-Datensatz wurde in 4.6 NICHT behauptet oder beigelegt: ohne verifizierte Vorlagen darf die Erkennung keine 100%-Sicherheit vortaeuschen.
 
 Version 4.7: Referenz-Eckenerkennung (32 nutzerseitig erstellte Eckenausschnitte als verkleinerte Merkmale). Vor dem Speichern weiterhin Spielart/Sitzposition/Hand und Karten kontrollieren. Original-Vorlagenbilder werden nicht mitveröffentlicht.
+
+Version 4.8 – Ein-Klick-Analyse (aktualisierte Fassung 4.8.1):
+1. Unter Wastl »Schafkopf-Palast-Partie importieren« wählen.
+2. Palast-Gesamtbild auswählen (Bildaufteilung ca. 600 × 1350).
+3. Auf »Spiel analysieren« tippen: automatische Sicherung der Partie,
+   anschließend 350 Verteilungen JE STICH ohne erneute Nachfrage.
+4. Originale vier Anfangshände und acht Stiche werden separat erkannt
+   und auf identische Kartenverteilung pro Spieler abgeglichen.
+5. Palast-Grünmarkierung erkennt den eigenen Platz nur, wenn eindeutig.
+6. Spielart-Textabgleich ist NUR für vorliegende Palast-Schriftvarianten
+   Rufspiel Eichel, Rufspiel Gras und Rufspiel Schellen vorbereitet.
+   Nicht erkannte Spielarten werden NICHT pauschal als Rufspiel gespeichert;
+   stattdessen verlangt die App eine kurze Korrektur.
+7. Ansager aus Palast-Ansagezeilen wird bei eindeutigem Treffer zugeordnet.
+8. Kartenfehler, fehlende eindeutige Informationen oder ungültige Regeln
+   stoppen die automatische Analyse und lassen einen Detailcheck öffnen.
+9. Datumsangabe ohne Texterkennung: es wird zunächst Importdatum gesetzt;
+   das tatsächliche Spieldatum kann in Details korrigiert werden.
+10. Screenshot wird nur im Arbeitsspeicher verarbeitet, NICHT mit
+    der Partie gespeichert oder an externe Server gesendet.
+11. Externe Cloud-OCR wird nicht verwendet; weitere Foto-Layouts,
+    Solo, Ramsch etc. brauchen neue geprüfte Textmuster oder einen
+    separaten lokalen Texterkenner.
+12. Spielnoten bleiben experimentell/ggf. gesperrt, keine objektiv
+    validierte 1-10-Bewertung; Wastl verwendet seine bisherigen MC-Modelle.
+
+DATEIEN IN DIESEM UPDATE (OHNE cards-ORDNER):
+- index.html, sw.js, palast-import.js, training-manager.js,
+  wastl-montecarlo-ui.js, palast-game-labels.js, palast-oneclick.js,
+  palast-oneclick.css, README.txt.
+
+Die bestehenden Archiv-Schlüssel bleiben unverändert. Vor dem Update
+in Einstellungen einen Backup-Export durchführen.

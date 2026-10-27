@@ -46,6 +46,9 @@ function trainingSaveEdit(){
  const check=mentorStichEvidence(updated),issues=check.tricks.flatMap(t=>t.notes).filter(x=>x.heading==='Bedienpflicht prüfen');
  if(issues.length&&!confirm(`${issues.length} mögliche Bedienpflicht-Widersprüche. Möchtest du trotzdem speichern und die Partie später weiter korrigieren?`))return;
  if(updated.type!==trainingEditing.type){trainingMessage='Spielart nicht übernommen. Bitte erneut versuchen.';render();return;}
+ // Nach manuellen Änderungen gilt der ursprüngliche Foto-Kreuzabgleich
+ // nicht mehr ungeprüft. Die Simulation rekonstruiert die Hand aus den Stichen.
+ delete updated.initialHands;delete updated.initialHandsSource;
  const original=stitch.archive[before];stitch.archive[before]=updated;
  if(!saveStitch()){stitch.archive[before]=original;return;}
  // Verify persistence before closing, so a Solo cannot silently turn back into Rufspiel.
@@ -104,12 +107,13 @@ palastImportUI=function(){
  const players=page.querySelector('.palast-player-names');if(players){const d=document.createElement('details');d.className='palast-optional-names';d.innerHTML='<summary>Spielernamen zuordnen (optional)</summary>';players.parentNode.insertBefore(d,players);d.appendChild(players);}
  const handCompare=page.querySelector('.palast-hand-compare');if(handCompare){const d=document.createElement('details');d.className='palast-optional-image';d.innerHTML='<summary>Original-Handkarten zum Vergleich aufklappen</summary>';handCompare.parentNode.insertBefore(d,handCompare);d.appendChild(handCompare);}
  const trickSections=[...page.querySelectorAll('.palast-trick')];
+ const audit=palastCrosscheck(palastDraft),verified=audit?.ok;
  let doubtful=0;
  trickSections.forEach((section,ti)=>{
-  const uncertain=palastDraft.uncertain.slice(ti*4,ti*4+4).filter((value,i)=>value&&!palastDraft.userEdited[ti*4+i]).length;
+  const uncertain=verified?0:palastDraft.uncertain.slice(ti*4,ti*4+4).filter((value,i)=>value&&!palastDraft.userEdited[ti*4+i]).length;
   if(uncertain)doubtful++;
   const d=document.createElement('details');d.className='palast-quick-trick';d.id=`palast-trick-${ti}`;
-  if(palastOpenTricks.has(ti))d.open=true;
+  if(palastOpenTricks.has(ti)||audit&&!audit.ok&&audit.wrong.some(v=>Math.floor(v.index/4)===ti))d.open=true;
   d.innerHTML=`<summary>Stich ${ti+1} <span>${uncertain?`${uncertain} unsichere Karte${uncertain===1?'':'n'}`:'Karten ansehen'} ▾</span></summary>`;
   section.parentNode.insertBefore(d,section);section.removeAttribute('id');d.appendChild(section);
  });
@@ -117,14 +121,14 @@ palastImportUI=function(){
  const suspect=page.querySelector('.palast-suspects');
  if(suspect){suspect.classList.add('palast-quick-suspects');suspect.querySelectorAll('a[href^="#palast-card-"]').forEach(a=>a.dataset.quickSuspect='1');}
  const sectionTitle=page.querySelector('.palast-section-title');
- if(sectionTitle){const hint=document.createElement('p');hint.className='palast-quick-hint';hint.textContent=`${doubtful} von 8 Stichen haben unsichere Vorschläge. Klappe zunächst nur diese Stiche auf; bei Unstimmigkeiten weitere Stiche prüfen.`;sectionTitle.after(hint);}
+ if(sectionTitle){const hint=document.createElement('p');hint.className='palast-quick-hint';hint.textContent=verified?'✓ 32 Starthandkarten und 32 Stichkarten passen zu den richtigen Spielern. Keine Einzelkartenkontrolle nötig.':`${doubtful} von 8 Stichen haben unsichere Vorschläge. Klappe zunächst nur diese Stiche auf; bei Unstimmigkeiten weitere Stiche prüfen.`;sectionTitle.after(hint);}
  return wrapper.innerHTML;
 };
 // A screenshot import must never silently change its declared game type.
 const _palastSavev38=palastSave;
-palastSave=function(){
+palastSave=function(...args){
  const requested=palastDraft?.type||'',number=palastDraft?.gameId?.trim()||'';
- _palastSavev38();
+ _palastSavev38(...args);
  if(!requested||palastDraft)return;
  const record=mentorSelected();
  if(record&&record.type!==requested){alert('Die gespeicherte Spielart stimmt nicht mit deiner Auswahl überein. Bitte korrigiere sie über Bearbeiten.');}

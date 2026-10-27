@@ -28,7 +28,7 @@
   if(!E.SEATS.includes(game.mySeat))return {ok:false,reason:'Dein Platz konnte nicht bestimmt werden.'};
   if(!Number.isInteger(turn)||turn<0||turn>=8)return {ok:false,reason:'Bitte einen Stich von 1 bis 8 auswählen.'};
   const t=game.tricks[turn],seat=game.mySeat,idx=seatIndex(t.leaderSeat,seat);
-  const myFull=E.reconstructHands(game)?.[seat];
+  const myFull=(game.source==='palast'&&game.initialHandsSource==='palast-photo-crosschecked-v4.8'&&Array.isArray(game.initialHands?.[seat])&&game.initialHands[seat].length===8?game.initialHands[seat]:null)||E.reconstructHands(game)?.[seat];
   if(!myFull||myFull.length!==8)return {ok:false,reason:'Deine Anfangshand lässt sich nicht rekonstruieren.'};
   const used=new Set();const playedCount=Object.fromEntries(E.SEATS.map(s=>[s,0]));
   const voids=Object.fromEntries(E.SEATS.map(s=>[s,new Set()]));
