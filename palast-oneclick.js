@@ -143,6 +143,16 @@ palastImportUI=function(){
 function oneClick(){
  const p=palastDraft;if(!p?.small||!p.recognized){alert('Bitte zuerst ein Palast-Spielbild auswählen.');return;}
  prefill(p);
+ const existing=p.imageHash?stitch.archive.find(g=>g.imageHash===p.imageHash):null;
+ if(existing){
+  palastDraft=null;mentorGameId=String(existing.id);mentorStep=0;mentorTab='tricks';switchTab('mentor');
+  Promise.resolve().then(()=>{
+   if(typeof window.WastlAutoSimulation?.startFor==='function')
+    window.WastlAutoSimulation.startFor(String(existing.id),350);
+   else flash('Gespeicherte Partie geöffnet. Simulation über den Würfel starten.');
+  });
+  return;
+ }
  if(!p.alias.trim())p.alias='Ich';
  if(p.mySeat&&!p.seatNames[p.mySeat])p.seatNames[p.mySeat]=p.alias;
  p.metaConfirmed=!!p.type&&!!p.mySeat&&(['ramsch','kreuzrunde'].includes(p.type)||!!p.declarerSeat);
@@ -152,7 +162,7 @@ function oneClick(){
  p.handConfirmed=true;
  const reviewed=palastReview();
  if(!reviewed.valid){palastRefresh();flash('Einige Angaben widersprechen den Spielregeln – bitte Detailkorrektur öffnen.');return;}
- if(p.imageHash&&stitch.archive.some(g=>g.imageHash===p.imageHash)){flash('Diese Bilddatei wurde bereits importiert.');return;}
+
  palastSave(true);
  if(!palastDraft&&mentorGameId){
   const id=mentorGameId;
