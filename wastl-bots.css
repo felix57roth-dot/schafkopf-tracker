@@ -150,3 +150,101 @@
  .bots-bubble,.bots-played{animation:none}
  .bots-card-button{transition:none}
 }
+
+/* 6.2 – zusätzliche räumliche Tiefe: Wirtshauswand, Tischkante,
+ * Fluchtpunkt-Planken, Illustrationsüberblendung und platzsparende Schilder.
+ * Alle Spielkarten liegen oberhalb sämtlicher Namensschilder. */
+.bots-scene{background:#987247;overflow:hidden;isolation:isolate}
+.bots-wood{
+ overflow:hidden;
+ background:
+  radial-gradient(ellipse at 50% 28%,#efdaa675 0%,transparent 56%),
+  repeating-linear-gradient(90deg,transparent 0 16.0%,#603a1a35 16.1%,#fff0c215 16.5%,transparent 17.0% 32%),
+  linear-gradient(180deg,#433020 0%,#87613a 26%,#9f7848 35%,#7e4e2a 100%);
+ box-shadow:inset 0 14px 33px #180d0852,inset 0 -22px 35px #3b1d0c55;
+}
+.bots-wood::before{
+ content:"";position:absolute;z-index:1;left:-12%;right:-12%;top:32%;bottom:-7%;pointer-events:none;
+ clip-path:polygon(15% 0,85% 0,100% 100%,0 100%);
+ background:
+  repeating-linear-gradient(1deg,#613a1c0c 0 3px,#f5d6a40d 4px 11px,#5b351a0c 12px 15px),
+  radial-gradient(ellipse at 52% 2%,#f4d5a799,transparent 65%),
+  linear-gradient(180deg,#986837 0%,#c28d54 15%,#d7a269 42%,#d9aa72 77%,#b47a41 100%);
+ filter:drop-shadow(0 -9px 5px #26130599);
+}
+.bots-wood::after{
+ content:"";position:absolute;z-index:2;left:5%;right:5%;top:31.2%;height:14px;
+ border-radius:80% 80% 45% 45%;
+ background:linear-gradient(180deg,#42240f 0%,#af7742 35%,#e6b47a 58%,#7b4b29 100%);
+ box-shadow:0 3px 13px #32180580;pointer-events:none;
+}
+.bots-plank-lines{
+ position:absolute;z-index:2;left:-12%;top:33%;width:124%;height:73%;
+ pointer-events:none;mix-blend-mode:multiply;opacity:.65;
+}
+.bots-reference-scene{
+ display:none;position:absolute;left:0;top:0;width:100%;height:auto;
+ z-index:3;pointer-events:none;
+ -webkit-mask-image:linear-gradient(#000 0%,#000 68%,transparent 100%);
+ mask-image:linear-gradient(#000 0%,#000 68%,transparent 100%);
+}
+.bots-art-loaded .bots-reference-scene{display:block}
+.bots-art-loaded .bots-player>img{opacity:0}
+.bots-player{z-index:5;overflow:visible;width:clamp(92px,28%,170px);pointer-events:none}
+.bots-player img{
+ height:clamp(98px,19svh,165px);max-height:165px;object-fit:contain;
+ filter:drop-shadow(0 5px 4px #24150c62);
+}
+.bots-player-top{top:3.8%}
+.bots-player-left{top:7.5%;left:1%}
+.bots-player-right{top:7.5%;right:1%}
+.bots-player-label{
+ display:inline-flex;justify-content:center;align-items:center;
+ gap:5px;min-width:0;max-width:100%;padding:3px 8px;margin-top:-3px;
+ border-radius:99px;border:1px solid #b69b68;
+ background:#f7e6bde8;box-shadow:0 2px 5px #3b271b45;
+ font-weight:700;line-height:1.1;color:#50351d;
+ white-space:nowrap;
+}
+.bots-player-label b{font-size:11px;font-weight:850}
+.bots-player-label small{font-size:9px;color:#786042}
+.bots-player-active .bots-player-label{outline:1px solid #57743a;outline-offset:1px}
+.bots-bubble{z-index:10;bottom:calc(100% - 4px);padding:6px 8px;font-size:11px;max-width:120px}
+.bots-playing-area{
+ z-index:8;inset:39% 9% 5%;
+ pointer-events:none;
+}
+.bots-played{z-index:9;width:clamp(62px,17.5vw,108px);max-width:24%;filter:drop-shadow(3px 6px 3px #32190885)}
+.bots-played .bots-face{box-shadow:0 1px 2px #3b1e0880}
+.bots-played-top{top:1%;left:50%}
+.bots-played-left{top:30%;left:1.5%}
+.bots-played-right{top:30%;right:1.5%}
+.bots-played-bottom{bottom:3%;left:50%}
+.bots-wood-center{
+ top:57%;z-index:9;max-width:34%;min-width:88px;
+ font-size:11px;padding:7px 6px;background:#49301eb8;
+}
+.bots-self-spot{z-index:10}
+.bots-mid-action{z-index:15}
+.bots-shade{z-index:18}
+.bots-finish{z-index:17}
+@media(min-width:650px){
+ .bots-player img{height:185px;max-height:185px}
+ .bots-player-left{left:7%}
+ .bots-player-right{right:7%}
+ .bots-playing-area{inset:39% 18% 5%}
+ .bots-wood-center{font-size:13px}
+}
+@media(max-width:385px){
+ .bots-player{width:28%;min-width:0}
+ .bots-player img{height:108px;max-height:108px}
+ .bots-player-top{top:6%}
+ .bots-player-left,.bots-player-right{top:9%}
+ .bots-player-label{padding:2px 5px;gap:3px}
+ .bots-player-label b{font-size:10px}
+ .bots-player-label small{font-size:8px}
+ .bots-bubble{font-size:10px;max-width:105px}
+ .bots-playing-area{inset:39% 6% 5%}
+ .bots-played{width:clamp(56px,17.5vw,75px)}
+ .bots-wood-center{min-width:76px;padding:6px 5px;font-size:10px}
+}

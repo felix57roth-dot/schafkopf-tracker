@@ -1,4 +1,4 @@
-/* Wastl Stammtisch 6.1 – eigenständige Offline-Tischoberfläche.
+/* Wastl Stammtisch 6.2 – eigenständige Offline-Tischoberfläche.
  * Ein Bot = eine sichtbare Entscheidung. Keine Eingriffe ins Kassenbuch.
  */
 (function(){
@@ -140,7 +140,7 @@
   return `<div class="bots-player bots-player-${pos} ${acting?'bots-player-active':''}">
    ${bubble}
    <img src="${esc(person.portrait)}" alt="${esc(person.name)}" draggable="false">
-   <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc(POSITIONS[seat])} · ${g.hands[seat].length} Karten</small></div>
+   <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc({vh:'VH',mh:'MH',hh:'HH',g:'G'}[seat])}</small></div>
    </div>`;
  }
  function playedCards(g){
@@ -156,6 +156,12 @@
    g.phase==='playing'?`Stich ${g.tricks.length+1} / 8`:`Runde ${g.round} · ${turnAnnouncement(g)}`;
   return `<div class="bots-scene">
    <div class="bots-wood" aria-label="Bayerischer Schafkopftisch">
+    <svg class="bots-plank-lines" viewBox="0 0 700 560" preserveAspectRatio="none" aria-hidden="true">
+     <path d="M175 0 L-160 560 M265 0 L65 560 M325 0 L255 560 M375 0 L445 560 M440 0 L645 560 M525 0 L860 560" fill="none" stroke="#4b2b13" stroke-opacity=".48" stroke-width="5"/>
+     <path d="M178 0 L-157 560 M268 0 L68 560 M328 0 L258 560 M378 0 L448 560 M443 0 L648 560 M528 0 L863 560" fill="none" stroke="#f5d6a1" stroke-opacity=".42" stroke-width="3"/>
+     <path d="M110 98 Q165 108 230 93 M450 180 Q505 174 565 183 M75 326 Q150 337 225 319 M375 420 Q455 413 560 438" fill="none" stroke="#74471f" stroke-opacity=".19" stroke-width="5"/>
+    </svg>
+    <img class="bots-reference-scene" src="./players/stammtisch-szene.webp" alt="" aria-hidden="true" draggable="false">
     ${portrait(g,'left')}${portrait(g,'top')}${portrait(g,'right')}
     <div class="bots-playing-area" aria-label="Ausgelegte Karten">
       ${playedCards(g)}
@@ -246,5 +252,11 @@
   }catch(ex){error=String(ex?.message||ex);renderApp();}
  }
  document.addEventListener('click',click);
- window.WastlBotsUI={render,version:'6.1.0'};
+ // Die perspektivische Szenengrafik ist optional: Solange sie nicht geladen
+ // werden kann, bleiben die einzelnen Originalportraits über dem Holztisch sichtbar.
+ document.addEventListener('load',event=>{
+  const img=event.target;
+  if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
+ },true);
+ window.WastlBotsUI={render,version:'6.2.0'};
 })();
