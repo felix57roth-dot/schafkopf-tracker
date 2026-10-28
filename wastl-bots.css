@@ -646,3 +646,164 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  outline:3px solid #f0bd3c;
  outline-offset:2px;
 }
+
+/* Stammtisch 6.9 – Spieler sitzen HINTER der Tischkante, die
+   Namensschilder liegen als eigene Ebene auf dem Tisch. Die Stich-
+   Zwischenanzeige wird vollständig entfernt. */
+.bots-wood::before{
+ top:37%;
+ bottom:-2%;
+ z-index:6;
+}
+.bots-wood::after{
+ top:35.7%;
+ z-index:7;
+}
+.bots-plank-lines{
+ top:39%;
+ height:59%;
+ z-index:7;
+}
+.bots-player{z-index:5}
+.bots-playing-area{z-index:8;inset:47% 8% 4%}
+.bots-wood-center{display:none!important}
+.bots-seat-label{
+ position:absolute;z-index:11;
+ display:flex;justify-content:center;
+ width:max-content;max-width:31%;
+ transform:translate(-50%,-50%);
+ pointer-events:none;
+}
+.bots-seat-label-left{left:19%;top:43%}
+.bots-seat-label-top{left:50%;top:38.5%}
+.bots-seat-label-right{left:81%;top:43%}
+.bots-seat-label .bots-player-label{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ width:max-content;max-width:100%;min-width:0;
+ padding:4px 9px;margin:0;
+ background:#fff0c7f5;
+ border:1px solid #b69b68;
+ border-radius:10px;
+ box-shadow:0 3px 7px #2014086b;
+ transform:none;
+ white-space:nowrap;
+}
+.bots-seat-label .bots-player-label b{font-size:12px}
+.bots-seat-label .bots-player-label small{
+ font-size:9px;
+ max-width:min(130px,27vw);
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.bots-seat-label-active .bots-player-label{
+ outline:2px solid #518a43;
+ outline-offset:1px;
+}
+/* Die Hand besteht aus acht gleich großen, einzeln sichtbaren Karten.
+   Dadurch verschwindet die bislang durchgehende weiße Fläche, die
+   durch die breite Überlappung der Kartenrückgründe entstand. */
+.bots-hand-row{
+ display:grid;
+ grid-template-columns:repeat(8,minmax(0,1fr));
+ gap:clamp(2px,.7vw,6px);
+ justify-content:center;
+ align-items:end;
+ max-width:680px;
+ width:100%;
+ box-sizing:border-box;
+ padding:3px 4px 4px;
+ margin:0 auto;
+ overflow:visible;
+ background:transparent;
+}
+.bots-hand-row .bots-card-button,
+.bots-hand-row .bots-card-button+.bots-card-button{
+ box-sizing:border-box;
+ display:block;
+ width:100%;
+ min-width:0;
+ max-width:none;
+ height:auto;
+ aspect-ratio:0.69;
+ flex:none;
+ margin:0;
+ align-self:end;
+ justify-self:stretch;
+ position:relative;
+ overflow:hidden;
+ border:0;
+ border-radius:4px;
+ padding:0;
+ background:transparent;
+ box-shadow:0 2px 4px #36271949;
+ transform:none;
+}
+.bots-hand-row .bots-card-button .bots-face{
+ display:block;
+ box-sizing:border-box;
+ width:100%;
+ height:100%;
+ max-height:none;
+ aspect-ratio:0.69;
+ object-fit:cover;
+ object-position:center;
+ transform:scale(1.035);
+ border:0;
+ outline:0;
+ border-radius:2px;
+ background:transparent;
+ box-shadow:none;
+ filter:none;
+}
+/* Klare, kompakte Umrandung, ohne Punkt oder weiße Außenkante. */
+.bots-hand-row .bots-card-button::before,
+.bots-hand-row .bots-card-button::after{
+ content:none;display:none;
+}
+.bots-hand-row .bots-card-button.playable::after{
+ content:"";
+ display:block;
+ position:absolute;
+ inset:0;
+ z-index:2;
+ border:2px solid #258748;
+ border-radius:4px;
+ box-sizing:border-box;
+ pointer-events:none;
+}
+.bots-hand-row .bots-card-button.playable,
+.bots-hand-row .bots-card-button.playable:hover,
+.bots-hand-row .bots-card-button.playable:active,
+.bots-hand-row .bots-card-button.playable:focus,
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ transform:none;
+ z-index:auto;
+ filter:none;
+}
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ outline:3px solid #e5b84b;
+ outline-offset:2px;
+}
+@media(max-width:385px){
+ .bots-seat-label-left{left:18%;top:43.5%}
+ .bots-seat-label-right{left:82%;top:43.5%}
+ .bots-seat-label .bots-player-label{padding:3px 5px}
+ .bots-seat-label .bots-player-label b{font-size:11px}
+ .bots-seat-label .bots-player-label small{font-size:8px;max-width:89px}
+}
+@media(max-height:640px){
+ .bots-wood::before{top:41%}
+ .bots-wood::after{top:39.6%}
+ .bots-plank-lines{top:43%;height:56%}
+ .bots-seat-label-left,.bots-seat-label-right{top:46%}
+ .bots-seat-label-top{top:42%}
+ .bots-playing-area{inset:49% 8% 3%}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-wood::before{top:46%}
+ .bots-wood::after{top:44.4%}
+ .bots-plank-lines{top:48%;height:51%}
+ .bots-seat-label-left,.bots-seat-label-right{top:50%}
+ .bots-seat-label-top{top:46%}
+ .bots-playing-area{inset:54% 13% 2%}
+}
