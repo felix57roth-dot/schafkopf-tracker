@@ -104,7 +104,7 @@
   </section>`;
  }
  function cardMenu(g){
-  const allowed=B.bidOptions(g.hands[g.mySeat],g.best);
+  const allowed=B.bidOptions(g.hands[g.mySeat],g.best,g.mySeat);
   const group=(type,label,icon)=>{
    const offers=allowed.filter(o=>o.type===type);
    if(!offers.length)return '';
@@ -130,7 +130,7 @@
   if(g.phase==='chooseGame')return cardMenu(g);
   if(g.phase==='biddingResult')return `<section class="bots-mid-action bots-final-announce" role="status"><h3>${esc(seatLabel(g,g.best.seat))} spielt ${esc(g.best.label)}!</h3><small>Alle haben sich erklärt. Gleich wird ausgespielt.</small></section>`;
   if(g.phase!=='bidding'||B.bidderSeat(g)!==g.mySeat)return '';
-  const opts=B.bidOptions(g.hands[g.mySeat],g.best);
+  const opts=B.bidOptions(g.hands[g.mySeat],g.best,g.mySeat);
   return `<section class="bots-mid-action" aria-label="Deine Spielansage">
    <h3>${g.auctionStage==='duel'?'Höher bieten oder Weiter?':'Du bist dran!'}</h3>
    <div class="bots-main-actions"><button type="button" class="bots-gold-btn" data-bots-choose ${opts.length?'':'disabled'}>Spielen</button>
@@ -336,7 +336,7 @@
     B.cancelChoice(game);
    }else if(b.hasAttribute('data-bots-bid')){
     const id=b.dataset.botsBid;
-    const option=B.bidOptions(game.hands[game.mySeat],game.best).find(x=>x.type+':'+(x.calledSuit||x.trumpSuit||'')===id);
+    const option=B.bidOptions(game.hands[game.mySeat],game.best,game.mySeat).find(x=>x.type+':'+(x.calledSuit||x.trumpSuit||'')===id);
     if(!option)throw Error('Diese Spielart ist nicht zulässig.');
     B.submitBid(game,option);
    }else if(b.hasAttribute('data-bots-pass')){
