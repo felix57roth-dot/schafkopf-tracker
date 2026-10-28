@@ -1291,3 +1291,36 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  }
  .bots-playing-area .bots-played{width:clamp(36px,9vh,52px)}
 }
+
+/* 7.3.2: Die neue Illustration ist eine vollständige, unverzerrte Szene.
+ * Sie übernimmt die gesamte Tischfläche, ohne zusätzliche CSS-Holzplanken.
+ * Durch "cover" bleiben Kreise, Gesichter und Tischperspektive maßhaltig.
+ * Das alte Szenenbild bleibt als Fallback unverändert. */
+.bots-art-loaded.bots-art-modern .bots-reference-scene{
+ object-fit:cover!important;
+ object-position:center top!important;
+ width:100%;
+ height:100%;
+ max-height:none;
+}
+.bots-art-loaded.bots-art-modern .bots-seat-label-left{
+ left:18%;top:45%;
+}
+.bots-art-loaded.bots-art-modern .bots-seat-label-top{
+ left:50%;top:42%;
+}
+.bots-art-loaded.bots-art-modern .bots-seat-label-right{
+ left:82%;top:45%;
+}
+.bots-art-loaded.bots-art-modern .bots-player-left,
+.bots-art-loaded.bots-art-modern .bots-player-right{
+ top:13%;
+}
+.bots-art-loaded.bots-art-modern .bots-player-top{
+ top:7%;
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-art-loaded.bots-art-modern .bots-reference-scene{
+  display:none!important;
+ }
+}

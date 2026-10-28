@@ -191,7 +191,7 @@
      <path d="M178 0 L-157 560 M268 0 L68 560 M328 0 L258 560 M378 0 L448 560 M443 0 L648 560 M528 0 L863 560" fill="none" stroke="#f5d6a1" stroke-opacity=".42" stroke-width="3"/>
      <path d="M110 98 Q165 108 230 93 M450 180 Q505 174 565 183 M75 326 Q150 337 225 319 M375 420 Q455 413 560 438" fill="none" stroke="#74471f" stroke-opacity=".19" stroke-width="5"/>
     </svg>
-    <img class="bots-reference-scene" src="./players/stammtisch-szene.webp" alt="" aria-hidden="true" draggable="false">
+    <img class="bots-reference-scene" src="./players/stammtisch-hintergrund-v1.webp" data-art-kind="modern" alt="" aria-hidden="true" draggable="false">
     ${portrait(g,'left')}${portrait(g,'top')}${portrait(g,'right')}
     <div class="bots-playing-area" aria-label="Ausgelegte Karten">
       ${playedCards(g)}
@@ -409,7 +409,19 @@
  // werden kann, bleiben die einzelnen Originalportraits über dem Holztisch sichtbar.
  document.addEventListener('load',event=>{
   const img=event.target;
-  if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
+  if(img?.classList?.contains('bots-reference-scene')){
+   img.parentElement?.classList.add('bots-art-loaded');
+   img.parentElement?.classList.toggle('bots-art-modern',img.dataset.artKind==='modern');
+  }
  },true);
- window.WastlBotsUI={render,version:'7.3.1'};
+ // Neue Wirtshausillustration optional: bis zu ihrem Upload bleibt die
+ // bisherige Szene sichtbar. Kein defektes Bild, keine Spielunterbrechung.
+ document.addEventListener('error',event=>{
+  const img=event.target;
+  if(img?.classList?.contains('bots-reference-scene')&&img.dataset.artKind==='modern'){
+   img.dataset.artKind='legacy';
+   img.src='./players/stammtisch-szene.webp';
+  }
+ },true);
+ window.WastlBotsUI={render,version:'7.3.2'};
 })();
