@@ -1,4 +1,4 @@
-/* Wastl Stammtisch 6.5 – eigenständige Offline-Tischoberfläche.
+/* Wastl Stammtisch 6.6 – eigenständige Offline-Tischoberfläche.
  * Ein Bot = eine sichtbare Entscheidung. Keine Eingriffe ins Kassenbuch.
  */
 (function(){
@@ -13,8 +13,11 @@
  try{
   const old=JSON.parse(localStorage.getItem(KEY)||'null');
   if(old&&old.version===6&&B.SEATS.includes(old.mySeat)&&
-    ['bidding','chooseGame','playing','trickDone','done','noGame'].includes(old.phase)&&
-    old.initialHands&&old.hands&&Array.isArray(old.tricks)&&old.tricks.length<=8)game=old;
+    ['bidding','chooseGame','biddingResult','playing','trickDone','done','noGame'].includes(old.phase)&&
+    old.initialHands&&old.hands&&Array.isArray(old.tricks)&&old.tricks.length<=8){
+     game=old;
+     if(game.phase==='bidding'&&game.bidCursor>=4)B.finishBidding(game);
+    }
  }catch(e){console.warn('Stammtisch konnte nicht geladen werden:',e);}
  function save(){
   try{if(game)localStorage.setItem(KEY,JSON.stringify(game));else localStorage.removeItem(KEY);return true;}
@@ -28,13 +31,17 @@
   return ['bottom','left','top','right'][offset];
  }
  function currentSpeaker(g){
-  if(g.phase==='bidding'&&g.bidCursor<4)return B.SEATS[g.bidCursor];
+  if(['bidding','chooseGame'].includes(g.phase))return B.bidderSeat(g);
   if(g.phase==='playing')return g.turn;
   return null;
  }
  function turnAnnouncement(g){
-  if(g.phase==='bidding')return g.bidCursor<4?'Ansage: '+seatLabel(g,B.SEATS[g.bidCursor])+' ist dran':'Ansagerunde beendet';
-  if(g.phase==='chooseGame')return 'Wähle deine Spielart';
+  if(g.phase==='bidding'){
+   const seat=B.bidderSeat(g);
+   return seat?(g.auctionStage==='duel'?'Spielverhandlung: ':'Ansage: ')+seatLabel(g,seat)+' ist dran':'Ansagerunde beendet';
+  }
+  if(g.phase==='chooseGame')return g.auctionStage==='duel'?'Wähle ein höherwertiges Spiel':'Wähle deine Spielart';
+  if(g.phase==='biddingResult')return seatLabel(g,g.best.seat)+' spielt '+g.best.label;
   if(g.phase==='playing')return seatLabel(g,g.turn)+' legt als Nächstes';
   if(g.phase==='trickDone')return 'Stich beendet';
   if(g.phase==='done')return 'Runde beendet';
@@ -43,17 +50,19 @@
  function schedule(){
   if(timer!==null||!game||typeof tab==='undefined'||tab!=='bots')return;
   const g=game;
-  const botBid=g.phase==='bidding'&&g.bidCursor<4&&B.SEATS[g.bidCursor]!==g.mySeat;
+  const botBid=g.phase==='bidding'&&B.bidderSeat(g)!==null&&B.bidderSeat(g)!==g.mySeat;
   const botCard=g.phase==='playing'&&g.turn!==g.mySeat;
   const nextTrick=g.phase==='trickDone';
-  if(!botBid&&!botCard&&!nextTrick)return;
+  const finalBid=g.phase==='biddingResult';
+  if(!botBid&&!botCard&&!nextTrick&&!finalBid)return;
   // Langsame, einzeln erkennbare Spielzüge. Ein kompletter Stich wird
   // zunächst gezeigt, bevor er automatisch eingesammelt wird.
-  const duration=nextTrick?1900:botBid?1350:1150;
+  const duration=nextTrick?1900:finalBid?1850:botBid?1350:1150;
   timer=setTimeout(()=>{
    timer=null;if(game!==g||tab!=='bots')return;
    try{
     if(g.phase==='trickDone')B.nextTrick(g);
+    else if(g.phase==='biddingResult')B.startPlay(g);
     else B.stepBot(g);
     save();renderApp();
    }catch(e){error=e?.message||String(e);renderApp();}
@@ -95,7 +104,7 @@
   </section>`;
  }
  function cardMenu(g){
-  const allowed=B.bidOptions(g.hands[g.mySeat],g.best);
+  const allowed=B.bidOptions(g.hands[g.mySeat],g.best,g.mySeat);
   const group=(type,label,icon)=>{
    const offers=allowed.filter(o=>o.type===type);
    if(!offers.length)return '';
@@ -119,10 +128,11 @@
  }
  function bidOverlay(g){
   if(g.phase==='chooseGame')return cardMenu(g);
-  if(g.phase!=='bidding'||B.SEATS[g.bidCursor]!==g.mySeat)return '';
-  const opts=B.bidOptions(g.hands[g.mySeat],g.best);
+  if(g.phase==='biddingResult')return `<section class="bots-mid-action bots-final-announce" role="status"><h3>${esc(seatLabel(g,g.best.seat))} spielt ${esc(g.best.label)}!</h3><small>Alle haben sich erklärt. Gleich wird ausgespielt.</small></section>`;
+  if(g.phase!=='bidding'||B.bidderSeat(g)!==g.mySeat)return '';
+  const opts=B.bidOptions(g.hands[g.mySeat],g.best,g.mySeat);
   return `<section class="bots-mid-action" aria-label="Deine Spielansage">
-   <h3>Du bist dran!</h3>
+   <h3>${g.auctionStage==='duel'?'Höher bieten oder Weiter?':'Du bist dran!'}</h3>
    <div class="bots-main-actions"><button type="button" class="bots-gold-btn" data-bots-choose ${opts.length?'':'disabled'}>Spielen</button>
     <button type="button" class="bots-gold-btn" data-bots-pass>Weiter</button></div>
    ${g.best?`<small>Aktuell: ${esc(g.best.label)} von ${esc(seatLabel(g,g.best.seat))}</small>`:''}
@@ -142,7 +152,7 @@
   const seat=B.SEATS.find(s=>relative(g,s)===pos);
   const person=B.personAt(g,seat),acting=currentSpeaker(g)===seat;
   const bubble=speech(g,seat);
-  const bid=g.bids?.find(b=>b.seat===seat);
+  const bid=g.bids?.slice().reverse().find(b=>b.seat===seat);
   const announced=bid?(bid.offer?bid.offer.label:'Weiter'):'';
   return `<div class="bots-player bots-player-${pos} ${acting?'bots-player-active':''}">
    ${bubble}
@@ -314,7 +324,7 @@
     save();switchTab('home');return;
    }
    if(b.hasAttribute('data-bots-abandon')){
-    if(game&&['playing','chooseGame','bidding'].includes(game.phase)&&!confirm('Laufende Runde wirklich beenden?')){schedule();return;}
+    if(game&&['playing','chooseGame','bidding','biddingResult'].includes(game.phase)&&!confirm('Laufende Runde wirklich beenden?')){schedule();return;}
     game=null;
    }else if(b.hasAttribute('data-bots-new')){
     game=B.create();
@@ -326,7 +336,7 @@
     B.cancelChoice(game);
    }else if(b.hasAttribute('data-bots-bid')){
     const id=b.dataset.botsBid;
-    const option=B.bidOptions(game.hands[game.mySeat],game.best).find(x=>x.type+':'+(x.calledSuit||x.trumpSuit||'')===id);
+    const option=B.bidOptions(game.hands[game.mySeat],game.best,game.mySeat).find(x=>x.type+':'+(x.calledSuit||x.trumpSuit||'')===id);
     if(!option)throw Error('Diese Spielart ist nicht zulässig.');
     B.submitBid(game,option);
    }else if(b.hasAttribute('data-bots-pass')){
@@ -350,5 +360,5 @@
   const img=event.target;
   if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
  },true);
- window.WastlBotsUI={render,version:'6.5.0'};
+ window.WastlBotsUI={render,version:'6.6.0'};
 })();
