@@ -937,3 +937,87 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
   --bots-card-overlap:min(3.8vw,calc(var(--bots-card-size)*.35));
  }
 }
+
+
+/* Stammtisch 7.1 – ein fertiges gemeinsames Stammtischbild.
+ * Das Bild blendet sich ausschließlich ein, wenn der lokale WebP-Asset
+ * wirklich geladen ist. Bei fehlender Datei bleiben alle bisherigen
+ * drei Figuren und der CSS-Tisch voll funktionsfähig. */
+.bots-wood.bots-art-loaded{
+ background:#302019;
+}
+.bots-art-loaded .bots-reference-scene{
+ display:block!important;
+ position:absolute;
+ inset:0;
+ z-index:3;
+ width:100%;
+ height:100%;
+ max-height:none;
+ object-fit:fill;
+ object-position:center center;
+ opacity:1;
+ pointer-events:none;
+ -webkit-mask-image:none;
+ mask-image:none;
+}
+/* Die Tischplatte, die bisher die Figuren anschnitt, wird durch
+ * die Tischplatte der Gesamtillustration ersetzt. */
+.bots-art-loaded::before,
+.bots-art-loaded::after,
+.bots-art-loaded .bots-plank-lines,
+.bots-art-loaded .bots-portrait-front{
+ display:none!important;
+}
+.bots-art-loaded .bots-player>img{
+ opacity:0!important;
+ visibility:hidden;
+}
+.bots-art-loaded .bots-playing-area{
+ z-index:8;
+ inset:46% 8% 3%;
+}
+.bots-art-loaded .bots-seat-label{z-index:11}
+.bots-art-loaded .bots-seat-label-left{left:17%;top:44%}
+.bots-art-loaded .bots-seat-label-top{left:50%;top:42%}
+.bots-art-loaded .bots-seat-label-right{left:83%;top:44%}
+/* Sprechblasen werden über der Illustration gezeichnet; die
+ * unsichtbaren Originalfiguren bleiben nur ihre Positionsanker. */
+.bots-art-loaded .bots-player{z-index:10}
+.bots-art-loaded .bots-player-left,
+.bots-art-loaded .bots-player-right{
+ width:30%;top:11%;
+}
+.bots-art-loaded .bots-player-left{left:1%}
+.bots-art-loaded .bots-player-right{right:1%}
+.bots-art-loaded .bots-player-top{
+ width:33%;top:6%;
+}
+.bots-art-loaded .bots-player-left .bots-bubble{
+ left:0;right:auto;top:-10%;transform:none;
+}
+.bots-art-loaded .bots-player-top .bots-bubble{
+ left:50%;top:-17%;transform:translateX(-50%);
+}
+.bots-art-loaded .bots-player-right .bots-bubble{
+ right:0;left:auto;top:-10%;transform:none;
+}
+/* Erst ab 550px Breite lohnt sich mehr Platz zwischen den Schildern. */
+@media(min-width:550px){
+ .bots-art-loaded .bots-seat-label-left{left:18%}
+ .bots-art-loaded .bots-seat-label-right{left:82%}
+}
+/* Die gemeinsame Szene ist für Handy-Hochformat optimiert.
+ * Im schmalen Querformat bleibt die frühere Figuren-/Tischansicht
+ * unverzerrt verfügbar. */
+@media(orientation:landscape) and (max-height:490px){
+ .bots-art-loaded .bots-reference-scene{display:none!important}
+ .bots-art-loaded::before,
+ .bots-art-loaded::after,
+ .bots-art-loaded .bots-plank-lines,
+ .bots-art-loaded .bots-portrait-front{display:block!important}
+ .bots-art-loaded .bots-player>img{opacity:1!important;visibility:visible}
+ .bots-art-loaded .bots-player-left,
+ .bots-art-loaded .bots-player-right{width:clamp(88px,24dvh,135px);top:2%}
+ .bots-art-loaded .bots-player-top{width:clamp(104px,28dvh,160px);top:0}
+}
