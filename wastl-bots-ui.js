@@ -147,16 +147,9 @@
    ${g.best?`<small>Aktuell: ${esc(g.best.label)} von ${esc(seatLabel(g,g.best.seat))}</small>`:first?'<small>Die Spielart wird erst nach der Runde festgelegt.</small>':''}
   </section>`;
  }
- function speech(g,seat){
-  const a=g.lastAction;
-  if(a&&a.seat===seat){
-   // Die längste Ansage sonst an Randplätzen abgeschnitten: kurzer Sprechtext.
-   const spoken=a.kind==='bid'?a.text.replace(/^Spiele\s+/,''):a.text;
-   return `<span class="bots-bubble bots-bubble-done" role="status">${esc(spoken)}</span>`;
-  }
-  if(!a&&currentSpeaker(g)===seat)return `<span class="bots-bubble">${seat===g.mySeat?'Du bist dran!':'Überlegt …'}</span>`;
-  return '';
- }
+ // Die Ansagen stehen bereits im Titel und in den Namensschildern.
+ // Keine Sprechblasen, auch nicht während der Bot-Denkpause.
+ function speech(g,seat){return '';}
  function portrait(g,pos){
   const seat=B.SEATS.find(s=>relative(g,s)===pos);
   const person=B.personAt(g,seat),acting=currentSpeaker(g)===seat;
@@ -435,5 +428,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.4.0'};
+ window.WastlBotsUI={render,version:'7.4.1'};
 })();

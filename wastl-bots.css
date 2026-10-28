@@ -1414,3 +1414,6 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-playing-area .bots-played{width:clamp(35px,8.5vh,49px)}
  .bots-grip{display:none}
 }
+
+/* Stammtisch 7.4.1: Keine redundanten Sprechblasen bei Ansagen oder Stichen. */
+.bots-page .bots-bubble,.bots-page .bots-self-spot{display:none!important}
