@@ -411,5 +411,5 @@
   const img=event.target;
   if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
  },true);
- window.WastlBotsUI={render,version:'7.3.0'};
+ window.WastlBotsUI={render,version:'7.3.1'};
 })();
