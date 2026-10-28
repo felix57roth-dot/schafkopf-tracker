@@ -1,4 +1,4 @@
-/* Wastl Stammtisch 6.7 – eigenständige Offline-Tischoberfläche.
+/* Wastl Stammtisch 6.9 – eigenständige Offline-Tischoberfläche.
  * Ein Bot = eine sichtbare Entscheidung. Keine Eingriffe ins Kassenbuch.
  */
 (function(){
@@ -163,11 +163,14 @@
   const bubble=speech(g,seat);
   const bid=g.bids?.slice().reverse().find(b=>b.seat===seat);
   const announced=bid?(bid.offer?bid.offer.label:bid.intent?'Ich spiele':'Weiter'):'';
+  // Figuren hinter der Tischkante, Namensschilder auf der Tischkante.
   return `<div class="bots-player bots-player-${pos} ${acting?'bots-player-active':''}">
    ${bubble}
    <img src="${esc(person.portrait)}" alt="${esc(person.name)}" draggable="false">
+  </div>
+  <div class="bots-seat-label bots-seat-label-${pos} ${acting?'bots-seat-label-active':''}">
    <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc({vh:'VH',mh:'MH',hh:'HH',g:'G'}[seat])}${announced?' · '+esc(announced):''}</small></div>
-   </div>`;
+  </div>`;
  }
  function playedCards(g){
   let cards=g.current.map(x=>({seat:x.seat,id:x.card}));
@@ -177,9 +180,7 @@
   return cards.map(x=>`<div class="bots-played bots-played-${relative(g,x.seat)}" data-bots-card-key="${esc(x.seat+':'+x.id)}">${face(x.id)}</div>`).join('');
  }
  function board(g){
-  const active=currentSpeaker(g),status=g.phase==='trickDone'||g.phase==='done'?
-   `${seatLabel(g,g.lastTrick?.winnerSeat)} gewinnt · ${g.lastTrick?.eyes||0} Augen`:
-   g.phase==='playing'?`Stich ${g.tricks.length+1} / 8`:`Runde ${g.round} · ${turnAnnouncement(g)}`;
+  const active=currentSpeaker(g);
   return `<div class="bots-scene">
    <div class="bots-wood" aria-label="Bayerischer Schafkopftisch">
     <svg class="bots-plank-lines" viewBox="0 0 700 560" preserveAspectRatio="none" aria-hidden="true">
@@ -191,7 +192,6 @@
     ${portrait(g,'left')}${portrait(g,'top')}${portrait(g,'right')}
     <div class="bots-playing-area" aria-label="Ausgelegte Karten">
       ${playedCards(g)}
-      <div class="bots-wood-center">${esc(status)}</div>
     </div>
     <div class="bots-self-spot ${active===g.mySeat?'bots-self-active':''}">
      ${speech(g,g.mySeat)}
@@ -274,8 +274,11 @@
    current.className=fresh.className;
    const img=current.querySelector('img'),newImg=fresh.querySelector('img');
    if(img&&newImg&&img.getAttribute('src')!==newImg.getAttribute('src'))img.setAttribute('src',newImg.getAttribute('src'));
-   const label=current.querySelector('.bots-player-label'),newLabel=fresh.querySelector('.bots-player-label');
-   if(label&&newLabel&&label.innerHTML!==newLabel.innerHTML)label.innerHTML=newLabel.innerHTML;
+   const label=currentWood.querySelector('.bots-seat-label-'+pos),newLabel=newWood.querySelector('.bots-seat-label-'+pos);
+   if(label&&newLabel){
+    if(label.innerHTML!==newLabel.innerHTML)label.innerHTML=newLabel.innerHTML;
+    label.className=newLabel.className;
+   }
    const existingBubble=current.querySelector('.bots-bubble'),newBubble=fresh.querySelector('.bots-bubble');
    if(existingBubble&&!newBubble)existingBubble.remove();
    else if(existingBubble&&newBubble){
@@ -285,16 +288,13 @@
   }
   const field=currentWood.querySelector('.bots-playing-area'),freshField=newWood.querySelector('.bots-playing-area');
   if(field&&freshField){
-   const anchor=field.querySelector('.bots-wood-center');
    const currentCards=new Map(Array.from(field.querySelectorAll('.bots-played')).map(node=>[node.dataset.botsCardKey,node]));
    const needed=new Set();
    for(const incoming of freshField.querySelectorAll('.bots-played')){
     const key=incoming.dataset.botsCardKey;needed.add(key);
-    if(!currentCards.has(key))field.insertBefore(incoming,anchor);
+    if(!currentCards.has(key))field.appendChild(incoming);
    }
    for(const [key,node] of currentCards)if(!needed.has(key))node.remove();
-   const nextStatus=freshField.querySelector('.bots-wood-center');
-   if(anchor&&nextStatus&&anchor.textContent!==nextStatus.textContent)anchor.textContent=nextStatus.textContent;
   }
   swap('.bots-self-spot',currentWood,newWood);
   for(const selector of ['.bots-mid-action','.bots-shade','.bots-finish'])swap(selector,currentWood,newWood);
