@@ -1655,3 +1655,46 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 @media(orientation:landscape) and (max-height:490px){
  .bots-page:not(.bots-page-start) .bots-index-finger{display:none!important}
 }
+
+/* Stammtisch 7.6.2: Zeigefinger am ersten Kartenrand statt als
+   freistehende Fingerspitze unter dem zweiten Ober.
+   Er liegt HINTER den Karten, der Daumen unverändert DAVOR.
+   Der Abstand ist auf die linke erste Karte begrenzt und verzerrt
+   weder die Karten noch verändert er ihre Klickbereiche. */
+.bots-page:not(.bots-page-start) .bots-index-finger{
+ left:clamp(26px,8.5vw,39px);
+ bottom:clamp(7px,1.0vh,13px);
+ width:clamp(66px,19vw,79px);
+ height:auto;
+ transform:rotate(-11deg);
+ transform-origin:15% 95%;
+ z-index:2;
+ pointer-events:none!important;
+ overflow:visible;
+ filter:drop-shadow(1px 2px 1px rgba(37,18,11,.22));
+}
+.bots-page:not(.bots-page-start) .bots-index-finger img{
+ display:block;
+ width:100%;height:auto;
+ object-fit:contain;
+ pointer-events:none!important;
+}
+/* Die übrig gebliebene Spitze gehörte in Version 7.6.1 zur
+   zu weit rechts positionierten separaten Fingergrafik. */
+@media(max-width:360px){
+ .bots-page:not(.bots-page-start) .bots-index-finger{
+  left:clamp(23px,8.5vw,31px);
+  bottom:8px;
+  width:clamp(59px,19vw,69px);
+ }
+}
+@media(max-height:690px){
+ .bots-page:not(.bots-page-start) .bots-index-finger{
+  left:clamp(21px,8vw,34px);
+  bottom:6px;
+  width:clamp(53px,17vw,65px);
+ }
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-page:not(.bots-page-start) .bots-index-finger{display:none!important}
+}
