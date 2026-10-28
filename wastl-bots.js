@@ -335,5 +335,5 @@
   return record;
  }
  return Object.freeze({VERSION:'6.7.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
-  create,bidderSeat,chooseToPlay,cancelChoice,submitBid,stepBot,advance,finishBidding,startPlay,play,playable,nextTrick,nextRound,result,toRecord});
+  create,bidderSeat,declareInterest,chooseToPlay,cancelChoice,submitBid,stepBot,advance,finishBidding,startPlay,play,playable,nextTrick,nextRound,result,toRecord});
 });
