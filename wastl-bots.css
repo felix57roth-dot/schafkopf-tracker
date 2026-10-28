@@ -1162,3 +1162,132 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-page{--bots-fan-width:55px;--bots-fan-overlap:16px}
  .bots-play-prompt{display:none}
 }
+
+/* Stammtisch 7.3: Karten vollständig sichtbar, eigener Stich frei.
+   Höhe und Drehung der Handkarten fließen in die verfügbare Fläche ein. */
+.bots-page:not(.bots-page-start){
+ --bots-hand-height-live:clamp(194px,28dvh,266px);
+ --bots-fan-width:min(26vw,110px,calc((var(--bots-hand-height-live) - 68px) * .58));
+}
+.bots-page:not(.bots-page-start) .bots-hand{
+ height:var(--bots-hand-height-live);
+ grid-template-rows:25px minmax(0,1fr) 13px;
+ padding:4px 5px 7px;
+ overflow:visible;
+ background:linear-gradient(180deg,transparent 0%,#2413050c 58%,#24130532 100%);
+ pointer-events:none;
+ isolation:isolate;
+}
+.bots-hand-row{
+ /* Bei weniger Karten sinkt die Überlappung; 8 Karten passen inkl.
+    Rotation auf 320px und 390px breiten Geräten nebeneinander. */
+ --bots-fan-overlap:clamp(16px,calc((var(--fan-count,8) - 1) * clamp(8px,2.6vw,12px)),78px);
+ position:relative;
+ width:100%;max-width:100%;min-width:0;height:100%;
+ display:flex;justify-content:center;align-items:flex-end;
+ gap:0;box-sizing:border-box;margin:0 auto;
+ padding:4px 22px 23px;overflow:visible;
+ isolation:isolate;pointer-events:auto;
+}
+.bots-hand-row .bots-card-button,
+.bots-hand-row .bots-card-button+.bots-card-button{
+ position:relative;display:block;box-sizing:border-box;
+ flex:0 0 var(--bots-fan-width);width:var(--bots-fan-width);
+ height:auto;max-height:none;aspect-ratio:.69;
+ align-self:flex-end;margin:0;padding:0;border:0;
+ border-radius:5px;overflow:hidden;
+ background:transparent;box-shadow:0 3px 7px #2513058a;
+ transform-origin:50% 88%;
+ transform:translateY(var(--fan-dip,0px)) rotate(var(--fan-angle,0deg));
+ z-index:var(--fan-layer,1);
+}
+.bots-hand-row .bots-card-button+.bots-card-button{
+ margin-left:calc(-1 * var(--bots-fan-overlap));
+}
+.bots-hand-row .bots-card-button .bots-face{
+ display:block;box-sizing:border-box;
+ width:100%;height:100%;max-height:none;aspect-ratio:.69;
+ object-fit:fill;object-position:center;transform:none;
+ background:transparent;border:0;outline:0;border-radius:5px;box-shadow:none;
+}
+.bots-hand-row .bots-card-button::before,
+.bots-hand-row .bots-card-button::after{content:none;display:none}
+.bots-hand-row .bots-card-button.playable::after{
+ content:"";display:block;position:absolute;box-sizing:border-box;
+ inset:0;border:3px solid #258748;border-radius:5px;pointer-events:none;
+}
+.bots-hand-row .bots-card-button.playable,
+.bots-hand-row .bots-card-button.playable:hover,
+.bots-hand-row .bots-card-button.playable:active,
+.bots-hand-row .bots-card-button.playable:focus{
+ transform:translateY(var(--fan-dip,0px)) rotate(var(--fan-angle,0deg));
+}
+.bots-hand-heading,.bots-play-prompt{position:relative;z-index:2;pointer-events:none}
+.bots-hand-heading{
+ align-self:center;
+ text-shadow:0 2px 4px #1d1107,0 0 6px #1d1107;
+}
+.bots-grip{
+ position:absolute;bottom:-3px;
+ left:max(-4px,calc(50% - 47vw));
+ width:clamp(102px,27vw,160px);
+ z-index:90;pointer-events:none;
+ filter:drop-shadow(2px 3px 3px #24130b77);
+}
+.bots-grip svg{display:block;width:100%;height:auto;overflow:visible}
+/* Ein abgeschlossener Stich bildet ein Viererkreuz in der Tischmitte.
+   Vor allem die eigene (untere) Karte endet vor Beginn des Fächers. */
+.bots-wood .bots-playing-area,
+.bots-wood.bots-art-loaded .bots-playing-area{
+ position:absolute;inset:auto;
+ left:9%;right:9%;top:42%;height:18%;
+ min-height:110px;max-height:210px;
+ overflow:visible;z-index:19;pointer-events:none;
+}
+.bots-playing-area .bots-played{width:clamp(54px,16vw,86px);max-width:24%;z-index:2}
+.bots-playing-area .bots-played-top{
+ top:0;left:50%;right:auto;
+ transform:translateX(-50%) rotate(-4deg);
+}
+.bots-playing-area .bots-played-left{
+ top:24%;left:0;right:auto;transform:rotate(-12deg);
+}
+.bots-playing-area .bots-played-right{
+ top:24%;right:0;left:auto;transform:rotate(10deg);
+}
+.bots-playing-area .bots-played-bottom{
+ top:auto;bottom:0;left:50%;right:auto;
+ transform:translateX(-50%) rotate(3deg);
+}
+.bots-page:not(.bots-page-start) .bots-hand{z-index:35}
+.bots-page:not(.bots-page-start) .bots-hand-row{z-index:3}
+.bots-wood .bots-mid-action,.bots-wood .bots-finish{z-index:50}
+.bots-wood .bots-shade{z-index:60}
+@media(max-width:385px){
+ .bots-page:not(.bots-page-start){--bots-hand-height-live:clamp(170px,26dvh,225px)}
+ .bots-playing-area .bots-played{width:clamp(48px,15vw,72px)}
+}
+@media(max-height:690px){
+ .bots-page:not(.bots-page-start){
+  --bots-hand-height-live:clamp(130px,25dvh,176px);
+  --bots-fan-width:min(23vw,92px,calc((var(--bots-hand-height-live) - 51px) * .66));
+ }
+ .bots-page:not(.bots-page-start) .bots-hand{grid-template-rows:20px minmax(0,1fr) 0px}
+ .bots-hand-row{padding:2px 18px 13px}
+ .bots-wood .bots-playing-area,
+ .bots-wood.bots-art-loaded .bots-playing-area{
+  top:35%;height:18%;min-height:85px;max-height:140px;
+ }
+ .bots-playing-area .bots-played{width:clamp(42px,13vw,64px)}
+ .bots-grip{width:clamp(80px,22vw,120px)}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-page:not(.bots-page-start){--bots-hand-height-live:93px;--bots-fan-width:51px}
+ .bots-hand-row{padding:0 18px 8px}
+ .bots-grip{display:none}
+ .bots-wood .bots-playing-area,
+ .bots-wood.bots-art-loaded .bots-playing-area{
+  top:26%;height:29%;min-height:0;
+ }
+ .bots-playing-area .bots-played{width:clamp(36px,9vh,52px)}
+}
