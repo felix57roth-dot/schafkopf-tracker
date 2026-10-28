@@ -1417,3 +1417,38 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 
 /* Stammtisch 7.4.1: Keine redundanten Sprechblasen bei Ansagen oder Stichen. */
 .bots-page .bots-bubble,.bots-page .bots-self-spot{display:none!important}
+
+/* Stammtisch 7.5: Hand direkt aus der freigestellten Musterillustration.
+ * Statt des unnatürlichen SVG-Zeigers umfasst der echte gemalte Daumen
+ * den unteren Rand der Karten. Das Bild ist transparent und fängt keine
+ * Berührungen ab. Der Fächer bleibt vollständig bedienbar. */
+.bots-page:not(.bots-page-start) .bots-grip{
+ display:block;
+ position:absolute;
+ bottom:-2px;
+ left:max(-28px,calc(50% - ((var(--fan-count,8) * var(--bots-fan-width) - (var(--fan-count,8) - 1) * var(--bots-fan-overlap)) / 2) - 57px));
+ width:clamp(116px,35vw,157px);
+ height:auto;
+ z-index:55;
+ overflow:visible;
+ pointer-events:none!important;
+ filter:drop-shadow(1px 2px 2px #2612075e);
+}
+.bots-page:not(.bots-page-start) .bots-grip img{
+ display:block;
+ width:100%;
+ height:auto;
+ object-fit:contain;
+ pointer-events:none!important;
+ user-select:none;
+ -webkit-user-drag:none;
+}
+@media(max-height:690px){
+ .bots-page:not(.bots-page-start) .bots-grip{
+  bottom:-3px;
+  width:clamp(95px,29vw,123px);
+ }
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-page:not(.bots-page-start) .bots-grip{display:none}
+}

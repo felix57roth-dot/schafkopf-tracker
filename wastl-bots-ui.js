@@ -202,7 +202,7 @@
   const active=g.phase==='playing'&&g.turn===g.mySeat;
   const legal=active?new Set(B.playable(g,g.mySeat)):new Set();
   const sorted=B.sortHand(g.hands[g.mySeat],g.type?g:{type:'rufspiel'});
-  return `<section class="bots-hand">
+  return `<section class="bots-hand" style="--fan-count:${sorted.length}">
    <div class="bots-hand-row" style="--fan-count:${sorted.length}" aria-label="Deine ${sorted.length} Handkarten">
     ${sorted.map((id,i)=>{
       const center=(sorted.length-1)/2;
@@ -212,43 +212,7 @@
      }).join('')}
    </div>
    <div class="bots-grip" aria-hidden="true">
-    <svg viewBox="0 0 230 134" xmlns="http://www.w3.org/2000/svg" role="presentation">
-     <defs>
-      <linearGradient id="gripPalm" x1=".17" y1=".2" x2=".85" y2=".95">
-       <stop offset="0" stop-color="#ffe4bc"/><stop offset=".35" stop-color="#f5c598"/>
-       <stop offset=".73" stop-color="#df956d"/><stop offset="1" stop-color="#ac644b"/>
-      </linearGradient>
-      <linearGradient id="gripThumb" x1=".2" y1="0" x2=".82" y2="1">
-       <stop offset="0" stop-color="#fff3ce"/><stop offset=".3" stop-color="#f8d4ac"/>
-       <stop offset=".74" stop-color="#ecac80"/><stop offset="1" stop-color="#c87c61"/>
-      </linearGradient>
-      <filter id="gripSoftShadow" x="-25%" y="-25%" width="150%" height="160%">
-       <feGaussianBlur stdDeviation="3.5"/>
-      </filter>
-     </defs>
-     <path d="M-15 91 Q22 79 55 91 L114 119 Q141 134 148 148 H-15Z"
-      fill="#26100b" opacity=".27" filter="url(#gripSoftShadow)"/>
-     <path d="M-18 95 C13 80 43 82 64 91 C79 99 105 104 129 118
-      Q144 130 143 144 H-18Z" fill="url(#gripPalm)"
-      stroke="#70402c" stroke-width="2.8" stroke-linejoin="round"/>
-     <path d="M-7 106 Q26 91 52 103 L74 112 Q97 125 124 130"
-      fill="none" stroke="#ffe8c2" opacity=".65" stroke-width="5" stroke-linecap="round"/>
-     <path d="M19 118 Q28 91 54 79 Q82 65 108 51
-      C123 42 146 41 161 49 C170 54 174 64 170 74
-      C166 86 150 92 134 91 L116 90
-      C106 94 95 107 84 124 C72 145 55 151 34 144
-      C21 139 16 132 19 118Z"
-      fill="url(#gripThumb)" stroke="#7a4635" stroke-width="3.1" stroke-linejoin="round"/>
-     <path d="M119 53 Q139 43 155 54 Q161 59 158 67 Q156 74 145 77
-      Q127 78 117 72 Q113 64 119 53Z"
-      fill="#fbe3c6" stroke="#c48c78" stroke-width="1.9"/>
-     <path d="M119 57 Q134 51 148 57" fill="none"
-      stroke="#fff4df" stroke-linecap="round" stroke-width="2.5" opacity=".75"/>
-     <path d="M35 123 Q42 106 63 99 M65 127 Q75 113 89 107"
-      fill="none" stroke="#ad624d" stroke-linecap="round" stroke-width="2.2" opacity=".55"/>
-     <path d="M31 115 Q39 96 66 84 Q102 69 123 54"
-      fill="none" stroke="#fff1d2" stroke-width="5" stroke-linecap="round" opacity=".54"/>
-    </svg>
+    <img src="./players/griffhand.webp" alt="" draggable="false">
    </div>
    ${active?'<p class="bots-play-prompt">Du bist dran – tippe auf eine Karte.</p>':''}
   </section>`;
@@ -342,6 +306,7 @@
   for(const selector of ['.bots-mid-action','.bots-shade','.bots-finish'])swap(selector,currentWood,newWood);
   const hand=root.querySelector('.bots-hand'),nextHand=next.querySelector('.bots-hand');
   if(hand&&nextHand){
+   hand.style.setProperty('--fan-count',nextHand.style.getPropertyValue('--fan-count')||'8');
    swap('.bots-hand-heading',hand,nextHand);
    const row=hand.querySelector('.bots-hand-row'),future=nextHand.querySelector('.bots-hand-row');
    if(row&&future){
@@ -428,5 +393,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.4.1'};
+ window.WastlBotsUI={render,version:'7.5.0'};
 })();
