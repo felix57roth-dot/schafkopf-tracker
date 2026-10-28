@@ -494,3 +494,100 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-hand-row{height:100%;min-height:0;max-height:none}
  .bots-player-top .bots-bubble{top:0;left:85%;max-width:100px}
 }
+
+
+/* Stammtisch 6.5: blickdichte Karten und vollständig sichtbare Ansageblasen. */
+/* "locked" bedeutet nur: nicht anklickbar. Es darf die Karte nicht durchsichtig machen. */
+.bots-hand .bots-card-button,
+.bots-hand .bots-card-button.locked,
+.bots-hand .bots-card-button.playable {
+ opacity:1;
+ filter:none;
+ isolation:isolate;
+}
+.bots-hand .bots-card-button .bots-face{
+ opacity:1;
+ background-color:#fff;
+ mix-blend-mode:normal;
+ box-shadow:none;
+ filter:none;
+}
+/* Acht Karten müssen inklusive aller Ränder auf das Display passen.
+ * Breite gesamt = 8 x Kartenbreite - 7 x Überlappung.
+ * Bei Smartphonebreite 320px: 8 x 68.8px - 7 x 36.8px = 292.8px.
+ * Die bereits sichtbaren Karten bleiben groß; nur die Überlappung wird erhöht. */
+.bots-hand-row{
+ width:100%;
+ max-width:100%;
+ min-width:0;
+ box-sizing:border-box;
+ padding-left:8px;
+ padding-right:8px;
+ overflow:hidden;
+}
+.bots-hand-row .bots-card-button{
+ width:clamp(58px,21.5vw,112px);
+ flex:0 0 clamp(58px,21.5vw,112px);
+ min-width:0;
+}
+.bots-hand-row .bots-card-button+.bots-card-button{
+ margin-left:calc(-1 * clamp(34px,11.5vw,60px));
+}
+.bots-hand-row .bots-card-button:last-child{
+ margin-right:0;
+}
+/* Sprechblasen für lange Spielansagen: vollständig im sichtbaren Tischbereich,
+ * auch bei Seitenspielern und beim zentralen Spieler Sepp. */
+.bots-player .bots-bubble{
+ box-sizing:border-box;
+ width:max-content;
+ min-width:0;
+ max-width:min(168px,45vw);
+ padding:8px 10px;
+ font-size:clamp(10px,2.9vw,13px);
+ line-height:1.22;
+ overflow-wrap:break-word;
+ word-break:normal;
+ white-space:normal;
+ hyphens:auto;
+ z-index:30;
+}
+.bots-player-left .bots-bubble{
+ bottom:auto;
+ top:1%;
+ left:6px;
+ right:auto;
+ transform:none;
+}
+.bots-player-top .bots-bubble{
+ bottom:auto;
+ top:2%;
+ left:50%;
+ right:auto;
+ transform:translateX(-50%);
+}
+.bots-player-right .bots-bubble{
+ bottom:auto;
+ top:1%;
+ right:6px;
+ left:auto;
+ transform:none;
+}
+.bots-player-left .bots-bubble:after{left:26%;right:auto}
+.bots-player-right .bots-bubble:after{left:auto;right:26%}
+.bots-player-top .bots-bubble:after{left:50%;right:auto}
+@media(max-width:385px){
+ .bots-player .bots-bubble{
+  max-width:min(145px,44vw);
+  padding:6px 8px;
+  font-size:10px;
+ }
+ .bots-player-left .bots-bubble{left:1px}
+ .bots-player-right .bots-bubble{right:1px}
+}
+/* Querformat erhält die eigene kürzere Kartenhand aus Version 6.3,
+ * statt durch die Hochformatregel unnötig breit zu werden. */
+@media(orientation:landscape) and (max-height:490px){
+ .bots-hand-row .bots-card-button{width:54px;flex-basis:54px}
+ .bots-hand-row .bots-card-button+.bots-card-button{margin-left:-13px}
+}
