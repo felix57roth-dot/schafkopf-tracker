@@ -248,3 +248,177 @@
  .bots-played{width:clamp(56px,17.5vw,75px)}
  .bots-wood-center{min-width:76px;padding:6px 5px;font-size:10px}
 }
+
+
+/* 6.3 – Vollbild-Stammtisch, runde Tischkanten und größere Karten.
+ * Gilt ausschließlich, solange die Bot-Oberfläche sichtbar ist. */
+html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:none}
+.app:has(.bots-page){padding-bottom:0;min-height:0}
+.app:has(.bots-page)>.hero,.app:has(.bots-page)>.nav{display:none}
+.app:has(.bots-page)>.main{margin:0!important;padding:0!important;position:static}
+.bots-page{
+ position:fixed;inset:0;z-index:75;
+ width:100%;max-width:100%;height:100vh;height:100dvh;
+ padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+ margin:0;background:#d4af79;overflow:hidden;overscroll-behavior:none;
+ display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;
+ align-content:stretch;gap:0;
+}
+.bots-page-start{display:flex;flex-direction:column}
+.bots-page-start .bots-intro{min-height:0;height:100%;flex:1}
+.bots-exit-start{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:12px;z-index:2;background:#fff6dfa8;border:1px solid #bc9f6d;border-radius:13px;padding:9px 12px;color:#392d1f;font-weight:800}
+.bots-hud{z-index:2;position:relative;padding:8px 11px;min-height:61px;gap:10px}
+.bots-hud strong{font-size:clamp(18px,5.2vw,24px)}
+.bots-hud small{font-size:9px}
+.bots-hud span{font-size:11px}
+.bots-exit{display:grid;place-items:center;flex:0 0 37px;width:37px;min-height:43px;border:none;border-radius:11px;background:#604a38;color:#fff4df;font-size:26px;font-weight:650}
+.bots-reset{padding:7px 10px;min-height:39px;font-size:13px}
+.bots-scene{height:100%;min-height:0;max-height:none;position:relative;overflow:hidden;z-index:2}
+.bots-scene:has(.bots-shade){z-index:80}
+.bots-wood{
+ height:100%;width:100%;overflow:hidden;isolation:isolate;
+ background:
+ radial-gradient(ellipse at 50% 10%,#d1af7f66,transparent 65%),
+ linear-gradient(180deg,#35261d 0%,#5e4330 28%,#755332 37%,#51351e 100%);
+}
+.bots-wood::before{
+ left:3.5%;right:3.5%;top:33%;bottom:0;
+ clip-path:none;border:8px solid #744821;border-bottom-width:13px;
+ border-radius:48% 48% 9% 9% / 10% 10% 5% 5%;
+ background:
+  repeating-linear-gradient(0deg,#633c1912 0 2px,#f3d6a815 4px 9px,#4d280a16 11px 16px),
+  radial-gradient(ellipse at 50% 2%,#fff3c5a6,transparent 63%),
+  linear-gradient(180deg,#d9b17e 0%,#e8c18d 24%,#c9935d 73%,#aa7745 100%);
+ box-shadow:
+  0 8px 0 #452411,0 12px 13px #1d100b9c,
+  inset 0 10px 12px #60330d47,
+  inset 8px 0 9px #3b1f1357,
+  inset -8px 0 9px #3b1f1357;
+ transform:perspective(850px) rotateX(4deg);transform-origin:top center;
+}
+.bots-wood::after{
+ left:4%;right:4%;top:31.5%;height:22px;
+ border-radius:50%;
+ background:linear-gradient(180deg,#58351b 0%,#e8bc82 35%,#bd8a52 66%,#6d4220 100%);
+ box-shadow:0 5px 7px #29140870,0 -2px 5px #fff0c154;
+}
+.bots-plank-lines{
+ left:6%;top:37%;width:88%;height:60%;opacity:.42;
+ mix-blend-mode:multiply;clip-path:polygon(11% 0,89% 0,100% 100%,0 100%);
+}
+.bots-reference-scene{max-height:44%;object-fit:cover;object-position:top}
+.bots-player{width:clamp(118px,35%,230px);max-width:none;z-index:5}
+.bots-player img{
+ height:clamp(115px,25dvh,225px);max-height:none;
+ object-fit:contain;object-position:center bottom;
+ filter:drop-shadow(0 8px 6px #1f120d5c);
+}
+.bots-player-top{top:0;left:50%;transform:translateX(-50%)}
+.bots-player-left{top:3%;left:0}
+.bots-player-right{top:3%;right:0}
+.bots-player-label{
+ display:flex;flex-direction:column;gap:0;
+ min-width:0;max-width:98%;
+ padding:3px 7px;margin-top:-10px;
+ border-radius:10px;line-height:1.16;
+ box-shadow:0 2px 5px #20140869;
+ background:#fff0c7ef;
+}
+.bots-player-label b{font-size:12px}
+.bots-player-label small{
+ display:block;font-size:9px;max-width:140px;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ color:#68452c;
+}
+.bots-player-top .bots-player-label{transform:translateY(-6px)}
+.bots-bubble{max-width:133px;font-size:11px}
+.bots-playing-area{
+ inset:45% 8% 4%;z-index:8;overflow:visible;
+}
+.bots-played{width:clamp(64px,19vw,112px);max-width:25%}
+.bots-played-top{top:0}
+.bots-played-left{top:29%;left:0}
+.bots-played-right{top:29%;right:0}
+.bots-played-bottom{bottom:0}
+.bots-wood-center{top:49%;max-width:37%;min-width:86px;font-size:11px;padding:5px}
+.bots-hand{
+ flex:none;z-index:3;min-height:0;
+ max-height:clamp(140px,24dvh,215px);
+ padding:6px 8px 10px;
+ overflow:hidden;
+ background:linear-gradient(180deg,#f9edcc,#ebd4a8);
+}
+.bots-hand-heading{margin:0 6px 8px}
+.bots-hand-heading b{font-size:13px}
+.bots-hand-heading span{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:63%}
+.bots-hand-row{
+ display:flex;align-items:flex-end;justify-content:center;
+ gap:0;min-height:0;max-height:clamp(108px,18dvh,170px);
+ overflow:visible;width:100%;max-width:none;
+ padding:3px 4px 5px;
+}
+.bots-card-button{
+ width:clamp(57px,22vw,114px);max-width:none;min-width:0;
+ flex:0 0 clamp(57px,22vw,114px);
+ transition:transform .12s ease-out;
+}
+.bots-card-button+.bots-card-button{margin-left:calc(-1 * clamp(27px,10.5vw,53px))}
+.bots-card-button .bots-face{width:100%;box-shadow:0 4px 7px #3c251568}
+.bots-card-button.playable{transform:translateY(-6px)}
+.bots-card-button.playable:active{transform:translateY(-13px)}
+.bots-play-prompt{font-size:10px;margin:0}
+.bots-tally{min-height:27px;display:flex;align-items:center;justify-content:center;padding:5px 8px;font-size:10px}
+.bots-shade{
+ position:fixed;inset:0;z-index:90;
+ display:flex;align-items:center;justify-content:center;
+ padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
+ background:#100c09de;
+}
+.bots-pick-panel{
+ width:min(100%,525px);max-height:100%;overflow:auto;
+ border-radius:18px;overscroll-behavior:contain;
+}
+.bots-pick-panel header strong{font-size:clamp(20px,5vw,26px)}
+.bots-choice-row{grid-template-columns:80px minmax(0,1fr);gap:6px;padding:8px 0}
+.bots-choice-name{font-size:16px}
+.bots-game-card{width:clamp(44px,13vw,70px)}
+.bots-mid-action{top:64%;max-width:min(370px,92%)}
+@media(max-width:385px){
+ .bots-player{width:35%;min-width:0}
+ .bots-player img{height:clamp(114px,23dvh,172px);max-height:none}
+ .bots-player-left,.bots-player-right{top:5%}
+ .bots-player-label{padding:2px 5px;margin-top:-8px}
+ .bots-player-label b{font-size:11px}
+ .bots-player-label small{max-width:101px;font-size:8px}
+ .bots-bubble{max-width:110px;font-size:10px}
+ .bots-playing-area{inset:46% 6% 4%}
+ .bots-played{width:clamp(57px,18vw,80px)}
+ .bots-hand-row{max-height:clamp(100px,17dvh,148px)}
+ .bots-card-button{width:22vw;flex-basis:22vw}
+ .bots-card-button+.bots-card-button{margin-left:-10.5vw}
+ .bots-choice-row{grid-template-columns:70px minmax(0,1fr)}
+}
+@media(max-height:640px){
+ .bots-hud{min-height:54px}
+ .bots-hud small{display:none}
+ .bots-hud strong{font-size:18px}
+ .bots-player img{height:clamp(96px,20dvh,137px)}
+ .bots-playing-area{inset:40% 7% 3%}
+ .bots-hand{max-height:147px}
+ .bots-hand-row{max-height:111px}
+ .bots-pick-panel{padding:8px}
+ .bots-choice-row{padding:4px 0}
+ .bots-game-card{width:42px}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-hud{min-height:46px;padding:4px 9px}
+ .bots-hand{max-height:102px;padding:2px 8px 3px}
+ .bots-hand-heading{margin:0}
+ .bots-hand-row{max-height:78px}
+ .bots-card-button{width:54px;flex-basis:54px}
+ .bots-card-button+.bots-card-button{margin-left:-13px}
+ .bots-player img{height:90px}
+ .bots-player-label{padding:1px 5px}
+ .bots-playing-area{inset:47% 13% 2%}
+ .bots-played{width:52px}
+}
