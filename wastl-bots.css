@@ -422,3 +422,75 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-playing-area{inset:47% 13% 2%}
  .bots-played{width:52px}
 }
+
+
+/* 6.4: stabile Vollbild-Zeilen, Sepp-Sprechblase und klare Kartenkonturen.
+ * Die Höhe der Tischfläche hängt NICHT von der Zahl der Handkarten ab. */
+.bots-page{
+ --bots-hud-height:clamp(63px,10dvh,84px);
+ --bots-hand-height:clamp(148px,25dvh,218px);
+ --bots-tally-height:30px;
+ grid-template-rows:var(--bots-hud-height) minmax(0,1fr) var(--bots-hand-height) var(--bots-tally-height);
+}
+.bots-hud{height:100%;min-height:0}
+.bots-scene{height:100%;min-height:0;max-height:none;align-self:stretch}
+.bots-hand{
+ display:grid;
+ grid-template-rows:22px minmax(0,1fr) 18px;
+ align-items:stretch;
+ height:100%;min-height:0;max-height:none;
+ overflow:hidden;
+ padding:7px 8px 8px;
+}
+.bots-hand-heading{height:22px;min-height:0;margin:0 6px}
+.bots-hand-row{
+ height:100%;min-height:0;max-height:none;
+ padding:3px 4px 4px;
+ align-items:flex-end;
+}
+.bots-card-button{
+ display:flex;align-items:flex-end;justify-content:center;
+ min-height:0;max-height:100%;
+ background:transparent;box-shadow:none;
+ border:0;border-radius:0;overflow:visible;
+}
+.bots-card-button .bots-face{
+ display:block;width:100%;height:auto;max-height:100%;
+ object-fit:contain;object-position:bottom center;
+ background:#fff;border:0;border-radius:2px;
+ box-shadow:none;filter:none;
+}
+.bots-card-button.locked,.bots-card-button.playable{filter:none}
+.bots-card-button.playable:focus-visible{outline:3px solid #1b6f4a;outline-offset:2px}
+.bots-play-prompt{height:18px;min-height:0;margin:0;display:flex;justify-content:center;align-items:center}
+.bots-tally{height:100%;min-height:0;max-height:none}
+/* Kopf-Figur: Sprechblase nicht mehr aus dem oberen Bühnenrand ragen lassen. */
+.bots-player-top .bots-bubble{
+ bottom:auto;top:20%;left:83%;right:auto;
+ transform:none;max-width:124px;
+ white-space:normal;z-index:20;
+}
+.bots-player-top .bots-bubble:after{left:18%}
+/* Fehlermeldungen nicht als zusätzliche Grid-Zeile einsetzen. */
+.bots-error{
+ position:absolute;z-index:125;top:var(--bots-hud-height);
+ left:8px;right:8px;
+ box-shadow:0 5px 12px #0005;
+}
+@media(max-height:640px){
+ .bots-page{
+  --bots-hud-height:clamp(48px,9dvh,60px);
+  --bots-hand-height:clamp(112px,22dvh,150px);
+  --bots-tally-height:25px;
+ }
+ .bots-hud{height:100%;min-height:0}
+ .bots-hand{height:100%;min-height:0;max-height:none}
+ .bots-hand-row{height:100%;min-height:0;max-height:none}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-page{--bots-hud-height:47px;--bots-hand-height:99px;--bots-tally-height:22px}
+ .bots-hud{height:100%;min-height:0}
+ .bots-hand{height:100%;min-height:0;max-height:none}
+ .bots-hand-row{height:100%;min-height:0;max-height:none}
+ .bots-player-top .bots-bubble{top:0;left:85%;max-width:100px}
+}
