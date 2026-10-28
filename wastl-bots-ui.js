@@ -210,7 +210,6 @@
   const legal=active?new Set(B.playable(g,g.mySeat)):new Set();
   const sorted=B.sortHand(g.hands[g.mySeat],g.type?g:{type:'rufspiel'});
   return `<section class="bots-hand">
-   <div class="bots-hand-heading"><b>Deine Karten</b><span>${sorted.length} Karten · ${esc(POSITIONS[g.mySeat])}${g.bids?.some(b=>b.seat===g.mySeat)?' · '+esc((g.bids.slice().reverse().find(b=>b.seat===g.mySeat).offer?.label)||(g.bids.slice().reverse().find(b=>b.seat===g.mySeat).intent?'Ich spiele':'Weiter')):''}</span></div>
    <div class="bots-hand-row" style="--fan-count:${sorted.length}" aria-label="Deine ${sorted.length} Handkarten">
     ${sorted.map((id,i)=>{
       const center=(sorted.length-1)/2;
@@ -220,29 +219,42 @@
      }).join('')}
    </div>
    <div class="bots-grip" aria-hidden="true">
-    <svg viewBox="0 0 220 135" xmlns="http://www.w3.org/2000/svg" role="presentation">
+    <svg viewBox="0 0 230 134" xmlns="http://www.w3.org/2000/svg" role="presentation">
      <defs>
-      <linearGradient id="botsGripSkin" x1="0" y1="0" x2="1" y2=".9">
-       <stop offset="0" stop-color="#ffe0b6"/><stop offset=".43" stop-color="#e9a277"/>
-       <stop offset="1" stop-color="#ab6042"/>
+      <linearGradient id="gripPalm" x1=".17" y1=".2" x2=".85" y2=".95">
+       <stop offset="0" stop-color="#ffe4bc"/><stop offset=".35" stop-color="#f5c598"/>
+       <stop offset=".73" stop-color="#df956d"/><stop offset="1" stop-color="#ac644b"/>
       </linearGradient>
-      <linearGradient id="botsGripThumb" x1=".15" y1="0" x2=".9" y2="1">
-       <stop offset="0" stop-color="#fff0cf"/><stop offset=".5" stop-color="#ecae82"/>
-       <stop offset="1" stop-color="#c27959"/>
+      <linearGradient id="gripThumb" x1=".2" y1="0" x2=".82" y2="1">
+       <stop offset="0" stop-color="#fff3ce"/><stop offset=".3" stop-color="#f8d4ac"/>
+       <stop offset=".74" stop-color="#ecac80"/><stop offset="1" stop-color="#c87c61"/>
       </linearGradient>
+      <filter id="gripSoftShadow" x="-25%" y="-25%" width="150%" height="160%">
+       <feGaussianBlur stdDeviation="3.5"/>
+      </filter>
      </defs>
-     <path d="M-12 142 L-10 105 Q-5 81 26 83 Q46 82 66 96 L114 113 Q129 121 131 143Z"
-       fill="url(#botsGripSkin)" stroke="#71432f" stroke-width="3"/>
-     <path d="M-8 121 C9 108 28 105 48 111 L80 125"
-       fill="none" stroke="#fbd3aa" stroke-width="4" opacity=".7"/>
-     <path d="M29 96 Q39 77 61 68 Q87 57 110 59 Q127 62 131 72
-       Q136 83 127 90 Q120 95 106 91 L89 89 Q73 92 63 110 L54 129
-       Q45 142 27 138 Q12 135 16 116Z"
-       fill="url(#botsGripThumb)" stroke="#75462d" stroke-width="3.4" stroke-linejoin="round"/>
-     <path d="M100 66 Q116 62 121 71 Q125 79 115 82 L102 82 Q95 77 100 66Z"
-       fill="#f7d2b4" stroke="#bd7c69" stroke-width="1.7"/>
-     <path d="M31 115 Q42 105 56 105" fill="none" stroke="#bd7553" stroke-width="2.4" opacity=".65"/>
-     <path d="M66 89 Q78 78 92 80" fill="none" stroke="#fff0d2" stroke-width="3.4" opacity=".85"/>
+     <path d="M-15 91 Q22 79 55 91 L114 119 Q141 134 148 148 H-15Z"
+      fill="#26100b" opacity=".27" filter="url(#gripSoftShadow)"/>
+     <path d="M-18 95 C13 80 43 82 64 91 C79 99 105 104 129 118
+      Q144 130 143 144 H-18Z" fill="url(#gripPalm)"
+      stroke="#70402c" stroke-width="2.8" stroke-linejoin="round"/>
+     <path d="M-7 106 Q26 91 52 103 L74 112 Q97 125 124 130"
+      fill="none" stroke="#ffe8c2" opacity=".65" stroke-width="5" stroke-linecap="round"/>
+     <path d="M19 118 Q28 91 54 79 Q82 65 108 51
+      C123 42 146 41 161 49 C170 54 174 64 170 74
+      C166 86 150 92 134 91 L116 90
+      C106 94 95 107 84 124 C72 145 55 151 34 144
+      C21 139 16 132 19 118Z"
+      fill="url(#gripThumb)" stroke="#7a4635" stroke-width="3.1" stroke-linejoin="round"/>
+     <path d="M119 53 Q139 43 155 54 Q161 59 158 67 Q156 74 145 77
+      Q127 78 117 72 Q113 64 119 53Z"
+      fill="#fbe3c6" stroke="#c48c78" stroke-width="1.9"/>
+     <path d="M119 57 Q134 51 148 57" fill="none"
+      stroke="#fff4df" stroke-linecap="round" stroke-width="2.5" opacity=".75"/>
+     <path d="M35 123 Q42 106 63 99 M65 127 Q75 113 89 107"
+      fill="none" stroke="#ad624d" stroke-linecap="round" stroke-width="2.2" opacity=".55"/>
+     <path d="M31 115 Q39 96 66 84 Q102 69 123 54"
+      fill="none" stroke="#fff1d2" stroke-width="5" stroke-linecap="round" opacity=".54"/>
     </svg>
    </div>
    ${active?'<p class="bots-play-prompt">Du bist dran – tippe auf eine Karte.</p>':''}
@@ -423,5 +435,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.3.2'};
+ window.WastlBotsUI={render,version:'7.4.0'};
 })();

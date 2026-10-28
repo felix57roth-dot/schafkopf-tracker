@@ -1324,3 +1324,93 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
   display:none!important;
  }
 }
+
+/* Stammtisch 7.4 – Stichkarten in vier getrennten Bereichen, mit
+ * Abstand zu Sepp, Resi, Xaver und zum eigenen Kartenfächer.
+ * Keine neue DOM-Struktur: bestehende Partien/Spieldaten bleiben erhalten. */
+.bots-wood .bots-playing-area,
+.bots-wood.bots-art-loaded .bots-playing-area{
+ left:8%;
+ right:8%;
+ top:48%;
+ height:28%;
+ min-height:0;
+ max-height:none;
+ overflow:visible;
+ z-index:19;
+ pointer-events:none;
+}
+.bots-playing-area .bots-played{
+ width:clamp(48px,14vw,74px);
+ max-width:23%;
+ z-index:2;
+}
+.bots-playing-area .bots-played-top{
+ top:0;
+ left:50%;
+ right:auto;
+ bottom:auto;
+ transform:translateX(-50%) rotate(-4deg);
+}
+.bots-playing-area .bots-played-left{
+ top:16%;
+ left:0;
+ right:auto;
+ bottom:auto;
+ transform:rotate(-10deg);
+}
+.bots-playing-area .bots-played-right{
+ top:16%;
+ right:0;
+ left:auto;
+ bottom:auto;
+ transform:rotate(9deg);
+}
+.bots-playing-area .bots-played-bottom{
+ top:auto;
+ bottom:0;
+ left:50%;
+ right:auto;
+ transform:translateX(-50%) rotate(3deg);
+}
+/* Namensschilder sind vollständig lesbar; Karten liegen darunter
+ * auf dem Holztisch, niemals quer über ihrem Schriftfeld. */
+.bots-seat-label,.bots-art-loaded .bots-seat-label{z-index:24}
+/* Überflüssige Handüberschrift entfernen; den gewonnenen Platz
+ * erhält die vollständig sichtbare Kartenhand selbst. */
+.bots-page:not(.bots-page-start) .bots-hand{
+ grid-template-rows:minmax(0,1fr) 13px;
+}
+.bots-hand-heading{display:none!important}
+.bots-hand-row{padding-top:6px}
+/* Die alte cartoonartige große Griffhand wird durch einen kleineren,
+ * ruhiger gezeichneten Daumen ersetzt, direkt am Kartenfächer. */
+.bots-grip{
+ left:max(-11px,calc(50% - ((var(--fan-count,8)*var(--bots-fan-width) - (var(--fan-count,8) - 1)*var(--bots-fan-overlap))/2) - 37px));
+ bottom:-10px;
+ width:clamp(86px,25vw,120px);
+ z-index:55;
+ pointer-events:none;
+ filter:drop-shadow(1px 2px 2px #21150b75);
+}
+.bots-grip svg{width:100%;height:auto;display:block;overflow:visible}
+@media(max-height:690px){
+ .bots-wood .bots-playing-area,
+ .bots-wood.bots-art-loaded .bots-playing-area{
+  top:46%;
+  height:29%;
+  min-height:0;
+  max-height:none;
+ }
+ .bots-playing-area .bots-played{width:clamp(42px,13vw,64px)}
+ .bots-grip{width:clamp(70px,21vw,96px)}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-wood .bots-playing-area,
+ .bots-wood.bots-art-loaded .bots-playing-area{
+  top:43%;
+  height:33%;
+ }
+ .bots-playing-area .bots-played{width:clamp(35px,8.5vh,49px)}
+ .bots-grip{display:none}
+}
