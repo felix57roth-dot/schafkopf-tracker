@@ -1,4 +1,4 @@
-/* Wastl Stammtisch 6.2 – eigenständige Offline-Tischoberfläche.
+/* Wastl Stammtisch 6.3 – eigenständige Offline-Tischoberfläche.
  * Ein Bot = eine sichtbare Entscheidung. Keine Eingriffe ins Kassenbuch.
  */
 (function(){
@@ -86,6 +86,7 @@
  }
  function startUI(){
   return `<section class="bots-intro">
+   <button class="bots-exit-start" type="button" data-bots-exit aria-label="Zur Startseite">← Zurück</button>
    <img src="./wastl.png" alt="Wastl">
    <h2>Servus am Stammtisch!</h2>
    <p>Resi, Sepp und Xaver sitzen schon bereit. Der erste Platz wird ausgelost, danach wechselt der Geber jede Runde.</p>
@@ -137,10 +138,12 @@
   const seat=B.SEATS.find(s=>relative(g,s)===pos);
   const person=B.personAt(g,seat),acting=currentSpeaker(g)===seat;
   const bubble=speech(g,seat);
+  const bid=g.bids?.find(b=>b.seat===seat);
+  const announced=bid?(bid.offer?bid.offer.label:'Weiter'):'';
   return `<div class="bots-player bots-player-${pos} ${acting?'bots-player-active':''}">
    ${bubble}
    <img src="${esc(person.portrait)}" alt="${esc(person.name)}" draggable="false">
-   <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc({vh:'VH',mh:'MH',hh:'HH',g:'G'}[seat])}</small></div>
+   <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc({vh:'VH',mh:'MH',hh:'HH',g:'G'}[seat])}${announced?' · '+esc(announced):''}</small></div>
    </div>`;
  }
  function playedCards(g){
@@ -148,7 +151,7 @@
   if((g.phase==='trickDone'||g.phase==='done')&&g.lastTrick){
    cards=g.lastTrick.cards.map((id,i)=>({seat:E.nextSeat(g.lastTrick.leaderSeat,i),id}));
   }
-  return cards.map(x=>`<div class="bots-played bots-played-${relative(g,x.seat)}">${face(x.id)}</div>`).join('');
+  return cards.map(x=>`<div class="bots-played bots-played-${relative(g,x.seat)}" data-bots-card-key="${esc(x.seat+':'+x.id)}">${face(x.id)}</div>`).join('');
  }
  function board(g){
   const active=currentSpeaker(g),status=g.phase==='trickDone'||g.phase==='done'?
@@ -181,7 +184,7 @@
   const legal=active?new Set(B.playable(g,g.mySeat)):new Set();
   const sorted=B.sortHand(g.hands[g.mySeat],g.type?g:{type:'rufspiel'});
   return `<section class="bots-hand">
-   <div class="bots-hand-heading"><b>Deine Karten</b><span>${sorted.length} Karten · ${esc(POSITIONS[g.mySeat])}</span></div>
+   <div class="bots-hand-heading"><b>Deine Karten</b><span>${sorted.length} Karten · ${esc(POSITIONS[g.mySeat])}${g.bids?.some(b=>b.seat===g.mySeat)?' · '+esc((g.bids.find(b=>b.seat===g.mySeat).offer?.label)||'Weiter'):''}</span></div>
    <div class="bots-hand-row" aria-label="Deine acht Handkarten">
     ${sorted.map((id,i)=>`<button type="button" class="bots-card-button ${legal.has(id)?'playable':'locked'}" aria-label="${esc(id.replace('-',' '))} ${legal.has(id)?'spielen':'nicht spielbar'}" data-bots-play="${esc(id)}" ${legal.has(id)?'':'disabled'}>${face(id)}</button>`).join('')}
    </div>
@@ -203,7 +206,7 @@
   schedule();
   const g=game,sc=score(g);
   return `<section class="bots-page">
-   <header class="bots-hud"><div><small>♠ SCHAFKOPF-STAMMTISCH</small>
+   <header class="bots-hud"><button class="bots-exit" type="button" data-bots-exit aria-label="Zur Startseite">←</button><div><small>♠ SCHAFKOPF-STAMMTISCH</small>
     <strong>${esc(title(g))}</strong>
     <span>Runde ${g.round} · ${esc(turnAnnouncement(g))}</span></div>
     <button class="bots-reset" type="button" data-bots-abandon aria-label="Partie verlassen">↺ Neu</button></header>
@@ -214,13 +217,98 @@
    </footer>
   </section>`;
  }
- function renderApp(){if(typeof window.render==='function')window.render();}
+ // Karten nicht erneut zeichnen: Das bisherige DOM bleibt erhalten, nur die
+ // neue Stichkarte wird angefügt. Der sonst übliche App-Render ersetzt
+ // #main.innerHTML vollständig und löste das sichtbare Flackern aus.
+ function renderApp(){
+  const root=document.querySelector('.bots-page');
+  if(!root||!game||root.classList.contains('bots-page-start')||typeof document.createElement!=='function'){
+   if(typeof window.render==='function')window.render();return;
+  }
+  const template=document.createElement('template');
+  template.innerHTML=render().trim();
+  const next=template.content.firstElementChild;
+  if(!next||!next.querySelector('.bots-wood')||!root.querySelector('.bots-wood')){
+   if(typeof window.render==='function')window.render();return;
+  }
+  const currentWood=root.querySelector('.bots-wood'),newWood=next.querySelector('.bots-wood');
+  const swap=(selector,oldScope=root,newScope=next)=>{
+   const existing=oldScope.querySelector(selector),incoming=newScope.querySelector(selector);
+   if(existing&&incoming)existing.replaceWith(incoming);
+   else if(existing)existing.remove();
+   else if(incoming)oldScope.appendChild(incoming);
+  };
+  // Kopf, Punkte und Bedienelemente dürfen aktualisiert werden; die Tischszene
+  // und ihre Kartenbilder dagegen bleiben dieselben DOM-Elemente.
+  swap('.bots-hud');
+  const oldError=root.querySelector('.bots-error'),freshError=next.querySelector('.bots-error');
+  if(oldError)oldError.remove();
+  if(freshError)root.querySelector('.bots-hud')?.after(freshError);
+  for(const pos of ['left','top','right']){
+   const current=currentWood.querySelector('.bots-player-'+pos);
+   const fresh=newWood.querySelector('.bots-player-'+pos);
+   if(!current||!fresh)continue;
+   current.className=fresh.className;
+   const img=current.querySelector('img'),newImg=fresh.querySelector('img');
+   if(img&&newImg&&img.getAttribute('src')!==newImg.getAttribute('src'))img.setAttribute('src',newImg.getAttribute('src'));
+   const label=current.querySelector('.bots-player-label'),newLabel=fresh.querySelector('.bots-player-label');
+   if(label&&newLabel&&label.innerHTML!==newLabel.innerHTML)label.innerHTML=newLabel.innerHTML;
+   const existingBubble=current.querySelector('.bots-bubble'),newBubble=fresh.querySelector('.bots-bubble');
+   if(existingBubble&&!newBubble)existingBubble.remove();
+   else if(existingBubble&&newBubble){
+    if(existingBubble.textContent!==newBubble.textContent)existingBubble.textContent=newBubble.textContent;
+    existingBubble.className=newBubble.className;
+   }else if(newBubble)current.prepend(newBubble);
+  }
+  const field=currentWood.querySelector('.bots-playing-area'),freshField=newWood.querySelector('.bots-playing-area');
+  if(field&&freshField){
+   const anchor=field.querySelector('.bots-wood-center');
+   const currentCards=new Map(Array.from(field.querySelectorAll('.bots-played')).map(node=>[node.dataset.botsCardKey,node]));
+   const needed=new Set();
+   for(const incoming of freshField.querySelectorAll('.bots-played')){
+    const key=incoming.dataset.botsCardKey;needed.add(key);
+    if(!currentCards.has(key))field.insertBefore(incoming,anchor);
+   }
+   for(const [key,node] of currentCards)if(!needed.has(key))node.remove();
+   const nextStatus=freshField.querySelector('.bots-wood-center');
+   if(anchor&&nextStatus&&anchor.textContent!==nextStatus.textContent)anchor.textContent=nextStatus.textContent;
+  }
+  swap('.bots-self-spot',currentWood,newWood);
+  for(const selector of ['.bots-mid-action','.bots-shade','.bots-finish'])swap(selector,currentWood,newWood);
+  const hand=root.querySelector('.bots-hand'),nextHand=next.querySelector('.bots-hand');
+  if(hand&&nextHand){
+   swap('.bots-hand-heading',hand,nextHand);
+   const row=hand.querySelector('.bots-hand-row'),future=nextHand.querySelector('.bots-hand-row');
+   if(row&&future){
+    const existing=new Map(Array.from(row.querySelectorAll('[data-bots-play]')).map(node=>[node.dataset.botsPlay,node]));
+    const target=[];
+    for(const button of future.querySelectorAll('[data-bots-play]')){
+     const own=existing.get(button.dataset.botsPlay)||button;
+     own.className=button.className;
+     own.disabled=button.disabled;
+     own.setAttribute('aria-label',button.getAttribute('aria-label'));
+     target.push(own);
+    }
+    const expected=new Set(target);
+    for(const button of [...row.children])if(!expected.has(button))button.remove();
+    target.forEach((button,i)=>{
+     if(row.children[i]!==button)row.insertBefore(button,row.children[i]||null);
+    });
+   }
+   swap('.bots-play-prompt',hand,nextHand);
+  }else if(hand)hand.remove();
+  else if(nextHand)root.querySelector('.bots-scene')?.after(nextHand);
+  swap('.bots-tally');
+ }
  function click(e){
-  const b=e.target.closest('[data-bots-new],[data-bots-abandon],[data-bots-round],[data-bots-choose],[data-bots-back],[data-bots-bid],[data-bots-pass],[data-bots-play],[data-bots-analyze]');
+  const b=e.target.closest('[data-bots-exit],[data-bots-new],[data-bots-abandon],[data-bots-round],[data-bots-choose],[data-bots-back],[data-bots-bid],[data-bots-pass],[data-bots-play],[data-bots-analyze]');
   if(!b||typeof tab==='undefined'||tab!=='bots')return;
   e.preventDefault();cancelTimer();
   try{
    error='';
+   if(b.hasAttribute('data-bots-exit')){
+    save();switchTab('home');return;
+   }
    if(b.hasAttribute('data-bots-abandon')){
     if(game&&['playing','chooseGame','bidding'].includes(game.phase)&&!confirm('Laufende Runde wirklich beenden?')){schedule();return;}
     game=null;
@@ -258,5 +346,5 @@
   const img=event.target;
   if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
  },true);
- window.WastlBotsUI={render,version:'6.2.0'};
+ window.WastlBotsUI={render,version:'6.3.0'};
 })();
