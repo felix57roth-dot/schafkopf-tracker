@@ -1,4 +1,4 @@
-/* Wastl Stammtisch 6.6 – eigenständige Offline-Tischoberfläche.
+/* Wastl Stammtisch 6.7 – eigenständige Offline-Tischoberfläche.
  * Ein Bot = eine sichtbare Entscheidung. Keine Eingriffe ins Kassenbuch.
  */
 (function(){
@@ -12,11 +12,17 @@
  let game=null,error='',timer=null;
  try{
   const old=JSON.parse(localStorage.getItem(KEY)||'null');
-  if(old&&old.version===6&&B.SEATS.includes(old.mySeat)&&
+  if(old&&[6,7].includes(old.version)&&B.SEATS.includes(old.mySeat)&&
     ['bidding','chooseGame','biddingResult','playing','trickDone','done','noGame'].includes(old.phase)&&
     old.initialHands&&old.hands&&Array.isArray(old.tricks)&&old.tricks.length<=8){
      game=old;
-     if(game.phase==='bidding'&&game.bidCursor>=4)B.finishBidding(game);
+     // Laufende Runden bleiben erhalten. Nur alte, noch unvollständige
+     // Spielansagen beginnen mit denselben Karten erneut bei Vorhand.
+     if(game.version===6&&['bidding','chooseGame'].includes(game.phase)){
+      Object.assign(game,{phase:'bidding',auctionStage:'opening',bidCursor:0,
+       bids:[],activeBidders:[],auctionQueue:[],best:null,lastAction:null});
+     }
+     game.version=7;
     }
  }catch(e){console.warn('Stammtisch konnte nicht geladen werden:',e);}
  function save(){
@@ -38,9 +44,9 @@
  function turnAnnouncement(g){
   if(g.phase==='bidding'){
    const seat=B.bidderSeat(g);
-   return seat?(g.auctionStage==='duel'?'Spielverhandlung: ':'Ansage: ')+seatLabel(g,seat)+' ist dran':'Ansagerunde beendet';
+   return seat?(g.auctionStage==='declaration'?'Spielart: ':'Ansage: ')+seatLabel(g,seat)+' ist dran':'Ansagerunde beendet';
   }
-  if(g.phase==='chooseGame')return g.auctionStage==='duel'?'Wähle ein höherwertiges Spiel':'Wähle deine Spielart';
+  if(g.phase==='chooseGame')return g.best?'Wähle ein höherwertiges Spiel':'Sage deine Spielart an';
   if(g.phase==='biddingResult')return seatLabel(g,g.best.seat)+' spielt '+g.best.label;
   if(g.phase==='playing')return seatLabel(g,g.turn)+' legt als Nächstes';
   if(g.phase==='trickDone')return 'Stich beendet';
@@ -119,7 +125,7 @@
   };
   return `<div class="bots-shade"><section class="bots-pick-panel" role="dialog" aria-label="Spielauswahl">
    <header><strong>Spielauswahl</strong><button type="button" data-bots-back aria-label="Zurück">✕</button></header>
-   <p class="bots-pick-help">Wähle deine Spielart</p>
+   <p class="bots-pick-help">${g.best?'Du kannst ein höherwertiges Spiel ansagen.':'Du hast „Ich spiele“ gesagt. Welches Spiel sagst du an?'}</p>
    ${group('rufspiel','Rufspiel')}
    ${group('solo','Solo')}
    ${group('wenz','Wenz')}
@@ -128,14 +134,17 @@
  }
  function bidOverlay(g){
   if(g.phase==='chooseGame')return cardMenu(g);
-  if(g.phase==='biddingResult')return `<section class="bots-mid-action bots-final-announce" role="status"><h3>${esc(seatLabel(g,g.best.seat))} spielt ${esc(g.best.label)}!</h3><small>Alle haben sich erklärt. Gleich wird ausgespielt.</small></section>`;
+  if(g.phase==='biddingResult')return `<section class="bots-mid-action bots-final-announce" role="status"><h3>${esc(seatLabel(g,g.best.seat))} spielt ${esc(g.best.label)}!</h3><small>Die Spielverhandlung ist abgeschlossen. Gleich wird ausgespielt.</small></section>`;
   if(g.phase!=='bidding'||B.bidderSeat(g)!==g.mySeat)return '';
-  const opts=B.bidOptions(g.hands[g.mySeat],g.best,g.mySeat);
-  return `<section class="bots-mid-action" aria-label="Deine Spielansage">
-   <h3>${g.auctionStage==='duel'?'Höher bieten oder Weiter?':'Du bist dran!'}</h3>
-   <div class="bots-main-actions"><button type="button" class="bots-gold-btn" data-bots-choose ${opts.length?'':'disabled'}>Spielen</button>
-    <button type="button" class="bots-gold-btn" data-bots-pass>Weiter</button></div>
-   ${g.best?`<small>Aktuell: ${esc(g.best.label)} von ${esc(seatLabel(g,g.best.seat))}</small>`:''}
+  const first=g.auctionStage==='opening',opts=first?null:B.bidOptions(g.hands[g.mySeat],g.best,g.mySeat);
+  const canPass=first||!!g.best;
+  return `<section class="bots-mid-action" aria-label="${first?'Deine Spielabsicht':'Deine Spielart'}">
+   <h3>${first?'Möchtest du spielen?':g.best?'Überbieten oder Weiter?':'Welches Spiel sagst du an?'}</h3>
+   <div class="bots-main-actions">
+    <button type="button" class="bots-gold-btn" data-bots-choose ${!first&&!opts.length?'disabled':''}>${first?'Ich spiele':g.best?'Überbieten':'Spiel ansagen'}</button>
+    ${canPass?'<button type="button" class="bots-gold-btn" data-bots-pass>Weiter</button>':''}
+   </div>
+   ${g.best?`<small>Aktuell: ${esc(g.best.label)} von ${esc(seatLabel(g,g.best.seat))}</small>`:first?'<small>Die Spielart wird erst nach der Runde festgelegt.</small>':''}
   </section>`;
  }
  function speech(g,seat){
@@ -153,7 +162,7 @@
   const person=B.personAt(g,seat),acting=currentSpeaker(g)===seat;
   const bubble=speech(g,seat);
   const bid=g.bids?.slice().reverse().find(b=>b.seat===seat);
-  const announced=bid?(bid.offer?bid.offer.label:'Weiter'):'';
+  const announced=bid?(bid.offer?bid.offer.label:bid.intent?'Ich spiele':'Weiter'):'';
   return `<div class="bots-player bots-player-${pos} ${acting?'bots-player-active':''}">
    ${bubble}
    <img src="${esc(person.portrait)}" alt="${esc(person.name)}" draggable="false">
@@ -198,7 +207,7 @@
   const legal=active?new Set(B.playable(g,g.mySeat)):new Set();
   const sorted=B.sortHand(g.hands[g.mySeat],g.type?g:{type:'rufspiel'});
   return `<section class="bots-hand">
-   <div class="bots-hand-heading"><b>Deine Karten</b><span>${sorted.length} Karten · ${esc(POSITIONS[g.mySeat])}${g.bids?.some(b=>b.seat===g.mySeat)?' · '+esc((g.bids.find(b=>b.seat===g.mySeat).offer?.label)||'Weiter'):''}</span></div>
+   <div class="bots-hand-heading"><b>Deine Karten</b><span>${sorted.length} Karten · ${esc(POSITIONS[g.mySeat])}${g.bids?.some(b=>b.seat===g.mySeat)?' · '+esc((g.bids.slice().reverse().find(b=>b.seat===g.mySeat).offer?.label)||(g.bids.slice().reverse().find(b=>b.seat===g.mySeat).intent?'Ich spiele':'Weiter')):''}</span></div>
    <div class="bots-hand-row" aria-label="Deine acht Handkarten">
     ${sorted.map((id,i)=>`<button type="button" class="bots-card-button ${legal.has(id)?'playable':'locked'}" aria-label="${esc(id.replace('-',' '))} ${legal.has(id)?'spielen':'nicht spielbar'}" data-bots-play="${esc(id)}" ${legal.has(id)?'':'disabled'}>${face(id)}</button>`).join('')}
    </div>
@@ -331,7 +340,8 @@
    }else if(b.hasAttribute('data-bots-round')){
     game=B.nextRound(game);
    }else if(b.hasAttribute('data-bots-choose')){
-    B.chooseToPlay(game);
+    if(game.auctionStage==='opening')B.declareInterest(game,true);
+    else B.chooseToPlay(game);
    }else if(b.hasAttribute('data-bots-back')){
     B.cancelChoice(game);
    }else if(b.hasAttribute('data-bots-bid')){
@@ -340,7 +350,8 @@
     if(!option)throw Error('Diese Spielart ist nicht zulässig.');
     B.submitBid(game,option);
    }else if(b.hasAttribute('data-bots-pass')){
-    B.submitBid(game,null);
+    if(game.auctionStage==='opening')B.declareInterest(game,false);
+    else B.submitBid(game,null);
    }else if(b.hasAttribute('data-bots-play')){
     B.play(game,b.dataset.botsPlay);
    }else if(b.hasAttribute('data-bots-analyze')){
@@ -360,5 +371,5 @@
   const img=event.target;
   if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
  },true);
- window.WastlBotsUI={render,version:'6.6.0'};
+ window.WastlBotsUI={render,version:'6.7.0'};
 })();

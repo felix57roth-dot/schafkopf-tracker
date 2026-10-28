@@ -591,3 +591,33 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-hand-row .bots-card-button{width:54px;flex-basis:54px}
  .bots-hand-row .bots-card-button+.bots-card-button{margin-left:-13px}
 }
+
+
+/* 6.7: Legale Karten werden markiert, ohne ihre Nachbarkarten zu
+   überdecken. Die Reihenfolge/Überlappung der Karten bleibt stabil. */
+.bots-hand-row .bots-card-button.playable,
+.bots-hand-row .bots-card-button.playable:hover,
+.bots-hand-row .bots-card-button.playable:active,
+.bots-hand-row .bots-card-button.playable:focus,
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ transform:none;
+ z-index:auto;
+ filter:none;
+}
+/* Ein kleiner grüner Punkt auf der sichtbaren linken Kartenecke
+   statt Anheben und der früheren z-index:1-Überlagerung. */
+.bots-hand-row .bots-card-button.playable::after{
+ content:"";position:absolute;
+ top:5px;left:5px;width:9px;height:9px;
+ background:#2b9b51;border:1px solid #fcffef;
+ box-shadow:0 0 0 1px #125f2e9e;
+ border-radius:50%;pointer-events:none;
+}
+.bots-hand-row .bots-card-button.locked::after{content:none}
+.bots-hand-row .bots-card-button.playable .bots-face{
+ opacity:1;filter:none;box-shadow:none;
+}
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ outline:2px solid #207642;
+ outline-offset:-2px;
+}
