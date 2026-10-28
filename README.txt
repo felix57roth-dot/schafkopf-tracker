@@ -171,3 +171,15 @@ DATEIEN IN DIESEM UPDATE (OHNE cards-ORDNER):
 
 Die bestehenden Archiv-Schlüssel bleiben unverändert. Vor dem Update
 in Einstellungen einen Backup-Export durchführen.
+
+
+AUTOMATISCHE SYNCHRONISIERUNG AB 28.10.2026
+- Einziges Entwicklungsrepository: schafkopf-tracker/schafkopf-tracker.github.io (Branch main).
+- GitHub Actions: .github/workflows/sync-old-tracker.yml spiegelt jeden Push
+  auf main automatisch nach felix57roth-dot/schafkopf-tracker (Branch main).
+- Voraussetzung: Das Repository-Secret OLD_REPO_TOKEN im neuen Repository
+  muss Schreibzugriff auf das alte Repository haben.
+- Der Abgleich übernimmt die App-Dateien; die Verzeichnisse .git und .github
+  des alten Repositories werden nicht überschrieben.
+- Vorhandene Browser-Daten (localStorage) werden durch den Repository-Abgleich
+  weder gelöscht noch zwischen den beiden unterschiedlichen Links übertragen.
