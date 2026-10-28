@@ -1,0 +1,809 @@
+/* Wastl Stammtisch 6.1: Eigenständige Gestaltung auf Grundlage
+   der vom Projekt gelieferten Figuren und originalen Kartengrafiken. */
+/* Nur die Bots-Seite verändert den gemeinsamen App-Rahmen. */
+.app:has(.bots-page)>.hero{padding-bottom:14px;border-radius:0}
+.app:has(.bots-page)>.hero #headerTitle,
+.app:has(.bots-page)>.hero #headerSub{display:none}
+.app:has(.bots-page)>.main{margin:0;padding:0}
+.app:has(.bots-page){background:#ead6ac}
+.bots-page{width:min(100%,780px);margin:0 auto;padding:0 0 calc(110px + env(safe-area-inset-bottom));color:#36281a}
+.bots-page button{touch-action:manipulation}
+.bots-hud{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#3a3028;color:#fff2d3;padding:10px 14px}
+.bots-hud>div{display:grid;gap:2px;min-width:0}
+.bots-hud small{font-size:10px;font-weight:800;letter-spacing:.13em;color:#e2c18a}
+.bots-hud strong{font-size:21px;font-weight:850;line-height:1.15}
+.bots-hud span{font-size:12px;color:#efe5d2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70vw}
+.bots-reset{background:#6a5845;border:1px solid #c4a578;border-radius:12px;color:white;min-height:41px;padding:8px 12px;flex:none}
+.bots-error{padding:9px 12px;color:#9b311d;background:#fff1e7;border-bottom:2px solid #bb5b42}
+.bots-scene{width:100%;position:relative;height:clamp(385px,59svh,570px);overflow:hidden;background:#ddbb86}
+.bots-wood{
+ position:relative;width:100%;height:100%;isolation:isolate;
+ background:
+  radial-gradient(ellipse at 51% 66%,#ffffff2e 0%,#ffffff06 38%,#502d1338 100%),
+  repeating-linear-gradient(91deg,transparent 0 18%,#a0754170 18.2%,#f5d29f64 18.65%,transparent 19% 37%),
+  repeating-linear-gradient(0deg,#6e3f1a16 0px,#eec99019 2px,#ffffff12 4px,#72513112 9px,#00000000 12px),
+  linear-gradient(90deg,#c0915b,#edcea0 24%,#d3a772 51%,#ecd1a2 76%,#be8a53);
+ box-shadow:inset 0 7px 16px #28190b66,inset 0 -10px 22px #48250e77;
+}
+.bots-wood:after{content:"";pointer-events:none;position:absolute;inset:0;border-left:7px solid #80572d99;border-right:7px solid #80572d99}
+.bots-player{position:absolute;z-index:3;width:clamp(92px,29%,160px);display:flex;align-items:center;flex-direction:column;gap:0;filter:drop-shadow(0 3px 2px #23150b40)}
+.bots-player img{width:100%;height:clamp(91px,21svh,164px);object-fit:contain;object-position:center bottom;display:block}
+.bots-player-left{top:8%;left:0}
+.bots-player-top{top:1%;left:50%;transform:translateX(-50%)}
+.bots-player-right{top:8%;right:0}
+.bots-player-label{color:#42301b;text-align:center;display:grid;gap:1px;max-width:100%;padding:3px 7px;background:linear-gradient(#fff6dd,#edddaf);box-shadow:0 1px 6px #4d311455;border:1px solid #caad71;border-radius:11px}
+.bots-player-label b{font-size:13px}
+.bots-player-label small{font-size:9px;white-space:nowrap}
+.bots-player-active .bots-player-label{outline:2px solid #4d813b}
+.bots-bubble{position:absolute;z-index:6;bottom:calc(100% - 12px);left:50%;transform:translateX(-50%);
+ background:#fff8df;color:#3d2919;border:2px solid #b68b45;
+ border-radius:13px;min-width:72px;max-width:156px;width:max-content;
+ padding:7px 10px;text-align:center;font-size:12px;line-height:1.2;
+ font-weight:780;box-shadow:0 3px 9px #2b1a0c55;animation:bots-pop .22s ease-out}
+.bots-bubble:after{content:"";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%) rotate(45deg);width:12px;height:12px;background:#fff8df;border-right:2px solid #b68b45;border-bottom:2px solid #b68b45}
+.bots-bubble-done{border-color:#7b8f46}
+.bots-bubble-done:after{border-color:#7b8f46}
+.bots-player-left .bots-bubble{left:68%}
+.bots-player-right .bots-bubble{left:34%}
+.bots-playing-area{position:absolute;inset:32% 10% 6%;z-index:2}
+.bots-played{position:absolute;width:clamp(56px,16vw,102px);max-width:26%;animation:bots-deal .3s ease-out;filter:drop-shadow(2px 4px 3px #32231674)}
+.bots-played .bots-face{width:100%;height:auto;display:block;border-radius:5px}
+.bots-played-top{top:2%;left:50%;transform:translateX(-50%) rotate(-4deg)}
+.bots-played-left{top:28%;left:3%;transform:rotate(-13deg)}
+.bots-played-right{top:28%;right:3%;transform:rotate(11deg)}
+.bots-played-bottom{bottom:4%;left:50%;transform:translateX(-50%) rotate(3deg)}
+.bots-wood-center{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);
+ min-width:125px;max-width:200px;color:#fff7d8;text-align:center;font-size:12px;line-height:1.4;font-weight:850;
+ text-shadow:0 1px 3px #1e1209;background:#432b1dc9;border:1px solid #ffffff2e;
+ border-radius:12px;padding:9px 10px}
+.bots-self-spot{position:absolute;bottom:7%;left:50%;transform:translateX(-50%);width:74px;height:22px;z-index:5}
+.bots-self-spot .bots-bubble{bottom:100%;font-size:11px}
+.bots-mid-action{position:absolute;z-index:8;left:50%;top:64%;transform:translate(-50%,-50%);
+ display:grid;justify-items:center;gap:10px;text-align:center;width:min(94%,370px);
+ padding:12px;border-radius:18px;background:#382513a6;color:#fff8df;box-shadow:0 7px 22px #4b260a66}
+.bots-mid-action h3{font-size:18px;line-height:1.2;margin:0;color:#fff8df}
+.bots-mid-action small{font-size:11px;line-height:1.25}
+.bots-main-actions{display:flex;justify-content:center;gap:12px;width:100%}
+.bots-gold-btn{background:linear-gradient(180deg,#fff7d8 0%,#e6d5a1 74%,#c9aa65 100%);color:#32230e;
+ border:2px solid #b89657;border-radius:17px;font-weight:850;box-shadow:0 4px 0 #9a7645,0 5px 11px #22160d4d;
+ padding:12px 16px;min-height:49px;cursor:pointer}
+.bots-main-actions .bots-gold-btn{flex:1;min-width:0;font-size:17px}
+.bots-gold-btn:disabled{opacity:.46;filter:grayscale(.4);cursor:not-allowed}
+.bots-shade{position:absolute;inset:0;z-index:12;background:#0f0c0bc9;display:grid;place-items:center;padding:16px 11px}
+.bots-pick-panel{width:min(100%,500px);max-height:100%;overflow:auto;overscroll-behavior:contain;color:#fff8e9;
+ background:#1e1b17db;border:1px solid #cfb88d;border-radius:17px;
+ box-shadow:0 16px 45px #000a;padding:11px 13px}
+.bots-pick-panel header{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #ffffff55;padding:2px 0 8px}
+.bots-pick-panel header strong{font-size:24px;font-weight:750}
+.bots-pick-panel header button{border:1px solid #ffffff88;background:#fff2d717;border-radius:9px;color:#fff;padding:4px 12px;font-size:20px}
+.bots-pick-help{font-size:12px;margin:8px 0;color:#dfd5bb}
+.bots-choice-row{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #ffffff4b}
+.bots-choice-name{font-size:18px;font-weight:700}
+.bots-choice-cards{display:flex;gap:7px;flex-wrap:wrap}
+.bots-game-card{width:clamp(48px,15vw,71px);padding:0;border:0;background:transparent;color:#fffaf0;display:grid;justify-items:center;gap:3px}
+.bots-game-card img{display:block;width:100%;aspect-ratio:.69;object-fit:contain;box-shadow:0 2px 7px #0009;border-radius:4px}
+.bots-game-card small{font-size:9px;white-space:nowrap}
+.bots-game-card:focus-visible{outline:3px solid #e5bb4c;outline-offset:3px}
+.bots-pick-foot{font-size:10px;line-height:1.4;color:#ccba98;margin:9px 0 1px}
+.bots-hand{position:relative;z-index:4;padding:8px 9px 12px;background:linear-gradient(180deg,#f8f2db,#e7d1a2);box-shadow:0 -5px 14px #4d331d44}
+.bots-hand-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;margin:0 3px 11px}
+.bots-hand-heading b{font-size:15px}
+.bots-hand-heading span{font-size:11px;color:#695332}
+.bots-hand-row{display:flex;align-items:flex-end;justify-content:center;min-height:116px;max-width:680px;margin:auto;padding:0 4px 4px;overflow:visible}
+.bots-card-button{width:min(15.8vw,84px);min-width:0;flex:0 1 84px;border:none;padding:0;background:none;position:relative;touch-action:manipulation}
+.bots-card-button+.bots-card-button{margin-left:clamp(-24px,-5.1vw,-11px)}
+.bots-card-button .bots-face{display:block;width:100%;height:auto;border-radius:4px;border:1px solid #c7bea4;box-shadow:0 2px 7px #3a2b2057}
+.bots-card-button.locked{opacity:.87}
+.bots-card-button.playable{transform:translateY(-7px);z-index:1;cursor:pointer}
+.bots-card-button.playable:active{transform:translateY(-15px)}
+.bots-card-button.playable:focus-visible{outline:3px solid #27723f;outline-offset:3px;z-index:4}
+.bots-play-prompt{font-size:12px;font-weight:800;color:#396037;text-align:center;margin:4px 0 0}
+.bots-tally{padding:9px 14px;background:#d0b585;color:#513a24;text-align:center;font-size:12px;font-weight:750}
+.bots-tally span{margin-left:15px}
+.bots-finish{position:absolute;z-index:9;left:50%;top:59%;transform:translate(-50%,-50%);
+ background:#261c16e8;color:#fff4db;border:2px solid #b99657;border-radius:19px;padding:15px;
+ width:min(93%,360px);text-align:center;display:grid;gap:8px;box-shadow:0 9px 25px #130902a6}
+.bots-finish h3{font-size:20px;margin:0}
+.bots-finish p{font-size:13px;line-height:1.4;margin:0}
+.bots-finish small{font-size:10px;color:#e5d2ae}
+.bots-finish-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.bots-finish-actions button{font-size:12px;padding:9px;min-height:45px}
+.bots-analyze-btn{background:#f6f0e4;color:#3f3828;border:1px solid #c9a879;border-radius:13px;font-weight:800}
+.bots-analyze-btn:disabled{opacity:.4}
+.bots-intro{min-height:calc(100svh - 220px);background:linear-gradient(150deg,#e7c38f,#f4e2bd);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:25px}
+.bots-intro img{width:116px;height:116px;border-radius:21px;object-fit:contain}
+.bots-intro h2{font-size:26px;margin:0}
+.bots-intro p{font-size:15px;line-height:1.5;max-width:420px;margin:0}
+.bots-intro .bots-gold-btn{margin:9px 0;font-size:17px}
+.bots-intro small{font-size:11px;color:#6b593c}
+@keyframes bots-pop{from{opacity:0;scale:.88}to{opacity:1;scale:1}}
+@keyframes bots-deal{from{opacity:0;scale:.86}to{opacity:1;scale:1}}
+@media(min-width:650px){
+ .bots-scene{height:550px}
+ .bots-player{width:170px}
+ .bots-player img{height:175px}
+ .bots-player-left{left:7%}
+ .bots-player-right{right:7%}
+ .bots-playing-area{inset:32% 19% 6%}
+ .bots-wood-center{font-size:14px}
+ .bots-hand-row{min-height:158px}
+ .bots-pick-panel{max-height:96%}
+}
+@media(max-width:385px){
+ .bots-scene{height:clamp(370px,58svh,470px)}
+ .bots-player{width:106px}
+ .bots-player img{height:105px}
+ .bots-player-left,.bots-player-right{top:11%}
+ .bots-player-top{top:3%}
+ .bots-bubble{font-size:11px;padding:6px 8px;max-width:116px}
+ .bots-playing-area{inset:31% 6% 6%}
+ .bots-played{width:59px}
+ .bots-pick-panel header strong{font-size:21px}
+ .bots-choice-row{grid-template-columns:77px minmax(0,1fr);gap:4px;padding:7px 0}
+ .bots-choice-name{font-size:15px}
+ .bots-choice-cards{gap:4px}
+ .bots-game-card{width:50px}
+ .bots-card-button+.bots-card-button{margin-left:-15px}
+ .bots-card-button{width:49px;flex:0 1 49px}
+}
+@media(prefers-reduced-motion:reduce){
+ .bots-bubble,.bots-played{animation:none}
+ .bots-card-button{transition:none}
+}
+
+/* 6.2 – zusätzliche räumliche Tiefe: Wirtshauswand, Tischkante,
+ * Fluchtpunkt-Planken, Illustrationsüberblendung und platzsparende Schilder.
+ * Alle Spielkarten liegen oberhalb sämtlicher Namensschilder. */
+.bots-scene{background:#987247;overflow:hidden;isolation:isolate}
+.bots-wood{
+ overflow:hidden;
+ background:
+  radial-gradient(ellipse at 50% 28%,#efdaa675 0%,transparent 56%),
+  repeating-linear-gradient(90deg,transparent 0 16.0%,#603a1a35 16.1%,#fff0c215 16.5%,transparent 17.0% 32%),
+  linear-gradient(180deg,#433020 0%,#87613a 26%,#9f7848 35%,#7e4e2a 100%);
+ box-shadow:inset 0 14px 33px #180d0852,inset 0 -22px 35px #3b1d0c55;
+}
+.bots-wood::before{
+ content:"";position:absolute;z-index:1;left:-12%;right:-12%;top:32%;bottom:-7%;pointer-events:none;
+ clip-path:polygon(15% 0,85% 0,100% 100%,0 100%);
+ background:
+  repeating-linear-gradient(1deg,#613a1c0c 0 3px,#f5d6a40d 4px 11px,#5b351a0c 12px 15px),
+  radial-gradient(ellipse at 52% 2%,#f4d5a799,transparent 65%),
+  linear-gradient(180deg,#986837 0%,#c28d54 15%,#d7a269 42%,#d9aa72 77%,#b47a41 100%);
+ filter:drop-shadow(0 -9px 5px #26130599);
+}
+.bots-wood::after{
+ content:"";position:absolute;z-index:2;left:5%;right:5%;top:31.2%;height:14px;
+ border-radius:80% 80% 45% 45%;
+ background:linear-gradient(180deg,#42240f 0%,#af7742 35%,#e6b47a 58%,#7b4b29 100%);
+ box-shadow:0 3px 13px #32180580;pointer-events:none;
+}
+.bots-plank-lines{
+ position:absolute;z-index:2;left:-12%;top:33%;width:124%;height:73%;
+ pointer-events:none;mix-blend-mode:multiply;opacity:.65;
+}
+.bots-reference-scene{
+ display:none;position:absolute;left:0;top:0;width:100%;height:auto;
+ z-index:3;pointer-events:none;
+ -webkit-mask-image:linear-gradient(#000 0%,#000 68%,transparent 100%);
+ mask-image:linear-gradient(#000 0%,#000 68%,transparent 100%);
+}
+.bots-art-loaded .bots-reference-scene{display:block}
+.bots-art-loaded .bots-player>img{opacity:0}
+.bots-player{z-index:5;overflow:visible;width:clamp(92px,28%,170px);pointer-events:none}
+.bots-player img{
+ height:clamp(98px,19svh,165px);max-height:165px;object-fit:contain;
+ filter:drop-shadow(0 5px 4px #24150c62);
+}
+.bots-player-top{top:3.8%}
+.bots-player-left{top:7.5%;left:1%}
+.bots-player-right{top:7.5%;right:1%}
+.bots-player-label{
+ display:inline-flex;justify-content:center;align-items:center;
+ gap:5px;min-width:0;max-width:100%;padding:3px 8px;margin-top:-3px;
+ border-radius:99px;border:1px solid #b69b68;
+ background:#f7e6bde8;box-shadow:0 2px 5px #3b271b45;
+ font-weight:700;line-height:1.1;color:#50351d;
+ white-space:nowrap;
+}
+.bots-player-label b{font-size:11px;font-weight:850}
+.bots-player-label small{font-size:9px;color:#786042}
+.bots-player-active .bots-player-label{outline:1px solid #57743a;outline-offset:1px}
+.bots-bubble{z-index:10;bottom:calc(100% - 4px);padding:6px 8px;font-size:11px;max-width:120px}
+.bots-playing-area{
+ z-index:8;inset:39% 9% 5%;
+ pointer-events:none;
+}
+.bots-played{z-index:9;width:clamp(62px,17.5vw,108px);max-width:24%;filter:drop-shadow(3px 6px 3px #32190885)}
+.bots-played .bots-face{box-shadow:0 1px 2px #3b1e0880}
+.bots-played-top{top:1%;left:50%}
+.bots-played-left{top:30%;left:1.5%}
+.bots-played-right{top:30%;right:1.5%}
+.bots-played-bottom{bottom:3%;left:50%}
+.bots-wood-center{
+ top:57%;z-index:9;max-width:34%;min-width:88px;
+ font-size:11px;padding:7px 6px;background:#49301eb8;
+}
+.bots-self-spot{z-index:10}
+.bots-mid-action{z-index:15}
+.bots-shade{z-index:18}
+.bots-finish{z-index:17}
+@media(min-width:650px){
+ .bots-player img{height:185px;max-height:185px}
+ .bots-player-left{left:7%}
+ .bots-player-right{right:7%}
+ .bots-playing-area{inset:39% 18% 5%}
+ .bots-wood-center{font-size:13px}
+}
+@media(max-width:385px){
+ .bots-player{width:28%;min-width:0}
+ .bots-player img{height:108px;max-height:108px}
+ .bots-player-top{top:6%}
+ .bots-player-left,.bots-player-right{top:9%}
+ .bots-player-label{padding:2px 5px;gap:3px}
+ .bots-player-label b{font-size:10px}
+ .bots-player-label small{font-size:8px}
+ .bots-bubble{font-size:10px;max-width:105px}
+ .bots-playing-area{inset:39% 6% 5%}
+ .bots-played{width:clamp(56px,17.5vw,75px)}
+ .bots-wood-center{min-width:76px;padding:6px 5px;font-size:10px}
+}
+
+
+/* 6.3 – Vollbild-Stammtisch, runde Tischkanten und größere Karten.
+ * Gilt ausschließlich, solange die Bot-Oberfläche sichtbar ist. */
+html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:none}
+.app:has(.bots-page){padding-bottom:0;min-height:0}
+.app:has(.bots-page)>.hero,.app:has(.bots-page)>.nav{display:none}
+.app:has(.bots-page)>.main{margin:0!important;padding:0!important;position:static}
+.bots-page{
+ position:fixed;inset:0;z-index:75;
+ width:100%;max-width:100%;height:100vh;height:100dvh;
+ padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+ margin:0;background:#d4af79;overflow:hidden;overscroll-behavior:none;
+ display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;
+ align-content:stretch;gap:0;
+}
+.bots-page-start{display:flex;flex-direction:column}
+.bots-page-start .bots-intro{min-height:0;height:100%;flex:1}
+.bots-exit-start{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:12px;z-index:2;background:#fff6dfa8;border:1px solid #bc9f6d;border-radius:13px;padding:9px 12px;color:#392d1f;font-weight:800}
+.bots-hud{z-index:2;position:relative;padding:8px 11px;min-height:61px;gap:10px}
+.bots-hud strong{font-size:clamp(18px,5.2vw,24px)}
+.bots-hud small{font-size:9px}
+.bots-hud span{font-size:11px}
+.bots-exit{display:grid;place-items:center;flex:0 0 37px;width:37px;min-height:43px;border:none;border-radius:11px;background:#604a38;color:#fff4df;font-size:26px;font-weight:650}
+.bots-reset{padding:7px 10px;min-height:39px;font-size:13px}
+.bots-scene{height:100%;min-height:0;max-height:none;position:relative;overflow:hidden;z-index:2}
+.bots-scene:has(.bots-shade){z-index:80}
+.bots-wood{
+ height:100%;width:100%;overflow:hidden;isolation:isolate;
+ background:
+ radial-gradient(ellipse at 50% 10%,#d1af7f66,transparent 65%),
+ linear-gradient(180deg,#35261d 0%,#5e4330 28%,#755332 37%,#51351e 100%);
+}
+.bots-wood::before{
+ left:3.5%;right:3.5%;top:33%;bottom:0;
+ clip-path:none;border:8px solid #744821;border-bottom-width:13px;
+ border-radius:48% 48% 9% 9% / 10% 10% 5% 5%;
+ background:
+  repeating-linear-gradient(0deg,#633c1912 0 2px,#f3d6a815 4px 9px,#4d280a16 11px 16px),
+  radial-gradient(ellipse at 50% 2%,#fff3c5a6,transparent 63%),
+  linear-gradient(180deg,#d9b17e 0%,#e8c18d 24%,#c9935d 73%,#aa7745 100%);
+ box-shadow:
+  0 8px 0 #452411,0 12px 13px #1d100b9c,
+  inset 0 10px 12px #60330d47,
+  inset 8px 0 9px #3b1f1357,
+  inset -8px 0 9px #3b1f1357;
+ transform:perspective(850px) rotateX(4deg);transform-origin:top center;
+}
+.bots-wood::after{
+ left:4%;right:4%;top:31.5%;height:22px;
+ border-radius:50%;
+ background:linear-gradient(180deg,#58351b 0%,#e8bc82 35%,#bd8a52 66%,#6d4220 100%);
+ box-shadow:0 5px 7px #29140870,0 -2px 5px #fff0c154;
+}
+.bots-plank-lines{
+ left:6%;top:37%;width:88%;height:60%;opacity:.42;
+ mix-blend-mode:multiply;clip-path:polygon(11% 0,89% 0,100% 100%,0 100%);
+}
+.bots-reference-scene{max-height:44%;object-fit:cover;object-position:top}
+.bots-player{width:clamp(118px,35%,230px);max-width:none;z-index:5}
+.bots-player img{
+ height:clamp(115px,25dvh,225px);max-height:none;
+ object-fit:contain;object-position:center bottom;
+ filter:drop-shadow(0 8px 6px #1f120d5c);
+}
+.bots-player-top{top:0;left:50%;transform:translateX(-50%)}
+.bots-player-left{top:3%;left:0}
+.bots-player-right{top:3%;right:0}
+.bots-player-label{
+ display:flex;flex-direction:column;gap:0;
+ min-width:0;max-width:98%;
+ padding:3px 7px;margin-top:-10px;
+ border-radius:10px;line-height:1.16;
+ box-shadow:0 2px 5px #20140869;
+ background:#fff0c7ef;
+}
+.bots-player-label b{font-size:12px}
+.bots-player-label small{
+ display:block;font-size:9px;max-width:140px;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ color:#68452c;
+}
+.bots-player-top .bots-player-label{transform:translateY(-6px)}
+.bots-bubble{max-width:133px;font-size:11px}
+.bots-playing-area{
+ inset:45% 8% 4%;z-index:8;overflow:visible;
+}
+.bots-played{width:clamp(64px,19vw,112px);max-width:25%}
+.bots-played-top{top:0}
+.bots-played-left{top:29%;left:0}
+.bots-played-right{top:29%;right:0}
+.bots-played-bottom{bottom:0}
+.bots-wood-center{top:49%;max-width:37%;min-width:86px;font-size:11px;padding:5px}
+.bots-hand{
+ flex:none;z-index:3;min-height:0;
+ max-height:clamp(140px,24dvh,215px);
+ padding:6px 8px 10px;
+ overflow:hidden;
+ background:linear-gradient(180deg,#f9edcc,#ebd4a8);
+}
+.bots-hand-heading{margin:0 6px 8px}
+.bots-hand-heading b{font-size:13px}
+.bots-hand-heading span{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:63%}
+.bots-hand-row{
+ display:flex;align-items:flex-end;justify-content:center;
+ gap:0;min-height:0;max-height:clamp(108px,18dvh,170px);
+ overflow:visible;width:100%;max-width:none;
+ padding:3px 4px 5px;
+}
+.bots-card-button{
+ width:clamp(57px,22vw,114px);max-width:none;min-width:0;
+ flex:0 0 clamp(57px,22vw,114px);
+ transition:transform .12s ease-out;
+}
+.bots-card-button+.bots-card-button{margin-left:calc(-1 * clamp(27px,10.5vw,53px))}
+.bots-card-button .bots-face{width:100%;box-shadow:0 4px 7px #3c251568}
+.bots-card-button.playable{transform:translateY(-6px)}
+.bots-card-button.playable:active{transform:translateY(-13px)}
+.bots-play-prompt{font-size:10px;margin:0}
+.bots-tally{min-height:27px;display:flex;align-items:center;justify-content:center;padding:5px 8px;font-size:10px}
+.bots-shade{
+ position:fixed;inset:0;z-index:90;
+ display:flex;align-items:center;justify-content:center;
+ padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
+ background:#100c09de;
+}
+.bots-pick-panel{
+ width:min(100%,525px);max-height:100%;overflow:auto;
+ border-radius:18px;overscroll-behavior:contain;
+}
+.bots-pick-panel header strong{font-size:clamp(20px,5vw,26px)}
+.bots-choice-row{grid-template-columns:80px minmax(0,1fr);gap:6px;padding:8px 0}
+.bots-choice-name{font-size:16px}
+.bots-game-card{width:clamp(44px,13vw,70px)}
+.bots-mid-action{top:64%;max-width:min(370px,92%)}
+@media(max-width:385px){
+ .bots-player{width:35%;min-width:0}
+ .bots-player img{height:clamp(114px,23dvh,172px);max-height:none}
+ .bots-player-left,.bots-player-right{top:5%}
+ .bots-player-label{padding:2px 5px;margin-top:-8px}
+ .bots-player-label b{font-size:11px}
+ .bots-player-label small{max-width:101px;font-size:8px}
+ .bots-bubble{max-width:110px;font-size:10px}
+ .bots-playing-area{inset:46% 6% 4%}
+ .bots-played{width:clamp(57px,18vw,80px)}
+ .bots-hand-row{max-height:clamp(100px,17dvh,148px)}
+ .bots-card-button{width:22vw;flex-basis:22vw}
+ .bots-card-button+.bots-card-button{margin-left:-10.5vw}
+ .bots-choice-row{grid-template-columns:70px minmax(0,1fr)}
+}
+@media(max-height:640px){
+ .bots-hud{min-height:54px}
+ .bots-hud small{display:none}
+ .bots-hud strong{font-size:18px}
+ .bots-player img{height:clamp(96px,20dvh,137px)}
+ .bots-playing-area{inset:40% 7% 3%}
+ .bots-hand{max-height:147px}
+ .bots-hand-row{max-height:111px}
+ .bots-pick-panel{padding:8px}
+ .bots-choice-row{padding:4px 0}
+ .bots-game-card{width:42px}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-hud{min-height:46px;padding:4px 9px}
+ .bots-hand{max-height:102px;padding:2px 8px 3px}
+ .bots-hand-heading{margin:0}
+ .bots-hand-row{max-height:78px}
+ .bots-card-button{width:54px;flex-basis:54px}
+ .bots-card-button+.bots-card-button{margin-left:-13px}
+ .bots-player img{height:90px}
+ .bots-player-label{padding:1px 5px}
+ .bots-playing-area{inset:47% 13% 2%}
+ .bots-played{width:52px}
+}
+
+
+/* 6.4: stabile Vollbild-Zeilen, Sepp-Sprechblase und klare Kartenkonturen.
+ * Die Höhe der Tischfläche hängt NICHT von der Zahl der Handkarten ab. */
+.bots-page{
+ --bots-hud-height:clamp(63px,10dvh,84px);
+ --bots-hand-height:clamp(148px,25dvh,218px);
+ --bots-tally-height:30px;
+ grid-template-rows:var(--bots-hud-height) minmax(0,1fr) var(--bots-hand-height) var(--bots-tally-height);
+}
+.bots-hud{height:100%;min-height:0}
+.bots-scene{height:100%;min-height:0;max-height:none;align-self:stretch}
+.bots-hand{
+ display:grid;
+ grid-template-rows:22px minmax(0,1fr) 18px;
+ align-items:stretch;
+ height:100%;min-height:0;max-height:none;
+ overflow:hidden;
+ padding:7px 8px 8px;
+}
+.bots-hand-heading{height:22px;min-height:0;margin:0 6px}
+.bots-hand-row{
+ height:100%;min-height:0;max-height:none;
+ padding:3px 4px 4px;
+ align-items:flex-end;
+}
+.bots-card-button{
+ display:flex;align-items:flex-end;justify-content:center;
+ min-height:0;max-height:100%;
+ background:transparent;box-shadow:none;
+ border:0;border-radius:0;overflow:visible;
+}
+.bots-card-button .bots-face{
+ display:block;width:100%;height:auto;max-height:100%;
+ object-fit:contain;object-position:bottom center;
+ background:#fff;border:0;border-radius:2px;
+ box-shadow:none;filter:none;
+}
+.bots-card-button.locked,.bots-card-button.playable{filter:none}
+.bots-card-button.playable:focus-visible{outline:3px solid #1b6f4a;outline-offset:2px}
+.bots-play-prompt{height:18px;min-height:0;margin:0;display:flex;justify-content:center;align-items:center}
+.bots-tally{height:100%;min-height:0;max-height:none}
+/* Kopf-Figur: Sprechblase nicht mehr aus dem oberen Bühnenrand ragen lassen. */
+.bots-player-top .bots-bubble{
+ bottom:auto;top:20%;left:83%;right:auto;
+ transform:none;max-width:124px;
+ white-space:normal;z-index:20;
+}
+.bots-player-top .bots-bubble:after{left:18%}
+/* Fehlermeldungen nicht als zusätzliche Grid-Zeile einsetzen. */
+.bots-error{
+ position:absolute;z-index:125;top:var(--bots-hud-height);
+ left:8px;right:8px;
+ box-shadow:0 5px 12px #0005;
+}
+@media(max-height:640px){
+ .bots-page{
+  --bots-hud-height:clamp(48px,9dvh,60px);
+  --bots-hand-height:clamp(112px,22dvh,150px);
+  --bots-tally-height:25px;
+ }
+ .bots-hud{height:100%;min-height:0}
+ .bots-hand{height:100%;min-height:0;max-height:none}
+ .bots-hand-row{height:100%;min-height:0;max-height:none}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-page{--bots-hud-height:47px;--bots-hand-height:99px;--bots-tally-height:22px}
+ .bots-hud{height:100%;min-height:0}
+ .bots-hand{height:100%;min-height:0;max-height:none}
+ .bots-hand-row{height:100%;min-height:0;max-height:none}
+ .bots-player-top .bots-bubble{top:0;left:85%;max-width:100px}
+}
+
+
+/* Stammtisch 6.5: blickdichte Karten und vollständig sichtbare Ansageblasen. */
+/* "locked" bedeutet nur: nicht anklickbar. Es darf die Karte nicht durchsichtig machen. */
+.bots-hand .bots-card-button,
+.bots-hand .bots-card-button.locked,
+.bots-hand .bots-card-button.playable {
+ opacity:1;
+ filter:none;
+ isolation:isolate;
+}
+.bots-hand .bots-card-button .bots-face{
+ opacity:1;
+ background-color:#fff;
+ mix-blend-mode:normal;
+ box-shadow:none;
+ filter:none;
+}
+/* Acht Karten müssen inklusive aller Ränder auf das Display passen.
+ * Breite gesamt = 8 x Kartenbreite - 7 x Überlappung.
+ * Bei Smartphonebreite 320px: 8 x 68.8px - 7 x 36.8px = 292.8px.
+ * Die bereits sichtbaren Karten bleiben groß; nur die Überlappung wird erhöht. */
+.bots-hand-row{
+ width:100%;
+ max-width:100%;
+ min-width:0;
+ box-sizing:border-box;
+ padding-left:8px;
+ padding-right:8px;
+ overflow:hidden;
+}
+.bots-hand-row .bots-card-button{
+ width:clamp(58px,21.5vw,112px);
+ flex:0 0 clamp(58px,21.5vw,112px);
+ min-width:0;
+}
+.bots-hand-row .bots-card-button+.bots-card-button{
+ margin-left:calc(-1 * clamp(34px,11.5vw,60px));
+}
+.bots-hand-row .bots-card-button:last-child{
+ margin-right:0;
+}
+/* Sprechblasen für lange Spielansagen: vollständig im sichtbaren Tischbereich,
+ * auch bei Seitenspielern und beim zentralen Spieler Sepp. */
+.bots-player .bots-bubble{
+ box-sizing:border-box;
+ width:max-content;
+ min-width:0;
+ max-width:min(168px,45vw);
+ padding:8px 10px;
+ font-size:clamp(10px,2.9vw,13px);
+ line-height:1.22;
+ overflow-wrap:break-word;
+ word-break:normal;
+ white-space:normal;
+ hyphens:auto;
+ z-index:30;
+}
+.bots-player-left .bots-bubble{
+ bottom:auto;
+ top:1%;
+ left:6px;
+ right:auto;
+ transform:none;
+}
+.bots-player-top .bots-bubble{
+ bottom:auto;
+ top:2%;
+ left:50%;
+ right:auto;
+ transform:translateX(-50%);
+}
+.bots-player-right .bots-bubble{
+ bottom:auto;
+ top:1%;
+ right:6px;
+ left:auto;
+ transform:none;
+}
+.bots-player-left .bots-bubble:after{left:26%;right:auto}
+.bots-player-right .bots-bubble:after{left:auto;right:26%}
+.bots-player-top .bots-bubble:after{left:50%;right:auto}
+@media(max-width:385px){
+ .bots-player .bots-bubble{
+  max-width:min(145px,44vw);
+  padding:6px 8px;
+  font-size:10px;
+ }
+ .bots-player-left .bots-bubble{left:1px}
+ .bots-player-right .bots-bubble{right:1px}
+}
+/* Querformat erhält die eigene kürzere Kartenhand aus Version 6.3,
+ * statt durch die Hochformatregel unnötig breit zu werden. */
+@media(orientation:landscape) and (max-height:490px){
+ .bots-hand-row .bots-card-button{width:54px;flex-basis:54px}
+ .bots-hand-row .bots-card-button+.bots-card-button{margin-left:-13px}
+}
+
+
+/* Stammtisch 6.8: alle Handkarten gleich groß; spielbare Karten
+   mit grüner Umrandung statt grünem Punkt. Das Kartenfächern bleibt
+   erhalten, damit die Symbole auch auf schmalen Displays lesbar sind. */
+.bots-hand-row .bots-card-button{
+ align-self:flex-end;
+ box-sizing:border-box;
+ aspect-ratio:0.69;
+ max-height:100%;
+}
+.bots-hand-row .bots-card-button .bots-face{
+ display:block;
+ box-sizing:border-box;
+ width:100%;
+ height:100%;
+ max-height:100%;
+ aspect-ratio:0.69;
+ object-fit:fill;
+ object-position:center;
+ border:0;
+ border-radius:3px;
+ background:#fff;
+}
+/* Weder ein Statuspunkt noch das Anheben der Karten soll die
+   Nachbarkarte überdecken oder die Größe verändern. */
+.bots-hand-row .bots-card-button.playable,
+.bots-hand-row .bots-card-button.playable:hover,
+.bots-hand-row .bots-card-button.playable:active,
+.bots-hand-row .bots-card-button.playable:focus,
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ transform:none;
+ z-index:auto;
+ filter:none;
+}
+.bots-hand-row .bots-card-button::before,
+.bots-hand-row .bots-card-button::after{
+ content:none;
+ display:none;
+}
+.bots-hand-row .bots-card-button.playable::after{
+ content:"";
+ display:block;
+ position:absolute;
+ inset:0;
+ box-sizing:border-box;
+ border:3px solid #258748;
+ border-radius:3px;
+ pointer-events:none;
+}
+/* Tastaturfokus bleibt auch ohne den bisherigen Punkt erkennbar. */
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ outline:3px solid #f0bd3c;
+ outline-offset:2px;
+}
+
+/* Stammtisch 6.9 – Spieler sitzen HINTER der Tischkante, die
+   Namensschilder liegen als eigene Ebene auf dem Tisch. Die Stich-
+   Zwischenanzeige wird vollständig entfernt. */
+.bots-wood::before{
+ top:37%;
+ bottom:-2%;
+ z-index:6;
+}
+.bots-wood::after{
+ top:35.7%;
+ z-index:7;
+}
+.bots-plank-lines{
+ top:39%;
+ height:59%;
+ z-index:7;
+}
+.bots-player{z-index:5}
+.bots-playing-area{z-index:8;inset:47% 8% 4%}
+.bots-wood-center{display:none!important}
+.bots-seat-label{
+ position:absolute;z-index:11;
+ display:flex;justify-content:center;
+ width:max-content;max-width:31%;
+ transform:translate(-50%,-50%);
+ pointer-events:none;
+}
+.bots-seat-label-left{left:19%;top:43%}
+.bots-seat-label-top{left:50%;top:38.5%}
+.bots-seat-label-right{left:81%;top:43%}
+.bots-seat-label .bots-player-label{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ width:max-content;max-width:100%;min-width:0;
+ padding:4px 9px;margin:0;
+ background:#fff0c7f5;
+ border:1px solid #b69b68;
+ border-radius:10px;
+ box-shadow:0 3px 7px #2014086b;
+ transform:none;
+ white-space:nowrap;
+}
+.bots-seat-label .bots-player-label b{font-size:12px}
+.bots-seat-label .bots-player-label small{
+ font-size:9px;
+ max-width:min(130px,27vw);
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.bots-seat-label-active .bots-player-label{
+ outline:2px solid #518a43;
+ outline-offset:1px;
+}
+/* Die Hand besteht aus acht gleich großen, einzeln sichtbaren Karten.
+   Dadurch verschwindet die bislang durchgehende weiße Fläche, die
+   durch die breite Überlappung der Kartenrückgründe entstand. */
+.bots-hand-row{
+ display:grid;
+ grid-template-columns:repeat(8,minmax(0,1fr));
+ gap:clamp(2px,.7vw,6px);
+ justify-content:center;
+ align-items:end;
+ max-width:680px;
+ width:100%;
+ box-sizing:border-box;
+ padding:3px 4px 4px;
+ margin:0 auto;
+ overflow:visible;
+ background:transparent;
+}
+.bots-hand-row .bots-card-button,
+.bots-hand-row .bots-card-button+.bots-card-button{
+ box-sizing:border-box;
+ display:block;
+ width:100%;
+ min-width:0;
+ max-width:none;
+ height:auto;
+ aspect-ratio:0.69;
+ flex:none;
+ margin:0;
+ align-self:end;
+ justify-self:stretch;
+ position:relative;
+ overflow:hidden;
+ border:0;
+ border-radius:4px;
+ padding:0;
+ background:transparent;
+ box-shadow:0 2px 4px #36271949;
+ transform:none;
+}
+.bots-hand-row .bots-card-button .bots-face{
+ display:block;
+ box-sizing:border-box;
+ width:100%;
+ height:100%;
+ max-height:none;
+ aspect-ratio:0.69;
+ object-fit:cover;
+ object-position:center;
+ transform:scale(1.035);
+ border:0;
+ outline:0;
+ border-radius:2px;
+ background:transparent;
+ box-shadow:none;
+ filter:none;
+}
+/* Klare, kompakte Umrandung, ohne Punkt oder weiße Außenkante. */
+.bots-hand-row .bots-card-button::before,
+.bots-hand-row .bots-card-button::after{
+ content:none;display:none;
+}
+.bots-hand-row .bots-card-button.playable::after{
+ content:"";
+ display:block;
+ position:absolute;
+ inset:0;
+ z-index:2;
+ border:2px solid #258748;
+ border-radius:4px;
+ box-sizing:border-box;
+ pointer-events:none;
+}
+.bots-hand-row .bots-card-button.playable,
+.bots-hand-row .bots-card-button.playable:hover,
+.bots-hand-row .bots-card-button.playable:active,
+.bots-hand-row .bots-card-button.playable:focus,
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ transform:none;
+ z-index:auto;
+ filter:none;
+}
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ outline:3px solid #e5b84b;
+ outline-offset:2px;
+}
+@media(max-width:385px){
+ .bots-seat-label-left{left:18%;top:43.5%}
+ .bots-seat-label-right{left:82%;top:43.5%}
+ .bots-seat-label .bots-player-label{padding:3px 5px}
+ .bots-seat-label .bots-player-label b{font-size:11px}
+ .bots-seat-label .bots-player-label small{font-size:8px;max-width:89px}
+}
+@media(max-height:640px){
+ .bots-wood::before{top:41%}
+ .bots-wood::after{top:39.6%}
+ .bots-plank-lines{top:43%;height:56%}
+ .bots-seat-label-left,.bots-seat-label-right{top:46%}
+ .bots-seat-label-top{top:42%}
+ .bots-playing-area{inset:49% 8% 3%}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-wood::before{top:46%}
+ .bots-wood::after{top:44.4%}
+ .bots-plank-lines{top:48%;height:51%}
+ .bots-seat-label-left,.bots-seat-label-right{top:50%}
+ .bots-seat-label-top{top:46%}
+ .bots-playing-area{inset:54% 13% 2%}
+}

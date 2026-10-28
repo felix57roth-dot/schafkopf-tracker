@@ -1,0 +1,50 @@
+
+name: Alten Schafkopf-Tracker aktualisieren
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-old-repo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Neue App laden
+        uses: actions/checkout@v4
+        with:
+          path: new
+          persist-credentials: false
+
+      - name: Altes Repository laden
+        uses: actions/checkout@v4
+        with:
+          repository: felix57roth-dot/schafkopf-tracker
+          ref: main
+          token: ${{ secrets.OLD_REPO_TOKEN }}
+          path: old
+
+      - name: App-Dateien synchronisieren
+        run: |
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            new/ old/
+
+          cd old
+
+          git config user.name "Schafkopf-Sync"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "Beide Versionen sind bereits identisch."
+          else
+            git commit -m "Automatisches Schafkopf-Update"
+            git push origin main
+          fi

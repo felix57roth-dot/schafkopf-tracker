@@ -1,4 +1,59 @@
-Schafkopftracker – Version 4.4
+SCHAFKOPFTRACKER 5.0 – Gegen Bots spielen (erste spielbare Offline-Version)
+
+NEU
+- Eigenständiger Menüpunkt „Spielen“ und Schnellstart auf der Startseite.
+- Du spielst mit acht Originalkarten gegen drei lokale Bots.
+- Sitzplatz wählen, neue Karten austeilen, vereinfachte Ansage (Rufspiel,
+  Wenz, Farbsolo), alle acht Stiche durchspielen.
+- Schafkopfregeln und Bedienpflicht werden vom eigenen Wastl-Regelkern geprüft.
+- Jeder Bot erhält für seinen Zug nur seine eigene Hand und die öffentlich
+  bekannten Karten. Keine versteckten Hände als Entscheidungshilfe.
+- Abgeschlossene Runden werden automatisch als „Bot-Partie“ im Wastl-Archiv
+  gespeichert und verändern niemals die Finanzstatistik.
+- Anschließend direkt „Mit Wastl analysieren“: 350 Verteilungen pro Stich
+  starten ohne zusätzliche Auswahl.
+- Aktuelle Spielrunde wird lokal gespeichert und nach dem Öffnen der App fortgesetzt.
+- Nach Spielende dieselben Anfangskarten erneut spielen oder neue mischen.
+
+GRENZEN UND HINWEISE
+- Die Ansage ist in Version 5.0 als einfaches Bietverfahren mit
+  Rangfolge Rufspiel < Wenz < Farbsolo umgesetzt. Noch keine vollständige
+  Palast-/Turnier-Reizmechanik oder Hausregel-Auswahl.
+- Die drei Bots nutzen die eigene Wastl-Heuristik. Sie haben keine garantierte
+  Spielstärke oder optimalen Strategien. Auch die spätere 1–10-Bewertung ist
+  ein experimenteller Modellindex, keine validierte Expertennote.
+- Spielarchiv, Karten, Bilder und Berechnung bleiben offline. Es werden weder
+  externe KI-Dienste noch fremde Schafkopf-Engines benötigt.
+- VOR dem Update im Profil unter Datensicherung ein Backup exportieren.
+- Das kleine Update in die HAUPTEBENE des GitHub-Repositories laden.
+  Den cards-Ordner NICHT erneut hochladen.
+- Bestehende Stichdaten/Tracker-Einträge bleiben unverändert.
+
+DATEIEN DIESES UPDATES: index.html, sw.js, README.txt,
+  wastl-bots.js, wastl-bots-ui.js, wastl-bots.css.
+
+--- HISTORISCHE VERSIONEN ---
+
+Schafkopftracker 4.9.1 – Importstabilität, Originalbild, Wastls Mentorensprache
+
+- Sicherer Bildimport: Jeder Upload hat einen getrennten Zustand. Langsam eintreffende Dateien können neuere Auswahlen nicht überschreiben.
+- Fehlermeldungen und „Erkennung erneut starten“ direkt im Import; kein erneutes Hochladen notwendig, wenn lediglich die Kartenerkennung scheitert.
+- Bei unklarer Sitzposition wird der Spielerbereich des Originalbilds angezeigt. Über „Originalbild ansehen“ lässt sich jederzeit der ganze Spielbericht ansehen.
+- Wastl spricht im Tischdialog in kurzen, zugbezogenen Mentoren-Sätzen ohne Prozentwerte. Zahlen und Unsicherheiten bleiben über ⓘ verfügbar.
+- Geprüfte Spielart, gespeicherte Partien, bestehende Daten und Offline-Kartensatz bleiben erhalten. Keine weiteren Abhängigkeiten.
+
+KLEINES UPDATE: Alle enthaltenen Dateien ins Repository-Hauptverzeichnis kopieren und bestehende ersetzen. cards-Ordner nicht ändern.
+Vorher unter Einstellungen → Datensicherung die Daten exportieren.
+Schafkopftracker Version 4.9 – Klassische Spielarten, nachvollziehbarer Entscheidungsindex
+- Spielart-Erkennung: Rufspiel Eichel/Gras/Schellen; Farbsolo Eichel/Gras/Herz/Schellen; Wenz.
+- Vollstaendig simulierte Partien erhalten einen vorläufigen 1–10-Modellindex, ohne globales Benchmark-Gate.
+- Auch bei wenigen bewertbaren Zuegen wird der neutrale Wert 5 klar als nicht interpretierbar gekennzeichnet.
+- Konkrete Zugkommentare mit Kartenalternativen, Modell-Siegquoten, Augen und Unsicherheit.
+- Wastls Abschlussansicht zeigt Lernpunkte.
+- Alle Daten bleiben lokal; keine Schueler- oder Nutzerdaten werden versendet.
+- 1–10 ist kein Expertenurteil und muss weiter kalibriert werden.
+
+Schafkopftracker – Version 4.8
 Wastl Engine: reproduzierbares Offline-Prueflabor und Bewertungsschutz
 
 WAS IST NEU?
@@ -81,3 +136,38 @@ PRUEFUNG
 Version 4.6: Zusaetzlicher lokaler A/B-Test der Monte-Carlo-Empfehlung gegen die vorherige Heuristik. Die Testhaende sind der Empfehlung unbekannt. Nur interne Modellguete, keine validierte 1-10-Spielstaerke.
 
 Referenzbilder fuer die Palast-Bilderkennung: Bitte fuer jede der 32 ORIGINAL-Palastkarten die obere Ecke mit Wert und Farbzeichen gut lesbar aufnehmen. Zwei getrennte Referenzsaetze fuer Hand- und Stichansicht waeren noch besser. Ein Referenzbilder-Datensatz wurde in 4.6 NICHT behauptet oder beigelegt: ohne verifizierte Vorlagen darf die Erkennung keine 100%-Sicherheit vortaeuschen.
+
+Version 4.7: Referenz-Eckenerkennung (32 nutzerseitig erstellte Eckenausschnitte als verkleinerte Merkmale). Vor dem Speichern weiterhin Spielart/Sitzposition/Hand und Karten kontrollieren. Original-Vorlagenbilder werden nicht mitveröffentlicht.
+
+Version 4.8 – Ein-Klick-Analyse (aktualisierte Fassung 4.8.1):
+1. Unter Wastl »Schafkopf-Palast-Partie importieren« wählen.
+2. Palast-Gesamtbild auswählen (Bildaufteilung ca. 600 × 1350).
+3. Auf »Spiel analysieren« tippen: automatische Sicherung der Partie,
+   anschließend 350 Verteilungen JE STICH ohne erneute Nachfrage.
+4. Originale vier Anfangshände und acht Stiche werden separat erkannt
+   und auf identische Kartenverteilung pro Spieler abgeglichen.
+5. Palast-Grünmarkierung erkennt den eigenen Platz nur, wenn eindeutig.
+6. Spielart-Textabgleich ist NUR für vorliegende Palast-Schriftvarianten
+   Rufspiel Eichel, Rufspiel Gras und Rufspiel Schellen vorbereitet.
+   Nicht erkannte Spielarten werden NICHT pauschal als Rufspiel gespeichert;
+   stattdessen verlangt die App eine kurze Korrektur.
+7. Ansager aus Palast-Ansagezeilen wird bei eindeutigem Treffer zugeordnet.
+8. Kartenfehler, fehlende eindeutige Informationen oder ungültige Regeln
+   stoppen die automatische Analyse und lassen einen Detailcheck öffnen.
+9. Datumsangabe ohne Texterkennung: es wird zunächst Importdatum gesetzt;
+   das tatsächliche Spieldatum kann in Details korrigiert werden.
+10. Screenshot wird nur im Arbeitsspeicher verarbeitet, NICHT mit
+    der Partie gespeichert oder an externe Server gesendet.
+11. Externe Cloud-OCR wird nicht verwendet; weitere Foto-Layouts,
+    Solo, Ramsch etc. brauchen neue geprüfte Textmuster oder einen
+    separaten lokalen Texterkenner.
+12. Spielnoten bleiben experimentell/ggf. gesperrt, keine objektiv
+    validierte 1-10-Bewertung; Wastl verwendet seine bisherigen MC-Modelle.
+
+DATEIEN IN DIESEM UPDATE (OHNE cards-ORDNER):
+- index.html, sw.js, palast-import.js, training-manager.js,
+  wastl-montecarlo-ui.js, palast-game-labels.js, palast-oneclick.js,
+  palast-oneclick.css, README.txt.
+
+Die bestehenden Archiv-Schlüssel bleiben unverändert. Vor dem Update
+in Einstellungen einen Backup-Export durchführen.

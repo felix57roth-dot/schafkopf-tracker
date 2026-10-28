@@ -11,7 +11,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const VERSION = '4.0.0';
+  const VERSION = '4.5.0';
   const SUITS = Object.freeze(['eichel', 'gras', 'herz', 'schell']);
   const RANKS = Object.freeze(['A', '10', 'K', 'O', 'U', '9', '8', '7']);
   const EYES = Object.freeze({ A: 11, '10': 10, K: 4, O: 3, U: 2, '9': 0, '8': 0, '7': 0 });
@@ -33,7 +33,7 @@
   }
   function config(game) {
     const type = game?.type;
-    if (!STANDARD.has(type)) return { supported: false, reason: `Spielart „${String(type ?? 'unbekannt')}“ ist in Engine 4.0 noch nicht verifiziert.` };
+    if (!STANDARD.has(type)) return { supported: false, reason: `Spielart „${String(type ?? 'unbekannt')}“ wird vom Regelkern noch nicht verifiziert.` };
     if (COLORS.has(type) && !SUITS.includes(game.trumpSuit)) return { supported: false, reason: 'Für diese Spielart fehlt eine gültige Trumpffarbe.' };
     if (type === 'rufspiel' && !['eichel', 'gras', 'schell'].includes(game.calledSuit)) return { supported: false, reason: 'Für Rufspiel fehlt eine gültige gerufene Farbe.' };
     return { supported: true, reason: '' };
@@ -78,13 +78,33 @@
     const rankOrder = RANKS;
     return rankOrder.indexOf(x.rank) - rankOrder.indexOf(y.rank);
   }
-  function legalMoves(hand, lead, game) {
+  function legalMoves(hand, lead, game, context={}) {
     if (!Array.isArray(hand) || hand.some(c => !parse(c))) throw new TypeError('Hand enthält ungültige Karten');
-    if (lead == null) return [...hand];
-    if (!parse(lead)) throw new TypeError('Ungültige Anspielkarte');
-    const suit = colorClass(lead, game);
-    const following = hand.filter(c => colorClass(c, game) === suit);
-    return following.length ? following : [...hand];
+    if (lead!=null && !parse(lead)) throw new TypeError('Ungültige Anspielkarte');
+    const suit=lead==null?null:colorClass(lead,game);
+    const following=suit==null?[]:hand.filter(c=>colorClass(c,game)===suit);
+    let legal=suit==null?[...hand]:(following.length?following:[...hand]);
+    // Ruf-Sau-Sonderregel: nicht ohne Anlass schmieren oder verstecken.
+    // Davonlaufen: Besitzer spielt mit mindestens vier Ruffarbenkarten
+    // eine kleine Ruffarbe an. Nachher ist die Ruf-Sau freigegeben.
+    if(game.type==='rufspiel'){
+      const ace=game.calledSuit+'-A';
+      if(hand.includes(ace)){
+        const history=Array.isArray(context?.past)?context.past:[];
+        const released=history.some(t=>colorClass(t.cards?.[0],game)===game.calledSuit&&!t.cards?.includes(ace));
+        const lastTrick=context?.trickIndex===7||history.length>=7;
+        if(!released&&!lastTrick){
+          if(lead!=null&&suit===game.calledSuit)return [ace];
+          if(lead==null){
+            const count=hand.filter(c=>colorClass(c,game)===game.calledSuit).length;
+            if(count<4)legal=legal.filter(c=>c===ace||colorClass(c,game)!==game.calledSuit);
+          }else if(suit!==game.calledSuit){
+            legal=legal.filter(c=>c!==ace);
+          }
+        }
+      }
+    }
+    return legal;
   }
   function winnerIndex(cards, game) {
     if (!Array.isArray(cards) || cards.length !== 4 || cards.some(c => !parse(c))) return -1;
@@ -135,8 +155,35 @@
     }
     return null;
   }
+  // Schafkopf-Palast-Ramsch: meisten Augen verliert; Gleichstand nach Stichzahl,
+  // dann Trumpfanzahl und Trumpfstaerke. Durchmarsch: alle acht Stiche gewinnen.
+  // Finanzielle Jungfrau-/Durchmarsch-Tarife bleiben abhaengig von Hausregeln.
+  function ramschOutcome(tricks) {
+    if (!Array.isArray(tricks) || tricks.length !== 8) return {status:'unknown',reason:'Ramsch braucht acht vollständige Stiche.'};
+    const rows=Object.fromEntries(SEATS.map(s=>[s,{seat:s,eyes:0,won:0,trumps:[],highestTrump:999}]));
+    for(const t of tricks){
+      if(!SEATS.includes(t.winnerSeat)||!Array.isArray(t.cards)||t.cards.length!==4)return {status:'unknown',reason:'Ungültiger Ramschstich.'};
+      const r=rows[t.winnerSeat];r.eyes+=trickEyes(t.cards);r.won++;
+      for(const card of t.cards)if(isTrump(card,{type:'ramsch'})){
+        const strength=trumpOrder({type:'ramsch'}).indexOf(card);
+        r.trumps.push(card);r.highestTrump=Math.min(r.highestTrump,strength);
+      }
+    }
+    if(Object.values(rows).reduce((n,x)=>n+x.eyes,0)!==120)return {status:'unknown',reason:'Die Augen ergeben nicht 120.'};
+    const people=Object.values(rows),virgins=people.filter(x=>x.won===0).map(x=>x.seat);
+    const runner=people.find(x=>x.won===8);
+    if(runner)return {status:'known',winner:'durchmarsch',winnerSeat:runner.seat,loserSeat:null,people,virgins,
+      reason:`Durchmarsch: ${runner.seat.toUpperCase()} hat alle acht Stiche mit ${runner.eyes} Augen gewonnen.`};
+    const order=[...people].sort((a,b)=>b.eyes-a.eyes||b.won-a.won||b.trumps.length-a.trumps.length||a.highestTrump-b.highestTrump);
+    const top=order[0],next=order[1];
+    const tied=next&&top.eyes===next.eyes&&top.won===next.won&&top.trumps.length===next.trumps.length&&top.highestTrump===next.highestTrump;
+    if(tied)return {status:'unknown',winner:'tie',loserSeat:null,people,virgins,
+      reason:'Punkt- und Trumpfgleichstand: keine eindeutige Entscheidung ohne zusätzliche Hausregel.'};
+    return {status:'known',winner:'ramsch',loserSeat:top.seat,people,virgins,
+      reason:`Ramsch: ${top.seat.toUpperCase()} verliert mit ${top.eyes} Augen.${virgins.length?' Jungfrauen: '+virgins.length+'.':''}`};
+  }
   function outcome(game, teams, tricks) {
-    if (game.type === 'ramsch') return { status: 'not-supported', reason: 'Ramsch und Jungfrauen werden derzeit nur auf Stichregeln, nicht auf Hausregel-Ergebnisse geprüft.' };
+    if (game.type === 'ramsch') return ramschOutcome(tricks);
     if (!teams) return { status: 'unknown', reason: 'Ansager beziehungsweise Partner konnten nicht zweifelsfrei bestimmt werden.' };
     if (game.type === 'bettel') {
       const took = tricks.some(t => t.winnerSeat === game.declarerSeat);
@@ -147,7 +194,8 @@
       return { status: 'known', winner: all ? 'declarer' : 'opponents', reason: all ? 'Tout gewonnen: Ansager hat alle acht Stiche.' : 'Tout verloren: Mindestens ein Stich ging an die Gegenpartei.' };
     }
     const score = tricks.reduce((sum, t) => sum + (teams.team.includes(t.winnerSeat) ? t.eyes : 0), 0);
-    return { status: 'known', winner: score >= 61 ? 'declarer' : 'opponents', reason: score >= 61 ? `Ansagerpartei gewinnt mit ${score} Augen.` : `Gegenpartei gewinnt mit ${120 - score} Augen (${score} Augen für die Ansagerpartei).` };
+    const label=game.type==='kreuzrunde'?'Kreuzteam (VH/HH)':'Ansagerpartei';
+    return { status: 'known', winner: score >= 61 ? 'declarer' : 'opponents', reason: score >= 61 ? `${label} gewinnt mit ${score} Augen.` : `Gegenpartei gewinnt mit ${120 - score} Augen (${score} Augen für ${label}).` };
   }
   function review(game) {
     const errors = [], warnings = [];
@@ -184,7 +232,7 @@
           const seat = nextSeat(t.leaderSeat, j);
           const available = hands[seat].filter(c => !seen[seat].has(c));
           const follow = j===0 ? null : t.cards[0];
-          const options = legalMoves(available, follow, game);
+          const options = legalMoves(available, follow, game, {past:normalized,trickIndex:i});
           if (!options.includes(t.cards[j])) errors.push({code:'follow-suit', trick:i+1, message:`Stich ${i+1}: ${seat.toUpperCase()} bedient Farbe/Trumpf nicht, obwohl passende Karten rekonstruiert wurden.`});
           seen[seat].add(t.cards[j]);
         }
@@ -201,5 +249,5 @@
     const result = reliable ? outcome(game,teams,normalized) : {status:'unreliable',reason:'Wegen offener Regel-/Erfassungsfehler wird kein Gewinner behauptet.'};
     return {version:VERSION,ok:reliable,supported:cfg.supported,errors,warnings,tricks:normalized,eyesTotal,teams,teamEyes,result, note:'Regelprüfung ≠ Strategiebewertung. Kein Zug wurde als besser oder schlechter eingestuft.'};
   }
-  return Object.freeze({ VERSION, SUITS, RANKS, SEATS, FULL, parse, config, isTrump, colorClass, legalMoves, winnerIndex, trickEyes, nextSeat, reconstructHands, partnership, review });
+  return Object.freeze({ VERSION, SUITS, RANKS, SEATS, FULL, parse, config, isTrump, colorClass, compare, legalMoves, winnerIndex, trickEyes, nextSeat, reconstructHands, partnership, ramschOutcome, review });
 });
