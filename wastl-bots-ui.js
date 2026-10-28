@@ -211,13 +211,39 @@
   const sorted=B.sortHand(g.hands[g.mySeat],g.type?g:{type:'rufspiel'});
   return `<section class="bots-hand">
    <div class="bots-hand-heading"><b>Deine Karten</b><span>${sorted.length} Karten · ${esc(POSITIONS[g.mySeat])}${g.bids?.some(b=>b.seat===g.mySeat)?' · '+esc((g.bids.slice().reverse().find(b=>b.seat===g.mySeat).offer?.label)||(g.bids.slice().reverse().find(b=>b.seat===g.mySeat).intent?'Ich spiele':'Weiter')):''}</span></div>
-   <div class="bots-hand-row" aria-label="Deine acht Handkarten">
+   <div class="bots-hand-row" style="--fan-count:${sorted.length}" aria-label="Deine ${sorted.length} Handkarten">
     ${sorted.map((id,i)=>{
       const center=(sorted.length-1)/2;
       const tilt=(i-center)*3.4;
       const dip=Math.round(Math.abs(i-center)*3.5);
       return `<button type="button" class="bots-card-button ${legal.has(id)?'playable':'locked'}" style="--fan-angle:${tilt.toFixed(1)}deg;--fan-dip:${dip}px;--fan-layer:${i+1}" aria-label="${esc(id.replace('-',' '))} ${legal.has(id)?'spielen':'nicht spielbar'}" data-bots-play="${esc(id)}" ${legal.has(id)?'':'disabled'}>${face(id)}</button>`;
      }).join('')}
+   </div>
+   <div class="bots-grip" aria-hidden="true">
+    <svg viewBox="0 0 220 135" xmlns="http://www.w3.org/2000/svg" role="presentation">
+     <defs>
+      <linearGradient id="botsGripSkin" x1="0" y1="0" x2="1" y2=".9">
+       <stop offset="0" stop-color="#ffe0b6"/><stop offset=".43" stop-color="#e9a277"/>
+       <stop offset="1" stop-color="#ab6042"/>
+      </linearGradient>
+      <linearGradient id="botsGripThumb" x1=".15" y1="0" x2=".9" y2="1">
+       <stop offset="0" stop-color="#fff0cf"/><stop offset=".5" stop-color="#ecae82"/>
+       <stop offset="1" stop-color="#c27959"/>
+      </linearGradient>
+     </defs>
+     <path d="M-12 142 L-10 105 Q-5 81 26 83 Q46 82 66 96 L114 113 Q129 121 131 143Z"
+       fill="url(#botsGripSkin)" stroke="#71432f" stroke-width="3"/>
+     <path d="M-8 121 C9 108 28 105 48 111 L80 125"
+       fill="none" stroke="#fbd3aa" stroke-width="4" opacity=".7"/>
+     <path d="M29 96 Q39 77 61 68 Q87 57 110 59 Q127 62 131 72
+       Q136 83 127 90 Q120 95 106 91 L89 89 Q73 92 63 110 L54 129
+       Q45 142 27 138 Q12 135 16 116Z"
+       fill="url(#botsGripThumb)" stroke="#75462d" stroke-width="3.4" stroke-linejoin="round"/>
+     <path d="M100 66 Q116 62 121 71 Q125 79 115 82 L102 82 Q95 77 100 66Z"
+       fill="#f7d2b4" stroke="#bd7c69" stroke-width="1.7"/>
+     <path d="M31 115 Q42 105 56 105" fill="none" stroke="#bd7553" stroke-width="2.4" opacity=".65"/>
+     <path d="M66 89 Q78 78 92 80" fill="none" stroke="#fff0d2" stroke-width="3.4" opacity=".85"/>
+    </svg>
    </div>
    ${active?'<p class="bots-play-prompt">Du bist dran – tippe auf eine Karte.</p>':''}
   </section>`;
@@ -314,6 +340,8 @@
    swap('.bots-hand-heading',hand,nextHand);
    const row=hand.querySelector('.bots-hand-row'),future=nextHand.querySelector('.bots-hand-row');
    if(row&&future){
+    row.style.setProperty('--fan-count',String(future.querySelectorAll('[data-bots-play]').length));
+    row.setAttribute('aria-label',future.getAttribute('aria-label')||'Deine Handkarten');
     const existing=new Map(Array.from(row.querySelectorAll('[data-bots-play]')).map(node=>[node.dataset.botsPlay,node]));
     const target=[];
     for(const button of future.querySelectorAll('[data-bots-play]')){
@@ -383,5 +411,5 @@
   const img=event.target;
   if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
  },true);
- window.WastlBotsUI={render,version:'7.2.0'};
+ window.WastlBotsUI={render,version:'7.3.0'};
 })();
