@@ -1452,3 +1452,57 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 @media(orientation:landscape) and (max-height:490px){
  .bots-page:not(.bots-page-start) .bots-grip{display:none}
 }
+
+/* Stammtisch 7.5.1 – natürlicher Griff am linken Kartenrand.
+ * Der Arm kommt von außerhalb des linken Bildrands. Nur die
+ * Daumenspitze liegt über der unteren Ecke der ersten Karten.
+ * Ein fester linker Anker ist robuster als die frühere komplexe
+ * Größenberechnung und verhindert sichtbare Schnittkanten. */
+.bots-page:not(.bots-page-start) .bots-grip{
+ left:-23px;
+ bottom:-7px;
+ width:clamp(84px,26vw,112px);
+ height:auto;
+ z-index:55;
+ transform:rotate(-4deg);
+ transform-origin:0 100%;
+ overflow:visible;
+ pointer-events:none!important;
+ filter:drop-shadow(1px 2px 1.5px rgba(36,20,11,.35));
+}
+.bots-page:not(.bots-page-start) .bots-grip img{
+ width:100%;
+ height:auto;
+ display:block;
+ object-fit:contain;
+ object-position:bottom left;
+ pointer-events:none!important;
+}
+/* Das Handgelenk darf niemals über die untere Ergebnisleiste ragen. */
+.bots-page:not(.bots-page-start) .bots-tally{
+ position:relative;
+ z-index:70;
+}
+@media(max-width:360px){
+ .bots-page:not(.bots-page-start) .bots-grip{
+  left:-22px;
+  bottom:-7px;
+  width:clamp(78px,25vw,92px);
+ }
+}
+@media(min-width:500px){
+ .bots-page:not(.bots-page-start) .bots-grip{
+  left:-22px;
+  bottom:-9px;
+  width:clamp(102px,22vw,130px);
+ }
+}
+@media(max-height:690px){
+ .bots-page:not(.bots-page-start) .bots-grip{
+  bottom:-7px;
+  width:min(23vw,92px);
+ }
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-page:not(.bots-page-start) .bots-grip{display:none!important}
+}
