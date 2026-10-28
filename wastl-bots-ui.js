@@ -1,4 +1,4 @@
-/* Wastl Stammtisch 6.9 – eigenständige Offline-Tischoberfläche.
+/* Wastl Stammtisch 7.0 – eigenständige Offline-Tischoberfläche.
  * Ein Bot = eine sichtbare Entscheidung. Keine Eingriffe ins Kassenbuch.
  */
 (function(){
@@ -170,6 +170,9 @@
   </div>
   <div class="bots-seat-label bots-seat-label-${pos} ${acting?'bots-seat-label-active':''}">
    <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc({vh:'VH',mh:'MH',hh:'HH',g:'G'}[seat])}${announced?' · '+esc(announced):''}</small></div>
+  </div>
+  <div class="bots-portrait-front bots-portrait-front-${pos}" aria-hidden="true">
+   <img src="${esc(person.portrait)}" alt="" draggable="false">
   </div>`;
  }
  function playedCards(g){
@@ -274,6 +277,9 @@
    current.className=fresh.className;
    const img=current.querySelector('img'),newImg=fresh.querySelector('img');
    if(img&&newImg&&img.getAttribute('src')!==newImg.getAttribute('src'))img.setAttribute('src',newImg.getAttribute('src'));
+   const front=currentWood.querySelector('.bots-portrait-front-'+pos+' img');
+   const freshFront=newWood.querySelector('.bots-portrait-front-'+pos+' img');
+   if(front&&freshFront&&front.getAttribute('src')!==freshFront.getAttribute('src'))front.setAttribute('src',freshFront.getAttribute('src'));
    const label=currentWood.querySelector('.bots-seat-label-'+pos),newLabel=newWood.querySelector('.bots-seat-label-'+pos);
    if(label&&newLabel){
     if(label.innerHTML!==newLabel.innerHTML)label.innerHTML=newLabel.innerHTML;
@@ -371,5 +377,5 @@
   const img=event.target;
   if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
  },true);
- window.WastlBotsUI={render,version:'6.7.0'};
+ window.WastlBotsUI={render,version:'7.0.0'};
 })();

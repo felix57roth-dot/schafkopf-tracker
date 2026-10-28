@@ -807,3 +807,133 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-seat-label-top{top:46%}
  .bots-playing-area{inset:54% 13% 2%}
 }
+
+/* Stammtisch 7.0: Oberkörper hinter dem Tisch, eigene Kartenhände
+   auf der Tischplatte. Die vorderen Handpartien sind durch PNG-
+   Transparenz und Zuschnitt deckungsgleich über der Tischkante. */
+.bots-wood::before{
+ top:43.5%;bottom:-2%;left:0;right:0;z-index:6;
+ border-radius:42% 42% 0 0 / 5% 5% 0 0;
+ clip-path:polygon(3% 0,97% 0,100% 100%,0 100%);
+ transform:none;
+ background:
+  repeating-linear-gradient(0deg,#633c1910 0 2px,#f3d6a812 4px 9px,#4d280a13 11px 16px),
+  radial-gradient(ellipse at 50% 0,#fff2c6b3,transparent 65%),
+  linear-gradient(180deg,#ddbb8d 0%,#e1b986 25%,#d5a36e 72%,#b4804b 100%);
+}
+.bots-wood::after{
+ top:41.7%;left:2%;right:2%;height:25px;z-index:7;
+ border-radius:50%;background:linear-gradient(180deg,#f7d8a3 0%,#deb27b 32%,#966238 74%,#624020 100%);
+ box-shadow:0 5px 8px #2814075b,0 -2px 3px #fce5b677;
+}
+.bots-plank-lines{z-index:7;top:47%;height:54%;clip-path:polygon(4% 0,96% 0,100% 100%,0 100%)}
+.bots-player,.bots-portrait-front{position:absolute;max-width:none;pointer-events:none;box-sizing:border-box}
+.bots-player{z-index:5;filter:none}
+.bots-player img,.bots-portrait-front img{
+ display:block;width:100%;height:auto;max-height:none;
+ aspect-ratio:1/1;object-fit:contain;object-position:center;
+ filter:drop-shadow(0 4px 3px #28150755);
+}
+.bots-portrait-front{z-index:9;filter:none}
+.bots-portrait-front img{clip-path:inset(58% 0 9% 0);filter:drop-shadow(0 2px 2px #23130543)}
+.bots-player-left,.bots-portrait-front-left{
+ width:clamp(135px,43vw,265px);top:17%;left:-1.5%;right:auto;transform:none;
+}
+.bots-player-top,.bots-portrait-front-top{
+ width:clamp(170px,55vw,340px);top:8%;left:50%;right:auto;transform:translateX(-50%);
+}
+.bots-player-right,.bots-portrait-front-right{
+ width:clamp(135px,43vw,265px);top:17%;right:-1.5%;left:auto;transform:none;
+}
+.bots-player-left .bots-bubble,.bots-player-right .bots-bubble{top:-23%;bottom:auto;max-width:160px}
+.bots-player-top .bots-bubble{top:-11%;bottom:auto;max-width:145px}
+.bots-playing-area{z-index:8;inset:51% 8% 4%}
+.bots-played{z-index:8}
+.bots-self-spot{z-index:12}
+.bots-seat-label{z-index:11}
+.bots-seat-label-left{left:18%;top:49%}
+.bots-seat-label-top{left:50%;top:45.5%}
+.bots-seat-label-right{left:82%;top:49%}
+.bots-mid-action{z-index:15}
+.bots-shade{z-index:18}
+.bots-finish{z-index:17}
+
+/* Fächer statt Mini-Raster: 8 identische Karten mit großer,
+   responsive begrenzter Breite; jede Karte bleibt separat klickbar. */
+.bots-page{
+ --bots-card-size:min(23vw,calc((var(--bots-hand-height) - 54px)*.69),112px);
+ --bots-card-overlap:min(13vw,calc(var(--bots-card-size)*.55));
+}
+.bots-hand-row{
+ display:flex;flex-wrap:nowrap;align-items:flex-end;justify-content:center;
+ gap:0;width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+ height:100%;min-height:0;max-height:none;
+ padding:3px 8px 5px;margin:0 auto;overflow:hidden;background:transparent;
+}
+.bots-hand-row .bots-card-button,
+.bots-hand-row .bots-card-button+.bots-card-button{
+ box-sizing:border-box;position:relative;display:block;
+ width:var(--bots-card-size);min-width:0;max-width:none;
+ flex:0 0 var(--bots-card-size);
+ height:auto;max-height:100%;aspect-ratio:0.69;
+ margin:0;align-self:flex-end;overflow:hidden;
+ padding:0;border:0;border-radius:4px;background:transparent;
+ box-shadow:0 2px 5px #38291a6b;transform:none;isolation:isolate;
+}
+.bots-hand-row .bots-card-button+.bots-card-button{
+ margin-left:calc(-1 * var(--bots-card-overlap));
+}
+.bots-hand-row .bots-card-button .bots-face{
+ display:block;width:100%;height:100%;max-height:none;
+ box-sizing:border-box;aspect-ratio:0.69;
+ object-fit:cover;object-position:center;transform:scale(1.026);
+ opacity:1;border:0;outline:0;border-radius:2px;
+ box-shadow:none;filter:none;background:transparent;mix-blend-mode:normal;
+}
+.bots-hand-row .bots-card-button::before,
+.bots-hand-row .bots-card-button::after{content:none;display:none}
+.bots-hand-row .bots-card-button.playable::after{
+ content:"";display:block;position:absolute;z-index:2;inset:0;
+ border:3px solid #258748;border-radius:4px;
+ box-sizing:border-box;pointer-events:none;
+}
+.bots-hand-row .bots-card-button.playable,
+.bots-hand-row .bots-card-button.playable:hover,
+.bots-hand-row .bots-card-button.playable:active,
+.bots-hand-row .bots-card-button.playable:focus,
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ transform:none;z-index:auto;opacity:1;filter:none;
+}
+.bots-hand-row .bots-card-button.playable:focus-visible{outline:3px solid #e5b84b;outline-offset:2px}
+@media(max-width:385px){
+ .bots-player-left,.bots-portrait-front-left{left:-3%}
+ .bots-player-right,.bots-portrait-front-right{right:-3%}
+ .bots-seat-label-left{left:17%;top:49.5%}
+ .bots-seat-label-right{left:83%;top:49.5%}
+}
+@media(max-height:640px){
+ .bots-player-left,.bots-portrait-front-left,.bots-player-right,.bots-portrait-front-right{top:10%}
+ .bots-player-top,.bots-portrait-front-top{top:3%}
+ .bots-wood::before{top:43.5%}
+ .bots-wood::after{top:41.7%}
+ .bots-plank-lines{top:47%;height:54%}
+ .bots-seat-label-left,.bots-seat-label-right{top:49%}
+ .bots-seat-label-top{top:45.5%}
+ .bots-playing-area{inset:51% 8% 3%}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-player-left,.bots-portrait-front-left,.bots-player-right,.bots-portrait-front-right{
+  width:clamp(88px,24dvh,135px);top:2%;
+ }
+ .bots-player-top,.bots-portrait-front-top{width:clamp(104px,28dvh,160px);top:0}
+ .bots-wood::before{top:45%}
+ .bots-wood::after{top:43%}
+ .bots-plank-lines{top:49%;height:52%}
+ .bots-seat-label-left,.bots-seat-label-right{top:50%}
+ .bots-seat-label-top{top:46%}
+ .bots-playing-area{inset:52% 13% 2%}
+ .bots-page{
+  --bots-card-size:min(9vw,calc((var(--bots-hand-height) - 44px)*.69),60px);
+  --bots-card-overlap:min(3.8vw,calc(var(--bots-card-size)*.35));
+ }
+}
