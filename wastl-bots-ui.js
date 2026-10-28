@@ -1,4 +1,4 @@
-/* Wastl Stammtisch 6.3 – eigenständige Offline-Tischoberfläche.
+/* Wastl Stammtisch 6.5 – eigenständige Offline-Tischoberfläche.
  * Ein Bot = eine sichtbare Entscheidung. Keine Eingriffe ins Kassenbuch.
  */
 (function(){
@@ -130,7 +130,11 @@
  }
  function speech(g,seat){
   const a=g.lastAction;
-  if(a&&a.seat===seat)return `<span class="bots-bubble bots-bubble-done" role="status">${esc(a.text)}</span>`;
+  if(a&&a.seat===seat){
+   // Die längste Ansage sonst an Randplätzen abgeschnitten: kurzer Sprechtext.
+   const spoken=a.kind==='bid'?a.text.replace(/^Spiele\s+/,''):a.text;
+   return `<span class="bots-bubble bots-bubble-done" role="status">${esc(spoken)}</span>`;
+  }
   if(!a&&currentSpeaker(g)===seat)return `<span class="bots-bubble">${seat===g.mySeat?'Du bist dran!':'Überlegt …'}</span>`;
   return '';
  }
@@ -346,5 +350,5 @@
   const img=event.target;
   if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
  },true);
- window.WastlBotsUI={render,version:'6.3.0'};
+ window.WastlBotsUI={render,version:'6.5.0'};
 })();
