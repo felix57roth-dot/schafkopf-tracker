@@ -54,16 +54,19 @@
   }
   return [...hand].sort((a,b)=>key(a)-key(b));
  }
- function bidOptions(hand,top=null){
+ function bidOptions(hand,top=null,seat=null){
   const options=[],min=top?.priority||0;
-  if(min<PRIORITY.rufspiel){
+  // Bei gleichrangigen Spielen erhält die früher sitzende Person das Spielrecht.
+  const hasSeatPriority=top&&seat&&SEATS.indexOf(seat)<SEATS.indexOf(top.seat);
+  const allowed=priority=>priority>min||(priority===min&&hasSeatPriority);
+  if(allowed(PRIORITY.rufspiel)){
    for(const s of ['eichel','gras','schell']){
     if(!hand.includes(s+'-A')&&hand.some(c=>E.colorClass(c,{type:'rufspiel'})===s))
      options.push({type:'rufspiel',calledSuit:s,priority:1,label:'Rufspiel '+SUIT_LABEL[s]});
    }
   }
-  if(min<PRIORITY.wenz)options.push({type:'wenz',priority:2,label:'Wenz'});
-  if(min<PRIORITY.solo)for(const s of SUITS)options.push({type:'solo',trumpSuit:s,priority:3,label:'Solo '+SUIT_LABEL[s]});
+  if(allowed(PRIORITY.wenz))options.push({type:'wenz',priority:2,label:'Wenz'});
+  if(allowed(PRIORITY.solo))for(const s of SUITS)options.push({type:'solo',trumpSuit:s,priority:3,label:'Solo '+SUIT_LABEL[s]});
   return options;
  }
  // Alle Spielarten werden mit vergleichbaren Sicherheitsmargen bewertet.
@@ -105,8 +108,8 @@
   }
   return -100;
  }
- function botBid(hand,top,random=Math.random){
-  const offers=bidOptions(hand,top).map(offer=>({
+ function botBid(hand,top,random=Math.random,seat=null){
+  const offers=bidOptions(hand,top,seat).map(offer=>({
    ...offer,margin:bidStrength(hand,offer)-BID_THRESHOLDS[offer.type]
   })).sort((a,b)=>b.margin-a.margin);
   const best=offers[0];
@@ -144,7 +147,7 @@
  function chooseToPlay(g){
   if(g.phase!=='bidding'||bidderSeat(g)!==g.mySeat)
    throw Error('Du bist gerade nicht mit der Ansage an der Reihe.');
-  if(!bidOptions(g.hands[g.mySeat],g.best).length)
+  if(!bidOptions(g.hands[g.mySeat],g.best,g.mySeat).length)
    throw Error('Ein höherwertiges Spiel kannst du gerade nicht ansagen.');
   g.phase='chooseGame';return g;
  }
@@ -193,7 +196,7 @@
   if(bidderSeat(g)!==seat)throw Error('Dieser Spieler ist gerade nicht dran.');
   const stage=g.auctionStage||'opening';
   if(choice){
-   const valid=bidOptions(g.hands[seat],g.best).find(x=>
+   const valid=bidOptions(g.hands[seat],g.best,seat).find(x=>
     x.type===choice.type&&x.trumpSuit===choice.trumpSuit&&x.calledSuit===choice.calledSuit);
    if(!valid)throw Error('Das Spiel ist nicht höherwertig oder nicht zulässig.');
    g.best={...valid,seat};
@@ -224,7 +227,7 @@
    const seat=bidderSeat(g);
    if(!seat)return finishBidding(g);
    if(seat===g.mySeat)return g;
-   const choice=botBid(g.hands[seat],g.best,random);
+   const choice=botBid(g.hands[seat],g.best,random,seat);
    return recordBid(g,seat,choice);
   }
   if(g.phase==='playing'&&g.turn!==g.mySeat){
