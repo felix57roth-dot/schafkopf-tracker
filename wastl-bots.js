@@ -66,23 +66,55 @@
   if(min<PRIORITY.solo)for(const s of SUITS)options.push({type:'solo',trumpSuit:s,priority:3,label:'Solo '+SUIT_LABEL[s]});
   return options;
  }
+ // Alle Spielarten werden mit vergleichbaren Sicherheitsmargen bewertet.
+ // Keine festen Zufallsquoten für Rufspiel/Wenz/Solo: die Karten entscheiden.
+ const BID_THRESHOLDS=Object.freeze({rufspiel:5.5,wenz:7.5,solo:6.8});
  function bidStrength(hand,offer){
-  const g={type:offer.type,trumpSuit:offer.trumpSuit||'herz',calledSuit:offer.calledSuit};
-  const tr=hand.filter(c=>E.isTrump(c,g));
-  const aces=hand.filter(c=>rank(c)==='A').length,tens=hand.filter(c=>rank(c)==='10').length;
-  const o=hand.filter(c=>rank(c)==='O').length,u=hand.filter(c=>rank(c)==='U').length;
-  if(offer.type==='wenz')return u*2.9+aces*1.1+tens*.45+(hand.includes('eichel-U')?1.7:0)+(hand.includes('gras-U')?1:0);
-  if(offer.type==='solo')return tr.length*.93+o*.36+u*.33+aces*.65+(tr.some(c=>rank(c)==='A')?.6:0);
-  const nontrump=hand.filter(c=>!E.isTrump(c,g));
-  return tr.length*.6+o*.4+u*.35+aces*.45+(nontrump.some(c=>rank(c)==='A')?.4:0)+(nontrump.length>0?.2:0);
+  const game={type:offer.type,trumpSuit:offer.trumpSuit||'herz',calledSuit:offer.calledSuit};
+  const parsed=hand.map(card=>({...E.parse(card),card}));
+  const r=rankName=>parsed.filter(c=>c.rank===rankName).length;
+  const O=r('O'),U=r('U'),aces=r('A'),tens=r('10');
+  const tr=hand.filter(card=>E.isTrump(card,game));
+  if(offer.type==='rufspiel'){
+   const topCards=['eichel-O','gras-O','herz-O','schell-O','eichel-U','gras-U'];
+   const strongTrumps=hand.filter(c=>topCards.includes(c)).length;
+   const redTrumps=parsed.filter(c=>c.suit==='herz'&&c.rank!=='O'&&c.rank!=='U').length;
+   const called=parsed.filter(c=>c.suit===offer.calledSuit&&c.rank!=='O'&&c.rank!=='U');
+   if(!called.length)return -100;
+   return O*1.55+U*.92+redTrumps*.33+aces*.53+tens*.27+
+    strongTrumps*.42+(called.some(c=>c.rank==='10')?.15:0)+
+    (called.length>1?.22:0)+(tr.length>=5?.45:0);
+  }
+  if(offer.type==='wenz'){
+   // Zwei Unter sind Mindestvoraussetzung; Eichel- und Gras-Unter sind
+   // deutlich wertvoller als Herz- und Schellen-Unter.
+   if(U<2)return -100;
+   const weights={eichel:3.3,gras:2.65,herz:1.6,schell:1.1};
+   return parsed.filter(c=>c.rank==='U').reduce((n,c)=>n+weights[c.suit],0)+
+    aces*1.02+tens*.38+(U>=3?.6:0);
+  }
+  if(offer.type==='solo'){
+   // Farbsolo nur mit tragfähiger Trumpfstruktur, nicht allein mit Assen.
+   if(tr.length<5&&!(O>=3&&tr.length>=4))return -100;
+   if(O+U<2&&tr.length<6)return -100;
+   const trumpRanks={A:1.65,'10':1.12,K:.72,'9':.42,'8':.25,'7':.25};
+   const suitPoints=parsed.filter(c=>c.suit===offer.trumpSuit&&c.rank!=='O'&&c.rank!=='U')
+    .reduce((n,c)=>n+(trumpRanks[c.rank]||0),0);
+   const highO=hand.filter(c=>['eichel-O','gras-O'].includes(c)).length;
+   return O*1.25+U*.82+suitPoints+aces*.45+tens*.25+highO*.4+(tr.length>=6?.65:0);
+  }
+  return -100;
  }
  function botBid(hand,top,random=Math.random){
-  const thresholds={rufspiel:5.8,wenz:9.6,solo:8.4};
-  const offers=bidOptions(hand,top).map(offer=>({...offer,margin:bidStrength(hand,offer)-thresholds[offer.type]}))
-   .sort((a,b)=>b.margin-a.margin);
+  const offers=bidOptions(hand,top).map(offer=>({
+   ...offer,margin:bidStrength(hand,offer)-BID_THRESHOLDS[offer.type]
+  })).sort((a,b)=>b.margin-a.margin);
   const best=offers[0];
-  if(!best||best.margin<(random()-.5)*.8)return null;
-  const {margin,...offer}=best;return offer;
+  // Leichte Unsicherheit an der Spielbarkeitsgrenze. Keine Zufallsansage
+  // mit objektiv schwacher Hand; hohe Sicherheitsmargen werden bevorzugt.
+  if(!best||best.margin<(random()-.5)*.45)return null;
+  const {margin,...offer}=best;
+  return offer;
  }
  function checkHands(hands){
   if(!hands||SEATS.some(s=>!Array.isArray(hands[s])||hands[s].length!==8))throw Error('Jeder Platz braucht acht Karten.');
@@ -226,6 +258,6 @@
   if(!review.ok)throw Error('Die Partie konnte nicht regelkonform gespeichert werden: '+(review.errors[0]?.message||'Unbekannter Fehler'));
   return record;
  }
- return Object.freeze({VERSION:'6.2.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
+ return Object.freeze({VERSION:'6.4.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
   create,chooseToPlay,cancelChoice,submitBid,stepBot,advance,play,playable,nextTrick,nextRound,result,toRecord});
 });
