@@ -180,10 +180,15 @@
    throw Error('Die Ansagerunde ist noch nicht abgeschlossen.');
   g.type=g.best.type;g.trumpSuit=g.best.trumpSuit||'herz';
   g.calledSuit=g.best.calledSuit||'eichel';g.declarerSeat=g.best.seat;
-  g.phase='playing';g.turn='vh';g.leaderSeat='vh';g.current=[];
+  g.phase='playing';g.turn='vh';g.leaderSeat='vh';g.current=[];g.lastAction=null;
   return g;
  }
  function recordBid(g,seat,choice){
+  // Übernahme einer vor dem Update gespeicherten laufenden Ansagerunde.
+  if(!Array.isArray(g.activeBidders))
+   g.activeBidders=[...new Set((g.bids||[]).filter(x=>x.offer).map(x=>x.seat))];
+  if(!Array.isArray(g.auctionQueue))g.auctionQueue=[];
+  if(!g.auctionStage)g.auctionStage='opening';
   if(g.phase!=='bidding')throw Error('Ansagerunde nicht aktiv.');
   if(bidderSeat(g)!==seat)throw Error('Dieser Spieler ist gerade nicht dran.');
   const stage=g.auctionStage||'opening';
