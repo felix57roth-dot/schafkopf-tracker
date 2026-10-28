@@ -1558,3 +1558,54 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 @media(orientation:landscape) and (max-height:490px){
  .bots-page:not(.bots-page-start) .bots-grip{display:none!important}
 }
+
+/* Stammtisch 7.6 – vollständiger Daumen, keine Karte im Hand-Overlay.
+   Die neu freigestellte Grafik hat den gesamten Daumennagel samt
+   Fingerspitze und einen transparent auslaufenden Handgelenksbereich.
+   Kein negativer linker Offset: Bildschirmränder dürfen ihn nicht kappen.
+   Die Größe bleibt proportional, die Hand fängt keine Tap-Gesten ab. */
+.bots-page:not(.bots-page-start) .bots-grip{
+ position:absolute;
+ left:clamp(3px,1.2vw,9px);
+ bottom:-5px;
+ width:clamp(100px,30vw,122px);
+ height:auto;
+ transform:rotate(-3deg);
+ transform-origin:left bottom;
+ z-index:55;
+ overflow:visible;
+ pointer-events:none!important;
+ filter:drop-shadow(1px 2px 1.5px rgba(32,17,8,.3));
+}
+.bots-page:not(.bots-page-start) .bots-grip img{
+ display:block;
+ width:100%;
+ height:auto;
+ object-fit:contain;
+ object-position:bottom left;
+ overflow:visible;
+ pointer-events:none!important;
+}
+@media(max-width:360px){
+ .bots-page:not(.bots-page-start) .bots-grip{
+  left:3px;
+  width:clamp(95px,30vw,108px);
+  bottom:-5px;
+ }
+}
+@media(min-width:500px){
+ .bots-page:not(.bots-page-start) .bots-grip{
+  left:clamp(6px,1.5vw,16px);
+  width:clamp(122px,24vw,150px);
+ }
+}
+@media(max-height:690px){
+ .bots-page:not(.bots-page-start) .bots-grip{
+  left:3px;
+  width:clamp(88px,27vw,110px);
+  bottom:-5px;
+ }
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-page:not(.bots-page-start) .bots-grip{display:none!important}
+}
