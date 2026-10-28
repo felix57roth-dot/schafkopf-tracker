@@ -203,6 +203,9 @@
   const legal=active?new Set(B.playable(g,g.mySeat)):new Set();
   const sorted=B.sortHand(g.hands[g.mySeat],g.type?g:{type:'rufspiel'});
   return `<section class="bots-hand" style="--fan-count:${sorted.length}">
+   <div class="bots-index-finger" aria-hidden="true">
+    <img src="./players/zeigefinger.webp" alt="" draggable="false">
+   </div>
    <div class="bots-hand-row" style="--fan-count:${sorted.length}" aria-label="Deine ${sorted.length} Handkarten">
     ${sorted.map((id,i)=>{
       const center=(sorted.length-1)/2;
@@ -393,5 +396,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.6.0'};
+ window.WastlBotsUI={render,version:'7.6.1'};
 })();

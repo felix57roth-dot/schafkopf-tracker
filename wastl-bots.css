@@ -1609,3 +1609,49 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 @media(orientation:landscape) and (max-height:490px){
  .bots-page:not(.bots-page-start) .bots-grip{display:none!important}
 }
+
+/* Stammtisch 7.6.1: echter Zeigefinger unter den ersten Handkarten.
+ * Die vollständige Daumengrafik aus 7.6 bleibt unverändert. Die neue
+ * Fingerspitze ragt rechts unten hinter der Kartenunterkante hervor,
+ * während Daumen und vordere Hand weiterhin darüberliegen.
+ * Finger und Daumen sind reine Illustrationen (pointer-events:none).
+ */
+.bots-page:not(.bots-page-start) .bots-index-finger{
+ position:absolute;
+ left:clamp(67px,20vw,94px);
+ bottom:18px;
+ width:clamp(52px,17vw,70px);
+ height:auto;
+ z-index:2;
+ overflow:visible;
+ pointer-events:none!important;
+ filter:drop-shadow(1px 2px 1.2px rgba(37,18,11,.23));
+}
+.bots-page:not(.bots-page-start) .bots-index-finger img{
+ display:block;
+ width:100%;
+ height:auto;
+ object-fit:contain;
+ pointer-events:none!important;
+ user-select:none;
+ -webkit-user-drag:none;
+}
+.bots-page:not(.bots-page-start) .bots-hand:not(:has(.bots-card-button)) .bots-index-finger{
+ display:none!important;
+}
+@media(max-width:360px){
+ .bots-page:not(.bots-page-start) .bots-index-finger{
+  left:clamp(61px,20vw,73px);
+  bottom:16px;
+  width:clamp(50px,17vw,61px);
+ }
+}
+@media(max-height:690px){
+ .bots-page:not(.bots-page-start) .bots-index-finger{
+  bottom:12px;
+  width:clamp(45px,16vw,58px);
+ }
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-page:not(.bots-page-start) .bots-index-finger{display:none!important}
+}
