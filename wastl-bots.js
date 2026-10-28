@@ -129,7 +129,7 @@
   if(!SEATS.includes(mySeat))throw Error('Ungültiger Sitzplatz.');
   const initial=hands?copyHands(hands):deal(random);checkHands(initial);
   const game={
-   version:6,phase:'bidding',started:new Date().toISOString(),round,session:session||{played:0,won:0,lost:0,passed:0},
+   version:7,phase:'bidding',started:new Date().toISOString(),round,session:session||{played:0,won:0,lost:0,passed:0},
    mySeat,initialHands:copyHands(initial),hands:copyHands(initial),
    bids:[],bidCursor:0,auctionStage:'opening',activeBidders:[],auctionQueue:[],best:null,type:null,calledSuit:'eichel',trumpSuit:'herz',
    declarerSeat:null,leaderSeat:'vh',turn:null,current:[],tricks:[],lastTrick:null,lastAction:null
@@ -139,14 +139,19 @@
  // Jede der vier Personen erklärt zunächst ihre Spielabsicht. Bieten
  // mehrere, dürfen bereits interessierte Spieler bei einer Überbietung
  // nochmals erhöhen. Wer "Weiter" sagt, ist endgültig raus.
+ // Traditionelle zweistufige Ansage:
+ // 1. Vorhand -> Geber: ausschließlich "Ich spiele" oder "Weiter".
+ // 2. Die Interessenten nennen ihre Spielart bzw. überbieten reihum.
+ // Ein "Weiter" ist endgültig, niemals eine erneute Anfrage.
  function bidderSeat(g){
   if(g.phase!=='bidding'&&g.phase!=='chooseGame')return null;
-  if((g.auctionStage||'opening')==='duel')return (g.auctionQueue||[])[0]||null;
-  return g.bidCursor<4?SEATS[g.bidCursor]:null;
+  if((g.auctionStage||'opening')==='opening')return g.bidCursor<4?SEATS[g.bidCursor]:null;
+  if(g.auctionStage==='declaration')return (g.auctionQueue||[])[0]||null;
+  return null;
  }
  function chooseToPlay(g){
-  if(g.phase!=='bidding'||bidderSeat(g)!==g.mySeat)
-   throw Error('Du bist gerade nicht mit der Ansage an der Reihe.');
+  if(g.phase!=='bidding'||g.auctionStage!=='declaration'||bidderSeat(g)!==g.mySeat)
+   throw Error('Die Spielart wird erst nach der ersten Ansagerunde gewählt.');
   if(!bidOptions(g.hands[g.mySeat],g.best,g.mySeat).length)
    throw Error('Ein höherwertiges Spiel kannst du gerade nicht ansagen.');
   g.phase='chooseGame';return g;
@@ -163,19 +168,18 @@
   if(g.phase!=='bidding')return g;
   if((g.auctionStage||'opening')==='opening'){
    if(g.bidCursor<4)return g;
-   const interested=g.activeBidders?.length
-    ?g.activeBidders:[...new Set(g.bids.filter(x=>x.offer).map(x=>x.seat))];
-   g.activeBidders=[...interested];
-   if(!interested.length){g.phase='noGame';return g;}
-   if(interested.length>1){
-    g.auctionStage='duel';
-    g.auctionQueue=biddersAfter(g,g.best.seat);
-    if(g.auctionQueue.length)return g;
-   }
-  }else if(g.auctionQueue?.length)return g;
-  // Extra Anzeigeschritt: Der letzte Ausruf und das endgültige Spiel
-  // sind sichtbar, bevor die erste Karte gespielt wird.
-  g.auctionStage='result';g.auctionQueue=[];g.phase='biddingResult';
+   if(!g.activeBidders.length){g.phase='noGame';return g;}
+   // Reihenfolge der Erstansagen ist entscheidend; im zweiten Durchgang
+   // beginnt der erste Spieler mit Spielinteresse.
+   g.auctionStage='declaration';
+   g.auctionQueue=SEATS.filter(seat=>g.activeBidders.includes(seat));
+   return g;
+  }
+  if(g.auctionStage==='declaration'){
+   if(g.auctionQueue.length)return g;
+   if(!g.best)throw Error('Es wurde noch keine Spielart angesagt.');
+   g.auctionStage='result';g.phase='biddingResult';
+  }
   return g;
  }
  function startPlay(g){
@@ -186,49 +190,69 @@
   g.phase='playing';g.turn='vh';g.leaderSeat='vh';g.current=[];g.lastAction=null;
   return g;
  }
+ function recordIntent(g,seat,wantsToPlay){
+  if(g.phase!=='bidding'||g.auctionStage!=='opening'||bidderSeat(g)!==seat)
+   throw Error('Du bist gerade nicht mit der ersten Ansage an der Reihe.');
+  if(wantsToPlay){
+   if(!g.activeBidders.includes(seat))g.activeBidders.push(seat);
+  }
+  g.bids.push({seat,offer:null,intent:!!wantsToPlay,stage:'opening'});
+  g.lastAction={seat,text:wantsToPlay?'Ich spiele!':'Weiter!',kind:'intent'};
+  g.bidCursor++;
+  return finishBidding(g);
+ }
+ function declareInterest(g,wantsToPlay){
+  if(g.phase!=='bidding'||g.auctionStage!=='opening'||bidderSeat(g)!==g.mySeat)
+   throw Error('Du bist gerade nicht mit der ersten Ansage an der Reihe.');
+  return recordIntent(g,g.mySeat,wantsToPlay);
+ }
  function recordBid(g,seat,choice){
-  // Übernahme einer vor dem Update gespeicherten laufenden Ansagerunde.
-  if(!Array.isArray(g.activeBidders))
-   g.activeBidders=[...new Set((g.bids||[]).filter(x=>x.offer).map(x=>x.seat))];
-  if(!Array.isArray(g.auctionQueue))g.auctionQueue=[];
-  if(!g.auctionStage)g.auctionStage='opening';
-  if(g.phase!=='bidding')throw Error('Ansagerunde nicht aktiv.');
-  if(bidderSeat(g)!==seat)throw Error('Dieser Spieler ist gerade nicht dran.');
-  const stage=g.auctionStage||'opening';
+  if(g.phase!=='bidding'||g.auctionStage!=='declaration'||bidderSeat(g)!==seat)
+   throw Error('Dieser Spieler ist gerade nicht mit der Spielart dran.');
   if(choice){
    const valid=bidOptions(g.hands[seat],g.best,seat).find(x=>
     x.type===choice.type&&x.trumpSuit===choice.trumpSuit&&x.calledSuit===choice.calledSuit);
-   if(!valid)throw Error('Das Spiel ist nicht höherwertig oder nicht zulässig.');
+   if(!valid)throw Error('Die angesagte Spielart ist nicht zulässig oder zu niedrig.');
    g.best={...valid,seat};
-   if(!(g.activeBidders||[]).includes(seat))g.activeBidders.push(seat);
-  }else if(stage==='duel'){
-   g.activeBidders=g.activeBidders.filter(s=>s!==seat);
-  }
-  g.bids.push({seat,offer:choice?{...g.best}:null,stage});
-  g.lastAction={seat,text:choice?'Spiele '+g.best.label+'!':'Weiter!',kind:'bid'};
-  if(stage==='opening')g.bidCursor++;
-  else if(choice){
-   // Jeder weiterhin interessierte Mitspieler erhält nach einer neuen
-   // höheren Ansage wieder eine Gelegenheit zu reagieren.
    g.auctionQueue=biddersAfter(g,seat);
   }else{
+   if(!g.best)throw Error('Wer zuerst "Ich spiele" gesagt hat, muss eine Spielart nennen.');
+   g.activeBidders=g.activeBidders.filter(s=>s!==seat);
    g.auctionQueue.shift();
   }
+  g.bids.push({seat,offer:choice?{...g.best}:null,stage:'declaration'});
+  g.lastAction={seat,text:choice?'Spiele '+g.best.label+'!':'Weiter!',kind:'bid'};
   return finishBidding(g);
  }
  function submitBid(g,choice){
-  if(!['bidding','chooseGame'].includes(g.phase)||bidderSeat(g)!==g.mySeat)
-   throw Error('Du bist gerade nicht mit der Ansage an der Reihe.');
+  if(g.phase==='bidding'&&g.auctionStage==='opening'&&choice==null)return declareInterest(g,false);
+  if(!['bidding','chooseGame'].includes(g.phase)||g.auctionStage!=='declaration'||bidderSeat(g)!==g.mySeat)
+   throw Error('Du bist gerade nicht mit der Spielart an der Reihe.');
   g.phase='bidding';return recordBid(g,g.mySeat,choice);
  }
- // Ein Bot sagt bzw. legt immer exakt einmal je Aufruf.
+ // Ein Bot = eine sichtbare Ansage oder eine einzige ausgespielte Karte.
  function stepBot(g,random=Math.random){
   if(g.phase==='bidding'){
    const seat=bidderSeat(g);
    if(!seat)return finishBidding(g);
    if(seat===g.mySeat)return g;
-   const choice=botBid(g.hands[seat],g.best,random,seat);
-   return recordBid(g,seat,choice);
+   if(g.auctionStage==='opening'){
+    // Erst Absicht äußern, nicht schon die Spielart verraten.
+    return recordIntent(g,seat,!!botBid(g.hands[seat],null,random,seat));
+   }
+   const offer=botBid(g.hands[seat],g.best,random,seat);
+   if(offer)return recordBid(g,seat,offer);
+   if(!g.best){
+    // Ein bereits verbindlich interessierter Spieler muss die Spielart
+    // aussprechen; Grenzfall einer neuen Zufallsbewertung absichern.
+    const options=bidOptions(g.hands[seat],null,seat)
+     .map(o=>({...o,margin:bidStrength(g.hands[seat],o)-BID_THRESHOLDS[o.type]}))
+     .sort((a,b)=>b.margin-a.margin);
+    if(!options.length)throw Error('Keine erlaubte Spielart trotz Spielinteresse.');
+    const {margin,...first}=options[0];
+    return recordBid(g,seat,first);
+   }
+   return recordBid(g,seat,null);
   }
   if(g.phase==='playing'&&g.turn!==g.mySeat){
    const seat=g.turn,hand=g.hands[seat],cards=g.current.map(x=>x.card);
@@ -310,6 +334,6 @@
   if(!review.ok)throw Error('Die Partie konnte nicht regelkonform gespeichert werden: '+(review.errors[0]?.message||'Unbekannter Fehler'));
   return record;
  }
- return Object.freeze({VERSION:'6.6.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
+ return Object.freeze({VERSION:'6.7.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
   create,bidderSeat,chooseToPlay,cancelChoice,submitBid,stepBot,advance,finishBidding,startPlay,play,playable,nextTrick,nextRound,result,toRecord});
 });
