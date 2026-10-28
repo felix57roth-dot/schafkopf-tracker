@@ -1021,3 +1021,144 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-art-loaded .bots-player-right{width:clamp(88px,24dvh,135px);top:2%}
  .bots-art-loaded .bots-player-top{width:clamp(104px,28dvh,160px);top:0}
 }
+
+/* Stammtisch 7.2 – die eigene Kartenhand liegt sichtbar auf der
+   Spielfeld-Tischplatte, anstatt in einer separaten hellen Ablage.
+   Die Bögen/Neigung sind Positionsdaten und werden im DOM beim Ausspielen
+   mitaktualisiert, auch wenn sich die Anzahl der Karten verändert. */
+.bots-page:not(.bots-page-start){
+ grid-template-rows:var(--bots-hud-height) minmax(0,1fr) var(--bots-tally-height);
+}
+.bots-page:not(.bots-page-start) .bots-scene{grid-row:2;z-index:2}
+.bots-page:not(.bots-page-start) .bots-tally{grid-row:3;z-index:4}
+.bots-page:not(.bots-page-start) .bots-hand{
+ position:absolute;
+ left:0;right:0;
+ bottom:var(--bots-tally-height);
+ z-index:35;
+ height:clamp(178px,27dvh,258px);
+ max-height:none;min-height:0;
+ display:grid;
+ grid-template-rows:26px minmax(0,1fr) 18px;
+ padding:4px 8px 5px;
+ overflow:visible;
+ background:linear-gradient(180deg,transparent 0%,#482a1042 70%,#24150765 100%);
+ box-shadow:none;
+ pointer-events:none;
+}
+.bots-hand-heading{
+ pointer-events:none;
+ color:#fff1d1;
+ text-shadow:0 2px 4px #26160e,0 0 9px #1b100ec7;
+ margin:0 9px!important;
+}
+.bots-hand-heading b{font-size:14px}
+.bots-hand-heading span{color:#fff1d1;font-size:11px}
+.bots-play-prompt{color:#fff5dc;text-shadow:0 2px 4px #26160e}
+.bots-hand-row{
+ pointer-events:auto;
+ display:flex;
+ align-items:flex-end;
+ justify-content:center;
+ flex-wrap:nowrap;
+ gap:0;
+ height:100%;
+ max-width:100%;
+ padding:5px 8px 7px;
+ margin:0 auto;
+ overflow:visible;
+ isolation:isolate;
+ background:transparent;
+}
+.bots-page{
+ --bots-fan-width:clamp(68px,25vw,114px);
+ --bots-fan-overlap:clamp(40px,15vw,66px);
+}
+.bots-hand-row .bots-card-button,
+.bots-hand-row .bots-card-button+.bots-card-button{
+ display:block;
+ position:relative;
+ width:var(--bots-fan-width);
+ flex:0 0 var(--bots-fan-width);
+ height:auto;
+ max-height:100%;
+ min-width:0;max-width:none;
+ aspect-ratio:.69;
+ margin:0;
+ overflow:hidden;
+ padding:0;
+ border:0;
+ border-radius:6px;
+ background:transparent;
+ box-shadow:0 4px 9px #211205b5;
+ z-index:var(--fan-layer,1);
+ transform-origin:center 112%;
+ transform:translateY(var(--fan-dip,0px)) rotate(var(--fan-angle,0deg));
+ transition:filter .12s,box-shadow .12s;
+ touch-action:manipulation;
+}
+.bots-hand-row .bots-card-button+.bots-card-button{
+ margin-left:calc(-1 * var(--bots-fan-overlap));
+}
+.bots-hand-row .bots-card-button .bots-face{
+ display:block;
+ width:100%;height:100%;max-height:100%;
+ aspect-ratio:.69;
+ object-fit:cover;
+ object-position:center;
+ transform:scale(1.022);
+ border:0;outline:0;border-radius:3px;
+ box-shadow:none;
+ background:transparent;
+}
+/* Auch bei sich überdeckenden Karten zeichnet jede spielbare Karte
+   ihren grünen Rahmen selbst. Die obere Karte versteckt nur den
+   physisch überdeckten Teil; der sichtbare Abschnitt bleibt grün. */
+.bots-hand-row .bots-card-button::before,
+.bots-hand-row .bots-card-button::after{
+ content:none;display:none;
+}
+.bots-hand-row .bots-card-button.playable::after{
+ content:"";
+ display:block;
+ position:absolute;
+ inset:0;
+ z-index:3;
+ pointer-events:none;
+ box-sizing:border-box;
+ border:3px solid #258748;
+ border-radius:6px;
+}
+.bots-hand-row .bots-card-button.playable,
+.bots-hand-row .bots-card-button.playable:hover,
+.bots-hand-row .bots-card-button.playable:active,
+.bots-hand-row .bots-card-button.playable:focus,
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ transform:translateY(var(--fan-dip,0px)) rotate(var(--fan-angle,0deg));
+ filter:none;
+ z-index:var(--fan-layer,1);
+}
+.bots-hand-row .bots-card-button.playable:focus-visible{
+ outline:3px solid #f0c052;
+ outline-offset:2px;
+}
+/* Die Hand bleibt unterhalb des Ansagedialogs; alle Schaltflächen im
+   Dialog lassen sich auch mit den Karten darunter bedienen. */
+.bots-wood .bots-shade{z-index:50}
+.bots-wood .bots-mid-action,.bots-wood .bots-finish{z-index:45}
+.bots-wood .bots-playing-area{z-index:9}
+@media(max-width:385px){
+ .bots-page{--bots-fan-width:clamp(67px,25vw,92px);--bots-fan-overlap:clamp(39px,15.5vw,54px)}
+ .bots-page:not(.bots-page-start) .bots-hand{height:clamp(163px,24dvh,220px)}
+}
+@media(max-height:640px){
+ .bots-page:not(.bots-page-start) .bots-hand{height:clamp(136px,25dvh,182px)}
+ .bots-page{--bots-fan-width:min(22vw,92px);--bots-fan-overlap:min(13vw,49px)}
+}
+@media(orientation:landscape) and (max-height:490px){
+ .bots-page:not(.bots-page-start) .bots-hand{height:93px;padding:0 8px}
+ .bots-hand-heading{display:none}
+ .bots-hand-row{padding:0 4px}
+ .bots-page{--bots-fan-width:55px;--bots-fan-overlap:16px}
+ .bots-play-prompt{display:none}
+}

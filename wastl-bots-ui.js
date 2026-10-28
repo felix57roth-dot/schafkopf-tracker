@@ -1,4 +1,4 @@
-/* Wastl Stammtisch 7.0 – eigenständige Offline-Tischoberfläche.
+/* Wastl Stammtisch 7.2 – eigenständige Offline-Tischoberfläche.
  * Ein Bot = eine sichtbare Entscheidung. Keine Eingriffe ins Kassenbuch.
  */
 (function(){
@@ -212,7 +212,12 @@
   return `<section class="bots-hand">
    <div class="bots-hand-heading"><b>Deine Karten</b><span>${sorted.length} Karten · ${esc(POSITIONS[g.mySeat])}${g.bids?.some(b=>b.seat===g.mySeat)?' · '+esc((g.bids.slice().reverse().find(b=>b.seat===g.mySeat).offer?.label)||(g.bids.slice().reverse().find(b=>b.seat===g.mySeat).intent?'Ich spiele':'Weiter')):''}</span></div>
    <div class="bots-hand-row" aria-label="Deine acht Handkarten">
-    ${sorted.map((id,i)=>`<button type="button" class="bots-card-button ${legal.has(id)?'playable':'locked'}" aria-label="${esc(id.replace('-',' '))} ${legal.has(id)?'spielen':'nicht spielbar'}" data-bots-play="${esc(id)}" ${legal.has(id)?'':'disabled'}>${face(id)}</button>`).join('')}
+    ${sorted.map((id,i)=>{
+      const center=(sorted.length-1)/2;
+      const tilt=(i-center)*3.4;
+      const dip=Math.round(Math.abs(i-center)*3.5);
+      return `<button type="button" class="bots-card-button ${legal.has(id)?'playable':'locked'}" style="--fan-angle:${tilt.toFixed(1)}deg;--fan-dip:${dip}px;--fan-layer:${i+1}" aria-label="${esc(id.replace('-',' '))} ${legal.has(id)?'spielen':'nicht spielbar'}" data-bots-play="${esc(id)}" ${legal.has(id)?'':'disabled'}>${face(id)}</button>`;
+     }).join('')}
    </div>
    ${active?'<p class="bots-play-prompt">Du bist dran – tippe auf eine Karte.</p>':''}
   </section>`;
@@ -316,6 +321,7 @@
      own.className=button.className;
      own.disabled=button.disabled;
      own.setAttribute('aria-label',button.getAttribute('aria-label'));
+     own.setAttribute('style',button.getAttribute('style')||'');
      target.push(own);
     }
     const expected=new Set(target);
@@ -377,5 +383,5 @@
   const img=event.target;
   if(img?.classList?.contains('bots-reference-scene'))img.parentElement?.classList.add('bots-art-loaded');
  },true);
- window.WastlBotsUI={render,version:'7.0.0'};
+ window.WastlBotsUI={render,version:'7.2.0'};
 })();
