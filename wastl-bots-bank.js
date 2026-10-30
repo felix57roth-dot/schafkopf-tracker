@@ -59,9 +59,9 @@
   const withTop=owned.has(order[0]);
   let consecutive=0;
   for(const card of order){if(owned.has(card)!==withTop)break;consecutive++;}
-  const max=g.type==='rufspiel'?14:g.type==='wenz'?4:8;
+  const max=g.type==='wenz'?4:14;
   const usedRunners=consecutive>=(g.type==='rufspiel'?rufMinRunners:3)?Math.min(consecutive,max):0;
-  const schneider=losingEyes<30,schwarz=losingEyes===0;
+  const schneider=losingEyes<=30,schwarz=losingEyes===0;
   const unitCents=(g.type==='rufspiel'?rates.rufspiel:rates.solo)+
    (schneider?rates.schneider:0)+(schwarz?rates.schwarz:0)+usedRunners*rates.laeufer;
   const deltas={};
@@ -97,5 +97,5 @@
   const previous=load();
   return store({version:1,balances:Object.fromEntries(PEOPLE.map(id=>[id,START_CENTS])),settled:previous.settled});
  }
- return Object.freeze({VERSION:'7.7.1',KEY,START_CENTS,PEOPLE,load,reset,readSettings,money,quote,settle,receipt,roundId});
+ return Object.freeze({VERSION:'7.8.0',KEY,START_CENTS,PEOPLE,load,reset,readSettings,money,quote,settle,receipt,roundId});
 });

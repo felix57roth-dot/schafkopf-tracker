@@ -243,12 +243,50 @@
    ${active?'<p class="bots-play-prompt">Du bist dran – tippe auf eine Karte.</p>':''}
   </section>`;
  }
+ function priceReceipt(g,paid){
+  if(!paid||!paid.tariff)return '';
+  // Berechnung ausschließlich aus dem im Zahlungsbeleg gespeicherten Tarif.
+  // Niemals aktuelle Einstellungen verwenden: diese können sich geändert haben.
+  const rates=paid.tariff,base=paid.type==='rufspiel'?rates.rufspiel:rates.solo;
+  const schneider=paid.schneider?rates.schneider:0;
+  const schwarz=paid.schwarz?rates.schwarz:0;
+  const runners=(paid.runners||0)*(rates.laeufer||0);
+  const perPerson=base+schneider+schwarz+runners;
+  const you=paid.deltas?.you??0;
+  const mineAsDeclarer=g.declarerSeat&&B.personAt(g,g.declarerSeat)?.id==='you';
+  const factor=(paid.type==='solo'||paid.type==='wenz')&&mineAsDeclarer?3:1;
+  const all=[['you','Du'],['resi','Resi'],['sepp','Sepp'],['xaver','Xaver']];
+  const row=(name,cents,extra='')=>`<div class="bots-receipt-row ${extra}"><span>${esc(name)}</span><strong>${money(cents)}</strong></div>`;
+  const eyes=Number.isFinite(paid.declarerEyes)?paid.declarerEyes:0;
+  const getStatus=you>0?'Du gewinnst':you<0?'Du verlierst':'Dein Ergebnis';
+  return `<div class="bots-receipt-content" aria-label="Genaue Preisauflistung">
+   <div class="bots-receipt-highlight ${you<0?'bots-receipt-negative':''}">
+    <span>${getStatus}</span><strong>${signed(you)}</strong>
+   </div>
+   <div class="bots-receipt-subtitle">Ansagerpartei: ${eyes} Augen · Gegner: ${120-eyes} Augen</div>
+   <div class="bots-receipt-lines">
+    ${row('Grundpreis '+(paid.type==='rufspiel'?'Rufspiel':paid.type==='solo'?'Solo':'Wenz'),base)}
+    ${row('Schneider'+(paid.schneider?' ✓':' – nicht erreicht'),schneider)}
+    ${row('Schwarz'+(paid.schwarz?' ✓':' – nicht erreicht'),schwarz)}
+    ${row((paid.runners||0)+' Laufende'+(paid.runners?' ('+paid.runnersKind+')':''),runners)}
+    ${row('Spielwert pro Mitspieler',perPerson,'bots-receipt-subtotal')}
+    ${paid.type!=='rufspiel'? `<div class="bots-receipt-rule">${mineAsDeclarer?'Du spielst allein: 3 Gegner × '+money(perPerson):'Solo/Wenz: der Alleinspieler zahlt/erhält 3 × '+money(perPerson)+'; die anderen jeweils 1 ×'}</div>`:''}
+    <div class="bots-receipt-row bots-receipt-total"><span>Dein Ergebnis${factor!==1?' (× '+factor+')':''}</span><strong>${signed(you)}</strong></div>
+   </div>
+   <div class="bots-receipt-table-title">Abrechnung am Stammtisch</div>
+   <div class="bots-receipt-players">${all.map(([id,label])=>`<div class="bots-receipt-person ${id==='you'?'bots-receipt-self':''}">
+    <span>${label}</span><strong class="${paid.deltas[id]<0?'bots-receipt-loss':''}">${signed(paid.deltas[id])}</strong></div>`).join('')}</div>
+   <p class="bots-receipt-caption">Leger: keiner · Schuss: keiner. Diese Ansagen sind im Botspiel noch nicht verfügbar. Die Beträge stammen aus den Spielpreisen zum Zeitpunkt der Abrechnung.</p>
+   <div class="bots-receipt-current">Dein aktuelles Guthaben: <strong>${money(BANK.load().balances.you)}</strong></div>
+  </div>`;
+ }
  function finish(g){
   const r=B.result(g),archived=!!g.savedId&&stitch.archive.some(x=>x.id===g.savedId);
-  const paid=BANK.receipt(g),delta=paid?.deltas?.you;
-  return `<section class="bots-finish"><h3>${r?.win?'🏆 Gewonnen!':'Runde beendet'}</h3>
+  const paid=BANK.receipt(g);
+  return `<section class="bots-finish bots-finish-detailed">
+   <h3>${r?.win?'🏆 Gewonnen!':'Runde beendet'}</h3>
    <p>${esc(title(g))} · ${r?.declarerEyes||0} Augen für die Ansagerpartei</p>
-   ${paid?`<p class="bots-financial-result">Dein Ergebnis: <strong>${signed(delta)}</strong><span>Guthaben: ${money(BANK.load().balances.you)}</span>${paid.runners?' · '+paid.runnersKind+' '+paid.runners+' Läufer':''}${paid.schneider?' · Schneider':''}${paid.schwarz?' · Schwarz':''}</p>`:'<p class="bots-financial-result">Ältere Partie – nicht rückwirkend abgerechnet.</p>'}
+   <div class="bots-receipt-scroll">${paid?priceReceipt(g,paid):'<p class="bots-financial-result">Für diese ältere Partie wurde kein virtuelles Guthaben verrechnet.</p>'}</div>
    <div class="bots-finish-actions"><button class="bots-gold-btn" data-bots-round type="button">Nochmal spielen</button>
    <button class="bots-analyze-btn" data-bots-analyze type="button" ${archived?'':'disabled'}>Mit Wastl analysieren</button></div>
    <small>Der Geber wechselt automatisch mit der nächsten Runde.</small>
@@ -432,5 +470,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.7.1'};
+ window.WastlBotsUI={render,version:'7.8.0'};
 })();

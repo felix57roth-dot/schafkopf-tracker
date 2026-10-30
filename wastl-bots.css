@@ -1783,3 +1783,81 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 .bots-wallet-actions .bots-gold-btn{min-height:40px}
 @media(max-width:375px){.bots-cash-tally .bots-eyes-tally{display:none}.bots-seat-label .bots-seat-cash{font-size:10px}}
 @media(max-height:690px){.bots-page:not(.bots-page-start){--bots-tally-height:36px}.bots-wallet-modal{padding:10px;gap:6px}}
+
+/* Stammtisch 7.8: Beleg-ähnliche, exakte Abrechnung nach jedem Spiel.
+   Das Belegfeld scrollt separat; die beiden Aktionen bleiben erreichbar. */
+.bots-wood .bots-finish.bots-finish-detailed{
+ top:52%;
+ width:min(94%,470px);
+ max-height:min(76%,630px);
+ padding:clamp(9px,2vw,15px);
+ gap:6px;
+ overflow:hidden;
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ box-sizing:border-box;
+ border:2px solid #d2af71;
+ background:linear-gradient(155deg,#3b291eeF,#221913f5);
+ box-shadow:0 12px 34px #120a0788;
+}
+.bots-finish-detailed>h3{flex:0 0 auto;font-size:clamp(18px,4.8vw,23px);margin:0}
+.bots-finish-detailed>p{flex:0 0 auto;font-size:12px;margin:0;line-height:1.28}
+.bots-finish-detailed>.bots-receipt-scroll{
+ flex:1 1 auto;
+ min-height:0;
+ overflow:auto;
+ overscroll-behavior:contain;
+ border-radius:10px;
+ -webkit-overflow-scrolling:touch;
+ color:#392b1d;
+ background:linear-gradient(#fffaf0,#efdfb9);
+ border:1px solid #caad75;
+}
+.bots-receipt-content{text-align:left;display:grid;gap:7px;padding:10px 10px 12px}
+.bots-receipt-highlight{
+ display:flex;justify-content:space-between;align-items:center;gap:8px;
+ padding:8px 10px;background:#26704c;color:#fff9e5;border-radius:7px;
+ font-weight:850;
+}
+.bots-receipt-highlight strong{font-size:clamp(17px,4.4vw,23px);font-variant-numeric:tabular-nums}
+.bots-receipt-highlight.bots-receipt-negative{background:#8c503c}
+.bots-receipt-subtitle{font-size:11px;color:#705740;text-align:center;font-weight:800}
+.bots-receipt-lines{display:grid;gap:3px;padding:3px 0}
+.bots-receipt-row{
+ display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+ font-size:12px;line-height:1.3;padding:3px 2px;
+ border-bottom:1px solid #bfa67d45;
+}
+.bots-receipt-row strong{flex:none;white-space:nowrap;font-weight:850;font-variant-numeric:tabular-nums}
+.bots-receipt-row.bots-receipt-subtotal{border-top:1px solid #b9a171;border-bottom:0;font-weight:850;padding-top:8px}
+.bots-receipt-row.bots-receipt-total{
+ font-size:14px;font-weight:900;border-top:2px solid #967347;border-bottom:0;
+ margin-top:4px;padding-top:7px;
+}
+.bots-receipt-total strong{color:#235c3f;font-size:16px}
+.bots-receipt-rule{font-size:11px;color:#68523f;line-height:1.35}
+.bots-receipt-table-title{font-size:12px;font-weight:900;padding-top:4px;border-top:1px solid #c8b284}
+.bots-receipt-players{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.bots-receipt-person{
+ display:flex;align-items:center;justify-content:space-between;gap:4px;
+ padding:6px 7px;background:#fff5dd;border:1px solid #dfcfa8;
+ border-radius:7px;font-size:11px;
+}
+.bots-receipt-person.bots-receipt-self{border-color:#ba9762;background:#f3e2b8;font-weight:850}
+.bots-receipt-person strong{white-space:nowrap;color:#26704c;font-variant-numeric:tabular-nums}
+.bots-receipt-person strong.bots-receipt-loss{color:#994d41}
+.bots-receipt-caption{font-size:10px!important;color:#75614c!important;line-height:1.35!important;margin:2px 0!important}
+.bots-receipt-current{font-size:12px;font-weight:800;text-align:center;border-top:1px solid #bb9f6c;padding-top:7px}
+.bots-finish-detailed>.bots-finish-actions{flex:0 0 auto;grid-template-columns:1fr 1fr;gap:8px}
+.bots-finish-detailed>.bots-finish-actions button{min-width:0;padding:8px 5px;font-size:11px;line-height:1.2}
+.bots-finish-detailed>small{flex:0 0 auto;font-size:10px;line-height:1.2}
+@media(max-height:690px){
+ .bots-wood .bots-finish.bots-finish-detailed{max-height:83%;top:50%;gap:4px;padding:8px}
+ .bots-receipt-content{padding:7px;gap:5px}
+}
+@media(max-width:375px){
+ .bots-wood .bots-finish.bots-finish-detailed{width:96%}
+ .bots-receipt-content{padding:7px}
+ .bots-receipt-person{padding:5px}
+}
