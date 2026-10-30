@@ -432,5 +432,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.7.0'};
+ window.WastlBotsUI={render,version:'7.7.1'};
 })();

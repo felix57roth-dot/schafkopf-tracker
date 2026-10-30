@@ -47,7 +47,14 @@
   const losingEyes=declarerWon?120-r.declarerEyes:r.declarerEyes;
   const {rates,rufMinRunners}=readSettings();
   const cards=declarerTeam.flatMap(seat=>g.initialHands?.[seat]||[]);
-  const order=E.trumpOrder(g),owned=new Set(cards);
+  // Gleiche Trumpf-Reihenfolge wie die Stich-Engine, ohne private Engine-API.
+  const suits=['eichel','gras','herz','schell'];
+  const order=(g.type==='wenz'?['U']:['O','U']).flatMap(rank=>suits.map(suit=>suit+'-'+rank));
+  if(g.type!=='wenz'){
+   const suit=g.type==='solo'?g.trumpSuit:'herz';
+   order.push(...['A','10','K','9','8','7'].map(rank=>suit+'-'+rank));
+  }
+  const owned=new Set(cards);
   if(!order.length)return null;
   const withTop=owned.has(order[0]);
   let consecutive=0;
@@ -90,5 +97,5 @@
   const previous=load();
   return store({version:1,balances:Object.fromEntries(PEOPLE.map(id=>[id,START_CENTS])),settled:previous.settled});
  }
- return Object.freeze({VERSION:'7.7.0',KEY,START_CENTS,PEOPLE,load,reset,readSettings,money,quote,settle,receipt,roundId});
+ return Object.freeze({VERSION:'7.7.1',KEY,START_CENTS,PEOPLE,load,reset,readSettings,money,quote,settle,receipt,roundId});
 });
