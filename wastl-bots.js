@@ -124,13 +124,14 @@
   const all=SEATS.flatMap(s=>hands[s]);
   if(new Set(all).size!==32||all.some(c=>!E.parse(c)))throw Error('Die 32 Anfangskarten sind nicht eindeutig.');
  }
- function create({mySeat=null,hands=null,random=Math.random,round=1,session=null}={}){
+ function create({mySeat=null,hands=null,random=Math.random,round=1,session=null,knockEnabled=false,shotEnabled=false}={}){
   if(mySeat===null)mySeat=SEATS[Math.min(3,Math.floor(random()*4))];
   if(!SEATS.includes(mySeat))throw Error('Ungültiger Sitzplatz.');
   const initial=hands?copyHands(hands):deal(random);checkHands(initial);
   const game={
-   version:7,phase:'bidding',started:new Date().toISOString(),round,session:session||{played:0,won:0,lost:0,passed:0},
+   version:9,phase:knockEnabled?'knocking':'bidding',started:new Date().toISOString(),round,session:session||{played:0,won:0,lost:0,passed:0},
    mySeat,initialHands:copyHands(initial),hands:copyHands(initial),
+   knockEnabled:!!knockEnabled,shotEnabled:!!shotEnabled,knockCursor:0,knocks:[],shotLevel:0,shotQueue:[],shotStage:null,
    bids:[],bidCursor:0,auctionStage:'opening',activeBidders:[],auctionQueue:[],best:null,type:null,calledSuit:'eichel',trumpSuit:'herz',
    declarerSeat:null,leaderSeat:'vh',turn:null,current:[],tricks:[],lastTrick:null,lastAction:null
   };
@@ -143,6 +144,73 @@
  // 1. Vorhand -> Geber: ausschließlich "Ich spiele" oder "Weiter".
  // 2. Die Interessenten nennen ihre Spielart bzw. überbieten reihum.
  // Ein "Weiter" ist endgültig, niemals eine erneute Anfrage.
+
+ // Hausregel: nach jeweils vier Handkarten reihum Legen/Klopfen.
+ function firstFour(g,seat){return (g.initialHands?.[seat]||[]).slice(0,4);}
+ function currentActor(g){
+  if(g.phase==='knocking')return g.knockCursor<4?SEATS[g.knockCursor]:null;
+  if(g.phase==='shotOffer')return g.shotQueue?.[0]||null;
+  return null;
+ }
+ function knock(g,seat,lay){
+  if(g.phase!=='knocking'||currentActor(g)!==seat)throw Error('Legen ist gerade nicht möglich.');
+  g.knocks.push({seat,lay:!!lay});
+  g.knockCursor++;
+  g.lastAction={seat,text:lay?'Legt!':'Weiter!',kind:'knock'};
+  if(g.knockCursor===4){g.phase='bidding';g.lastAction=null;}
+  return g;
+ }
+ function botKnock(g,seat,random=Math.random){
+  const score=firstFour(g,seat).reduce((n,c)=>{
+   const p=E.parse(c);
+   if(p.rank==='O')return n+2.2+(p.suit==='eichel'?.65:0);
+   if(p.rank==='U')return n+1.35;
+   if(p.rank==='A')return n+1.1;
+   if(p.rank==='10')return n+.55;
+   if(p.suit==='herz')return n+.28;
+   return n;
+  },0);
+  return score>4.35+(random()-.5)*.9;
+ }
+ function declarerTeam(g){
+  if(!g.declarerSeat)return [];
+  if(g.type!=='rufspiel')return [g.declarerSeat];
+  const partner=SEATS.find(seat=>(g.initialHands?.[seat]||[]).includes(g.calledSuit+'-A'));
+  return partner&&partner!==g.declarerSeat?[g.declarerSeat,partner]:[];
+ }
+ function openShotWindow(g){
+  if(!g.shotEnabled||g.phase!=='playing'||g.tricks.length!==0||g.current.length!==1)return g;
+  const party=declarerTeam(g);
+  if(!party.length)return g;
+  g.shotLevel=0;
+  g.shotStage='offer';
+  g.shotQueue=SEATS.filter(s=>!party.includes(s));
+  g.phase='shotOffer';
+  return g;
+ }
+ function shot(g,seat,accept){
+  if(g.phase!=='shotOffer'||g.shotQueue?.[0]!==seat)throw Error('Schuss oder Retour ist gerade nicht möglich.');
+  if(accept){
+   g.shotLevel++;
+   g.lastAction={seat,text:g.shotLevel===1?'Schuss!':'Retour!',kind:'shot'};
+   if(g.shotStage==='offer'){
+    g.shotStage='retour';
+    g.shotQueue=SEATS.filter(s=>declarerTeam(g).includes(s));
+   }else{
+    g.shotQueue=[];g.phase='playing';
+   }
+  }else{
+   g.shotQueue.shift();
+   if(!g.shotQueue.length){g.phase='playing';g.lastAction=null;}
+  }
+  return g;
+ }
+ function botShot(g,seat,random=Math.random){
+  const hand=g.initialHands[seat];
+  const strength=hand.filter(c=>E.isTrump(c,g)).length+
+   .5*hand.filter(c=>E.parse(c).rank==='A').length;
+  return strength>=6.5&&random()>(g.shotStage==='offer'?.7:.55);
+ }
  function bidderSeat(g){
   if(g.phase!=='bidding'&&g.phase!=='chooseGame')return null;
   if((g.auctionStage||'opening')==='opening')return g.bidCursor<4?SEATS[g.bidCursor]:null;
@@ -232,6 +300,16 @@
  }
  // Ein Bot = eine sichtbare Ansage oder eine einzige ausgespielte Karte.
  function stepBot(g,random=Math.random){
+  if(g.phase==='knocking'){
+   const seat=currentActor(g);
+   if(seat&&seat!==g.mySeat)return knock(g,seat,botKnock(g,seat,random));
+   return g;
+  }
+  if(g.phase==='shotOffer'){
+   const seat=currentActor(g);
+   if(seat&&seat!==g.mySeat)return shot(g,seat,botShot(g,seat,random));
+   return g;
+  }
   if(g.phase==='bidding'){
    const seat=bidderSeat(g);
    if(!seat)return finishBidding(g);
@@ -286,7 +364,7 @@
    g.tricks.push(trick);g.lastTrick=trick;
    g.current=[];g.leaderSeat=winnerSeat;g.turn=winnerSeat;
    g.phase=g.tricks.length===8?'done':'trickDone';
-  }else g.turn=E.nextSeat(seat);
+  }else{g.turn=E.nextSeat(seat);openShotWindow(g);}
   return g;
  }
  function play(g,card){
@@ -306,14 +384,14 @@
   const myTeam=team.includes(g.mySeat);
   return {declarerEyes:eyes,partnerSeat:partner,win:myTeam?eyes>=61:eyes<61,myTeam};
  }
- function nextRound(g,random=Math.random){
+ function nextRound(g,random=Math.random,options={}){
   if(!['done','noGame'].includes(g?.phase))throw Error('Beende zunächst diese Runde.');
   const s={played:g.session?.played||0,won:g.session?.won||0,lost:g.session?.lost||0,passed:g.session?.passed||0};
   if(g.phase==='done'){const r=result(g);s.played++;if(r.win)s.won++;else s.lost++;}
   else s.passed++;
   // Der Geber rückt zum nächsten physischen Stuhl: jeder Teilnehmer
   // wird aus seiner bisherigen Spielposition eine Position zurückgesetzt.
-  return create({mySeat:E.nextSeat(g.mySeat,-1),random,round:(g.round||1)+1,session:s});
+  return create({mySeat:E.nextSeat(g.mySeat,-1),random,round:(g.round||1)+1,session:s,knockEnabled:options.knockEnabled??g.knockEnabled??false,shotEnabled:options.shotEnabled??g.shotEnabled??false});
  }
  function toRecord(g){
   if(g.phase!=='done'||g.tricks.length!==8)throw Error('Nur abgeschlossene Partien speichern.');
@@ -334,6 +412,6 @@
   if(!review.ok)throw Error('Die Partie konnte nicht regelkonform gespeichert werden: '+(review.errors[0]?.message||'Unbekannter Fehler'));
   return record;
  }
- return Object.freeze({VERSION:'6.7.0',SEATS,PEOPLE,deal,sortHand,personAt,bidOptions,bidStrength,
+ return Object.freeze({VERSION:'7.9.0',SEATS,PEOPLE,deal,sortHand,personAt,firstFour,currentActor,knock,shot,declarerTeam,bidOptions,bidStrength,
   create,bidderSeat,declareInterest,chooseToPlay,cancelChoice,submitBid,stepBot,advance,finishBidding,startPlay,play,playable,nextTrick,nextRound,result,toRecord});
 });

@@ -9,11 +9,14 @@
  const SUITS={eichel:'Eichel',gras:'Gras',herz:'Herz',schell:'Schellen'};
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\u0027':'&#39;'}[c]));
  const face=(id,cls='')=>`<img draggable="false" class="bots-face ${cls}" src="./cards/${encodeURIComponent(id)}.webp" alt="${esc(id.replace('-',' '))}">`;
- let game=null,error='',timer=null,walletOpen=false;
+ let game=null,error='',timer=null,walletOpen=false,settingsOpen=false;
+ const OPTIONS_KEY='schafkopf-botoptionen-v1';
+ function readOptions(){let o={};try{o=JSON.parse(localStorage.getItem(OPTIONS_KEY)||'null')||{};}catch{}return {knock:o.knock!==false,shot:o.shot===true};}
+ function saveOptions(o){localStorage.setItem(OPTIONS_KEY,JSON.stringify(o));}
  try{
   const old=JSON.parse(localStorage.getItem(KEY)||'null');
-  if(old&&[6,7].includes(old.version)&&B.SEATS.includes(old.mySeat)&&
-    ['bidding','chooseGame','biddingResult','playing','trickDone','done','noGame'].includes(old.phase)&&
+  if(old&&[6,7,8,9].includes(old.version)&&B.SEATS.includes(old.mySeat)&&
+    ['knocking','shotOffer','bidding','chooseGame','biddingResult','playing','trickDone','done','noGame'].includes(old.phase)&&
     old.initialHands&&old.hands&&Array.isArray(old.tricks)&&old.tricks.length<=8){
      game=old;
      // Laufende Runden bleiben erhalten. Nur alte, noch unvollständige
@@ -22,7 +25,12 @@
       Object.assign(game,{phase:'bidding',auctionStage:'opening',bidCursor:0,
        bids:[],activeBidders:[],auctionQueue:[],best:null,lastAction:null});
      }
-     game.version=7;
+     game.version=9;
+     if(game.knockEnabled===undefined)game.knockEnabled=false;
+     if(game.shotEnabled===undefined)game.shotEnabled=false;
+     if(!Array.isArray(game.knocks))game.knocks=[];
+     if(!Array.isArray(game.shotQueue))game.shotQueue=[];
+     if(!Number.isInteger(game.shotLevel))game.shotLevel=0;
      if(game.phase!=='done')game.cashEligible=true;
     }
  }catch(e){console.warn('Stammtisch konnte nicht geladen werden:',e);}
@@ -38,11 +46,14 @@
   return ['bottom','left','top','right'][offset];
  }
  function currentSpeaker(g){
+  if(g.phase==='knocking'||g.phase==='shotOffer')return B.currentActor(g);
   if(['bidding','chooseGame'].includes(g.phase))return B.bidderSeat(g);
   if(g.phase==='playing')return g.turn;
   return null;
  }
  function turnAnnouncement(g){
+  if(g.phase==='knocking')return 'Erste vier Karten · '+seatLabel(g,B.currentActor(g))+' ist dran';
+  if(g.phase==='shotOffer')return (g.shotStage==='retour'?'Retour: ':'Schuss: ')+seatLabel(g,B.currentActor(g))+' ist dran';
   if(g.phase==='bidding'){
    const seat=B.bidderSeat(g);
    return seat?(g.auctionStage==='declaration'?'Spielart: ':'Ansage: ')+seatLabel(g,seat)+' ist dran':'Ansagerunde beendet';
@@ -55,16 +66,17 @@
   return 'Neue Karten';
  }
  function schedule(){
-  if(timer!==null||!game||typeof tab==='undefined'||tab!=='bots')return;
+  if(timer!==null||!game||walletOpen||settingsOpen||typeof tab==='undefined'||tab!=='bots')return;
   const g=game;
+  const botSpecial=(g.phase==='knocking'||g.phase==='shotOffer')&&B.currentActor(g)&&B.currentActor(g)!==g.mySeat;
   const botBid=g.phase==='bidding'&&B.bidderSeat(g)!==null&&B.bidderSeat(g)!==g.mySeat;
   const botCard=g.phase==='playing'&&g.turn!==g.mySeat;
   const nextTrick=g.phase==='trickDone';
   const finalBid=g.phase==='biddingResult';
-  if(!botBid&&!botCard&&!nextTrick&&!finalBid)return;
+  if(!botSpecial&&!botBid&&!botCard&&!nextTrick&&!finalBid)return;
   // Langsame, einzeln erkennbare Spielzüge. Ein kompletter Stich wird
   // zunächst gezeigt, bevor er automatisch eingesammelt wird.
-  const duration=nextTrick?1900:finalBid?1850:botBid?1350:1150;
+  const duration=nextTrick?1900:finalBid?1850:botSpecial?1150:botBid?1350:1150;
   timer=setTimeout(()=>{
    timer=null;if(game!==g||tab!=='bots')return;
    try{
@@ -86,7 +98,7 @@
   }catch(e){error='Partie noch nicht archiviert: '+String(e.message||e);}
  }
  function title(g){
-  if(!g.type)return 'Ansagerunde';
+  if(!g.type)return g.phase==='knocking'?'Legen / Klopfen':'Ansagerunde';
   if(g.type==='rufspiel')return 'Rufspiel '+SUITS[g.calledSuit];
   if(g.type==='solo')return 'Solo '+SUITS[g.trumpSuit];
   return 'Wenz';
@@ -110,13 +122,29 @@
    <header><h3>🪙 Stammtischkasse</h3><button type="button" data-bots-wallet-close aria-label="Schließen">✕</button></header>
    <p>Virtuelles Guthaben · getrennt von deiner bisherigen Geldbilanz.</p>
    <div class="bots-wallet-grid">${persons.map(([id,name])=>`<div class="bots-wallet-person"><span>${name}</span><strong>${money(w.balances[id])}</strong></div>`).join('')}</div>
-   <div class="bots-wallet-tariffs"><b>Tarife aus Einstellungen</b>
+   <details class="bots-wallet-details"><summary>Tarife & Regeln anzeigen</summary><div class="bots-wallet-tariffs"><b>Tarife aus Einstellungen</b>
     <span>Rufspiel ${money(cfg.rates.rufspiel)} · Solo/Wenz ${money(cfg.rates.solo)}</span>
     <span>Schneider +${money(cfg.rates.schneider)} · Schwarz +${money(cfg.rates.schwarz)}</span>
     <span>Läufer +${money(cfg.rates.laeufer)} je Karte (Rufspiel ab ${cfg.rufMinRunners})</span>
-    <small>Neue Spielpreise gelten bei der nächsten Abrechnung. Schuss/Kontra sind im Botspiel noch nicht verfügbar. Ein negatives Guthaben ist beim Training erlaubt.</small>
-   </div>
+    <small>Tarifänderungen gelten bei der nächsten Abrechnung. Lege- und Schussregeln sind über ⚙️ einstellbar. Negatives Guthaben bleibt im Training erlaubt.</small>
+   </div></details>
    <div class="bots-wallet-actions"><button type="button" class="bots-wallet-reset" data-bots-wallet-reset>Alle Guthaben auf 10,00 € zurücksetzen</button><button type="button" class="bots-gold-btn" data-bots-wallet-close>Zurück zum Tisch</button></div>
+  </section></div>`;
+ }
+
+ function settingsPanel(){
+  const opts=readOptions();
+  return `<div class="bots-settings-overlay"><section class="bots-settings-modal" role="dialog" aria-modal="true" aria-label="Spieleinstellungen">
+   <header><h3>⚙️ Spieleinstellungen</h3><button type="button" data-bots-settings-close aria-label="Schließen">✕</button></header>
+   <p>Hausregeln für deinen virtuellen Stammtisch</p>
+   <div class="bots-settings-row"><div><strong>Legen / Klopfen (4 + 4)</strong>
+    <small>Nach den ersten vier Karten darf jeder reihum legen (je Leger ×2).</small></div>
+    <button type="button" data-bots-setting-toggle="knock" aria-pressed="${opts.knock}">${opts.knock?'Ein':'Aus'}</button></div>
+   <div class="bots-settings-row"><div><strong>Schuss / Kontra & Retour</strong>
+    <small>Vor der zweiten Karte: Gegenspieler ×2, Retour ×4.</small></div>
+    <button type="button" data-bots-setting-toggle="shot" aria-pressed="${opts.shot}">${opts.shot?'Ein':'Aus'}</button></div>
+   <small>Änderungen gelten ab der nächsten Runde. Guthaben und laufende Partien bleiben erhalten.</small>
+   <button class="bots-gold-btn" type="button" data-bots-settings-close>Zurück zum Spiel</button>
   </section></div>`;
  }
  function startUI(){
@@ -155,6 +183,25 @@
   </section></div>`;
  }
  function bidOverlay(g){
+  if(g.phase==='knocking'){
+   if(B.currentActor(g)!==g.mySeat)return '';
+   const count=(g.knocks||[]).filter(k=>k.lay).length;
+   return `<section class="bots-mid-action bots-knock-offer" aria-label="Legen oder Weiter"><h3>Möchtest du legen?</h3>
+    <p>Deine ersten vier Karten sind ausgeteilt. Jedes Legen verdoppelt den Spielwert.</p>
+    <div class="bots-main-actions"><button class="bots-gold-btn" type="button" data-bots-knock="yes">Klopfen / Legen</button>
+    <button class="bots-gold-btn" type="button" data-bots-knock="no">Weiter</button></div>
+    <small>${count} Leger · momentan ×${2**count}</small></section>`;
+  }
+  if(g.phase==='shotOffer'){
+   if(B.currentActor(g)!==g.mySeat)return '';
+   const retour=g.shotStage==='retour';
+   return `<section class="bots-mid-action bots-shot-offer" aria-label="Schussentscheidung">
+    <h3>${retour?'Retour geben?':'Schuss geben?'}</h3>
+    <p>${retour?'Den Spielwert nochmals verdoppeln.':'Du spielst gegen die Ansagerpartei – Kontra verdoppelt den Spielwert.'}</p>
+    <div class="bots-main-actions"><button class="bots-gold-btn" type="button" data-bots-shot="yes">${retour?'Retour!':'Schuss!'}</button>
+    <button class="bots-gold-btn" type="button" data-bots-shot="no">Weiter</button></div>
+    <small>Die zweite Karte des ersten Stichs ist noch nicht gelegt.</small></section>`;
+  }
   if(g.phase==='chooseGame')return cardMenu(g);
   if(g.phase==='biddingResult')return `<section class="bots-mid-action bots-final-announce" role="status"><h3>${esc(seatLabel(g,g.best.seat))} spielt ${esc(g.best.label)}!</h3><small>Die Spielverhandlung ist abgeschlossen. Gleich wird ausgespielt.</small></section>`;
   if(g.phase!=='bidding'||B.bidderSeat(g)!==g.mySeat)return '';
@@ -177,7 +224,8 @@
   const person=B.personAt(g,seat),acting=currentSpeaker(g)===seat;
   const bubble=speech(g,seat);
   const bid=g.bids?.slice().reverse().find(b=>b.seat===seat);
-  const announced=bid?(bid.offer?bid.offer.label:bid.intent?'Ich spiele':'Weiter'):'';
+  const knock=g.knocks?.slice().reverse().find(k=>k.seat===seat);
+  const announced=g.phase==='knocking'?(knock?(knock.lay?'Legt':'Weiter'):''):(bid?(bid.offer?bid.offer.label:bid.intent?'Ich spiele':'Weiter'):'');
   // Figuren hinter der Tischkante, Namensschilder auf der Tischkante.
   return `<div class="bots-player bots-player-${pos} ${acting?'bots-player-active':''}">
    ${bubble}
@@ -215,7 +263,6 @@
      ${speech(g,g.mySeat)}
     </div>
     ${bidOverlay(g)}
-     ${walletOpen?walletPanel():''}
     ${g.phase==='noGame'?`<div class="bots-mid-action"><h3>Alle haben weiter gesagt.</h3><button type="button" class="bots-gold-btn" data-bots-round>Neue Karten geben</button></div>`:''}
     ${g.phase==='done'?finish(g):''}
    </div>
@@ -224,8 +271,9 @@
  function hand(g){
   const active=g.phase==='playing'&&g.turn===g.mySeat;
   const legal=active?new Set(B.playable(g,g.mySeat)):new Set();
-  const sorted=B.sortHand(g.hands[g.mySeat],g.type?g:{type:'rufspiel'});
-  return `<section class="bots-hand" style="--fan-count:${sorted.length}">
+  const visible=g.phase==='knocking'?B.firstFour(g,g.mySeat):g.hands[g.mySeat];
+  const sorted=B.sortHand(visible,g.type?g:{type:'rufspiel'});
+  return `<section class="bots-hand ${g.phase==='knocking'?'bots-hand-first-packet':''}" style="--fan-count:${sorted.length}">
    <div class="bots-index-finger" aria-hidden="true">
     <img src="./players/zeigefinger.webp" alt="" draggable="false">
    </div>
@@ -255,6 +303,7 @@
   const you=paid.deltas?.you??0;
   const mineAsDeclarer=g.declarerSeat&&B.personAt(g,g.declarerSeat)?.id==='you';
   const factor=(paid.type==='solo'||paid.type==='wenz')&&mineAsDeclarer?3:1;
+  const finalUnit=perPerson*(paid.totalFactor||1);
   const all=[['you','Du'],['resi','Resi'],['sepp','Sepp'],['xaver','Xaver']];
   const row=(name,cents,extra='')=>`<div class="bots-receipt-row ${extra}"><span>${esc(name)}</span><strong>${money(cents)}</strong></div>`;
   const eyes=Number.isFinite(paid.declarerEyes)?paid.declarerEyes:0;
@@ -269,14 +318,17 @@
     ${row('Schneider'+(paid.schneider?' ✓':' – nicht erreicht'),schneider)}
     ${row('Schwarz'+(paid.schwarz?' ✓':' – nicht erreicht'),schwarz)}
     ${row((paid.runners||0)+' Laufende'+(paid.runners?' ('+paid.runnersKind+')':''),runners)}
-    ${row('Spielwert pro Mitspieler',perPerson,'bots-receipt-subtotal')}
-    ${paid.type!=='rufspiel'? `<div class="bots-receipt-rule">${mineAsDeclarer?'Du spielst allein: 3 Gegner × '+money(perPerson):'Solo/Wenz: der Alleinspieler zahlt/erhält 3 × '+money(perPerson)+'; die anderen jeweils 1 ×'}</div>`:''}
+    ${row('Zwischensumme vor Verdopplungen',perPerson,'bots-receipt-subtotal')}
+    ${row((paid.leger||0)+' Leger (×'+(paid.legerFactor||1)+')',perPerson*(paid.legerFactor||1))}
+    ${row((paid.shotLevel===2?'Schuss + Retour':paid.shotLevel===1?'Schuss':'Kein Schuss')+' (×'+(paid.shotFactor||1)+')',perPerson*(paid.totalFactor||1))}
+    ${row('Spielwert pro Gegenspieler',perPerson*(paid.totalFactor||1),'bots-receipt-subtotal')}
+    ${paid.type!=='rufspiel'? `<div class="bots-receipt-rule">${mineAsDeclarer?'Du spielst allein: 3 Gegner × '+money(finalUnit):'Solo/Wenz: der Alleinspieler zahlt/erhält 3 × '+money(finalUnit)+'; die anderen jeweils 1 ×'}</div>`:''}
     <div class="bots-receipt-row bots-receipt-total"><span>Dein Ergebnis${factor!==1?' (× '+factor+')':''}</span><strong>${signed(you)}</strong></div>
    </div>
    <div class="bots-receipt-table-title">Abrechnung am Stammtisch</div>
    <div class="bots-receipt-players">${all.map(([id,label])=>`<div class="bots-receipt-person ${id==='you'?'bots-receipt-self':''}">
     <span>${label}</span><strong class="${paid.deltas[id]<0?'bots-receipt-loss':''}">${signed(paid.deltas[id])}</strong></div>`).join('')}</div>
-   <p class="bots-receipt-caption">Leger: keiner · Schuss: keiner. Diese Ansagen sind im Botspiel noch nicht verfügbar. Die Beträge stammen aus den Spielpreisen zum Zeitpunkt der Abrechnung.</p>
+   <p class="bots-receipt-caption">Legen: ${paid.leger||0} × · Schuss: ${paid.shotLevel===2?'mit Retour':paid.shotLevel===1?'ohne Retour':'keiner'}. Gesamtfaktor: ×${paid.totalFactor||1}. Tarife sind zum Zeitpunkt der Abrechnung gespeichert.</p>
    <div class="bots-receipt-current">Dein aktuelles Guthaben: <strong>${money(BANK.load().balances.you)}</strong></div>
   </div>`;
  }
@@ -304,13 +356,15 @@
    <header class="bots-hud"><button class="bots-exit" type="button" data-bots-exit aria-label="Zur Startseite">←</button><div><small>♠ SCHAFKOPF-STAMMTISCH</small>
     <strong>${esc(title(g))}</strong>
     <span>Runde ${g.round} · ${esc(turnAnnouncement(g))}</span></div>
-    <button class="bots-reset" type="button" data-bots-abandon aria-label="Partie verlassen">↺ Neu</button></header>
+    <div class="bots-hud-actions"><button class="bots-settings-open" type="button" data-bots-settings title="Spieleinstellungen" aria-label="Spieleinstellungen">⚙</button><button class="bots-reset" type="button" data-bots-abandon aria-label="Partie verlassen">↺ Neu</button></div></header>
    ${error?`<div class="bots-error" role="alert">${esc(error)}</div>`:''}
    ${board(g)}
    ${g.phase!=='noGame'&&g.phase!=='done'?hand(g):''}
    <footer class="bots-tally bots-cash-tally"><span class="bots-your-cash">🪙 Du: <strong>${money(BANK.load().balances.you)}</strong></span>
     ${sc?`<span class="bots-eyes-tally">${sc.us}:${sc.them} Augen</span>`:''}
     <button type="button" class="bots-wallet-show" data-bots-wallet>Alle Guthaben</button></footer>
+   ${walletOpen?walletPanel():''}
+   ${settingsOpen?settingsPanel():''}
   </section>`;
  }
  // Karten nicht erneut zeichnen: Das bisherige DOM bleibt erhalten, nur die
@@ -373,9 +427,10 @@
    for(const [key,node] of currentCards)if(!needed.has(key))node.remove();
   }
   swap('.bots-self-spot',currentWood,newWood);
-  for(const selector of ['.bots-mid-action','.bots-shade','.bots-finish','.bots-wallet-overlay'])swap(selector,currentWood,newWood);
+  for(const selector of ['.bots-mid-action','.bots-shade','.bots-finish'])swap(selector,currentWood,newWood);
   const hand=root.querySelector('.bots-hand'),nextHand=next.querySelector('.bots-hand');
   if(hand&&nextHand){
+   hand.className=nextHand.className;
    hand.style.setProperty('--fan-count',nextHand.style.getPropertyValue('--fan-count')||'8');
    swap('.bots-hand-heading',hand,nextHand);
    const row=hand.querySelector('.bots-hand-row'),future=nextHand.querySelector('.bots-hand-row');
@@ -402,13 +457,22 @@
   }else if(hand)hand.remove();
   else if(nextHand)root.querySelector('.bots-scene')?.after(nextHand);
   swap('.bots-tally');
+  swap('.bots-wallet-overlay');
+  swap('.bots-settings-overlay');
  }
  function click(e){
-  const b=e.target.closest('[data-bots-exit],[data-bots-new],[data-bots-abandon],[data-bots-round],[data-bots-choose],[data-bots-back],[data-bots-bid],[data-bots-pass],[data-bots-play],[data-bots-analyze],[data-bots-wallet],[data-bots-wallet-close],[data-bots-wallet-reset]');
+  const b=e.target.closest('[data-bots-exit],[data-bots-new],[data-bots-abandon],[data-bots-round],[data-bots-choose],[data-bots-back],[data-bots-bid],[data-bots-pass],[data-bots-play],[data-bots-analyze],[data-bots-wallet],[data-bots-wallet-close],[data-bots-wallet-reset],[data-bots-settings],[data-bots-settings-close],[data-bots-setting-toggle],[data-bots-knock],[data-bots-shot]');
   if(!b||typeof tab==='undefined'||tab!=='bots')return;
   e.preventDefault();cancelTimer();
   try{
    error='';
+   if(b.hasAttribute('data-bots-settings')){settingsOpen=true;renderApp();return;}
+   if(b.hasAttribute('data-bots-settings-close')){settingsOpen=false;renderApp();return;}
+   if(b.hasAttribute('data-bots-setting-toggle')){
+    const key=b.dataset.botsSettingToggle;
+    if(!['knock','shot'].includes(key))throw Error('Unbekannte Einstellung.');
+    const options=readOptions();options[key]=!options[key];saveOptions(options);renderApp();return;
+   }
    if(b.hasAttribute('data-bots-wallet')){walletOpen=true;renderApp();return;}
    if(b.hasAttribute('data-bots-wallet-close')){walletOpen=false;renderApp();return;}
    if(b.hasAttribute('data-bots-wallet-reset')){
@@ -416,16 +480,22 @@
     else schedule();
     return;
    }
+   if(b.hasAttribute('data-bots-knock')){
+    B.knock(game,game.mySeat,b.dataset.botsKnock==='yes');save();renderApp();return;
+   }
+   if(b.hasAttribute('data-bots-shot')){
+    B.shot(game,game.mySeat,b.dataset.botsShot==='yes');save();renderApp();return;
+   }
    if(b.hasAttribute('data-bots-exit')){
     save();switchTab('home');return;
    }
    if(b.hasAttribute('data-bots-abandon')){
-    if(game&&['playing','chooseGame','bidding','biddingResult'].includes(game.phase)&&!confirm('Laufende Runde wirklich beenden?')){schedule();return;}
+    if(game&&['knocking','shotOffer','playing','chooseGame','bidding','biddingResult'].includes(game.phase)&&!confirm('Laufende Runde wirklich beenden?')){schedule();return;}
     game=null;
    }else if(b.hasAttribute('data-bots-new')){
-    game=B.create();game.cashEligible=true;walletOpen=false;
+    game=B.create({knockEnabled:readOptions().knock,shotEnabled:readOptions().shot});game.cashEligible=true;walletOpen=false;settingsOpen=false;
    }else if(b.hasAttribute('data-bots-round')){
-    game=B.nextRound(game);game.cashEligible=true;walletOpen=false;
+    game=B.nextRound(game,Math.random,{knockEnabled:readOptions().knock,shotEnabled:readOptions().shot});game.cashEligible=true;walletOpen=false;settingsOpen=false;
    }else if(b.hasAttribute('data-bots-choose')){
     if(game.auctionStage==='opening')B.declareInterest(game,true);
     else B.chooseToPlay(game);
@@ -474,5 +544,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.8.1'};
+ window.WastlBotsUI={render,version:'7.9.0'};
 })();

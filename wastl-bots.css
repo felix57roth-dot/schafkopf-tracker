@@ -1869,3 +1869,106 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 .bots-page .bots-finish-actions,.bots-page .bots-finish-actions button{
  position:relative;z-index:161;pointer-events:auto;touch-action:manipulation;
 }
+
+/* Stammtisch 7.9 – Spielfolge 4+4, optionale Hausregeln und korrekte Dialogebenen. */
+.bots-hud-actions{
+ display:flex!important;flex:0 0 auto;align-items:center;justify-content:flex-end;
+ gap:6px;min-width:0;
+}
+.bots-hud-actions .bots-reset{padding:8px 10px;min-height:38px}
+.bots-settings-open{
+ border:1px solid #c4a578;border-radius:12px;
+ background:#6a5845;color:#fff8e3;
+ display:grid;place-items:center;font-size:22px;
+ width:39px;height:40px;min-width:39px;min-height:40px;line-height:1;
+ cursor:pointer;
+}
+.bots-settings-open:focus-visible,.bots-settings-modal button:focus-visible,
+.bots-wallet-details summary:focus-visible{outline:3px solid #2e7d50;outline-offset:2px}
+.bots-wallet-details{
+ background:#fff7e9a6;border:1px solid #d1b784;border-radius:10px;
+ padding:8px 10px;
+}
+.bots-wallet-details summary{
+ font-size:13px;font-weight:850;color:#533b20;cursor:pointer;
+ list-style:revert;padding:3px;
+}
+.bots-wallet-details[open] summary{padding-bottom:8px}
+.bots-wallet-details .bots-wallet-tariffs{
+ margin:0;border-top:1px solid #d9c69d;padding:8px 0 0;
+}
+.bots-page .bots-wallet-overlay,
+.bots-page .bots-settings-overlay{
+ position:fixed!important;inset:0!important;
+ display:flex;align-items:center;justify-content:center;
+ padding:calc(15px + env(safe-area-inset-top,0px)) 12px calc(15px + env(safe-area-inset-bottom,0px));
+ z-index:9999!important;isolation:isolate;
+ background:rgba(20,12,6,.84);overflow-y:auto;
+ overscroll-behavior:contain;
+ pointer-events:auto!important;
+}
+.bots-page .bots-wallet-modal,.bots-page .bots-settings-modal{
+ width:min(100%,455px);max-height:calc(100dvh - 52px);overflow-y:auto;
+ overscroll-behavior:contain;flex-shrink:1;
+}
+.bots-settings-modal{
+ color:#3c2b1c;
+ border:2px solid #bb975b;border-radius:19px;
+ background:linear-gradient(165deg,#fff8e8,#e9d4a5);
+ padding:clamp(12px,3vw,18px);
+ box-shadow:0 18px 46px #0d0907d9;
+ display:grid;gap:13px;
+}
+.bots-settings-modal header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.bots-settings-modal h3{margin:0;font-size:20px;color:#392519}
+.bots-settings-modal header button{
+ background:#fff6dd;color:#553a20;border:1px solid #bc9e70;
+ border-radius:10px;padding:5px 11px;font-size:20px;
+}
+.bots-settings-modal p{margin:0;font-size:13px;line-height:1.35}
+.bots-settings-modal>small{font-size:11px;color:#66503a;line-height:1.35}
+.bots-settings-row{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ background:#fff9ed;border:1px solid #d6bf96;border-radius:12px;
+ padding:12px;
+}
+.bots-settings-row>div{display:grid;gap:4px;min-width:0}
+.bots-settings-row strong{font-size:13px}
+.bots-settings-row small{font-size:11px;line-height:1.4;color:#6f5945}
+.bots-settings-row>button{
+ flex:0 0 auto;min-width:51px;border-radius:18px;
+ border:1px solid #a99369;background:#e7daca;color:#584331;
+ font-size:12px;font-weight:850;padding:8px 10px;
+}
+.bots-settings-row>button[aria-pressed="true"]{
+ background:#2d7655;color:#fff6dd;border-color:#2d7655;
+}
+.bots-knock-offer,.bots-shot-offer{
+ top:63%;z-index:60;gap:10px;
+ width:min(93%,415px);max-width:415px;
+ background:rgba(48,31,18,.9);border:1px solid #ddc18b;
+ box-shadow:0 8px 22px #241405b8;
+}
+.bots-knock-offer p,.bots-shot-offer p{font-size:12px;line-height:1.35;margin:0;color:#f8ebd4}
+.bots-knock-offer .bots-main-actions,
+.bots-shot-offer .bots-main-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bots-knock-offer .bots-gold-btn,
+.bots-shot-offer .bots-gold-btn{font-size:clamp(13px,3.7vw,16px);padding:8px 6px}
+.bots-hand-first-packet .bots-grip,
+.bots-hand-first-packet .bots-index-finger{display:none!important}
+.bots-hand-first-packet .bots-hand-row .bots-card-button{cursor:default}
+.bots-page .bots-wallet-overlay~.bots-hand,
+.bots-page .bots-settings-overlay~.bots-hand{pointer-events:none}
+.bots-wallet-modal .bots-wallet-actions{flex:0 0 auto}
+@media(max-width:380px){
+ .bots-hud{padding:9px 8px;gap:5px}
+ .bots-hud>div:not(.bots-hud-actions)>small{font-size:9px}
+ .bots-hud strong{font-size:clamp(16px,5vw,20px)}
+ .bots-settings-open{width:35px;min-width:35px;height:37px;min-height:37px;font-size:20px}
+ .bots-hud-actions .bots-reset{padding:7px 6px;font-size:12px}
+ .bots-wallet-modal,.bots-settings-modal{padding:10px;gap:9px}
+}
+@media(max-height:680px){
+ .bots-wallet-modal,.bots-settings-modal{max-height:calc(100dvh - 24px)!important}
+ .bots-knock-offer,.bots-shot-offer{top:58%;gap:7px;padding:9px}
+}

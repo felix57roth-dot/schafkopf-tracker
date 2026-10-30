@@ -60,20 +60,29 @@
   let consecutive=0;
   for(const card of order){if(owned.has(card)!==withTop)break;consecutive++;}
   const max=g.type==='wenz'?4:14;
-  const usedRunners=consecutive>=(g.type==='rufspiel'?rufMinRunners:3)?Math.min(consecutive,max):0;
-  const schneider=losingEyes<=30,schwarz=losingEyes===0;
+  const usedRunners=consecutive>=(g.type==='rufspiel'?rufMinRunners:g.type==='wenz'?2:3)?Math.min(consecutive,max):0;
+  // Spielerpartei unter 31 Augen, Gegenpartei unter 30 Augen Schneider.
+  const schneider=losingEyes<=(declarerWon?29:30);
+  // Schwarz heißt keinen einzigen Stich – nicht lediglich null Augen.
+  const losers=declarerWon?E.SEATS.filter(seat=>!declarerTeam.includes(seat)):declarerTeam;
+  const schwarz=g.tricks.every(trick=>!losers.includes(trick.winnerSeat));
   const unitCents=(g.type==='rufspiel'?rates.rufspiel:rates.solo)+
    (schneider?rates.schneider:0)+(schwarz?rates.schwarz:0)+usedRunners*rates.laeufer;
+  // Jede Legeransage verdoppelt, Schuss erneut x2 und Retour x4.
+  const leger=Math.min(4,(g.knocks||[]).filter(item=>item.lay).length);
+  const shotLevel=Math.min(2,Math.max(0,Number(g.shotLevel)||0));
+  const legerFactor=2**leger,shotFactor=2**shotLevel,totalFactor=legerFactor*shotFactor;
+  const finalUnitCents=unitCents*totalFactor;
   const deltas={};
   for(const seat of E.SEATS){
    const person=B.personAt(g,seat);
    if(!person||!PEOPLE.includes(person.id))return null;
    const isDeclarerTeam=declarerTeam.includes(seat);
    const winner=isDeclarerTeam===declarerWon;
-   deltas[person.id]=(winner?1:-1)*unitCents*(g.type==='rufspiel'?1:isDeclarerTeam?3:1);
+   deltas[person.id]=(winner?1:-1)*finalUnitCents*(g.type==='rufspiel'?1:isDeclarerTeam?3:1);
   }
   if(Object.values(deltas).reduce((sum,n)=>sum+n,0)!==0)return null;
-  return {id:roundId(g),type:g.type,unitCents,deltas,declarerWon,declarerEyes:r.declarerEyes,
+  return {id:roundId(g),type:g.type,unitCents:finalUnitCents,baseUnitCents:unitCents,leger,legerFactor,shotLevel,shotFactor,totalFactor,deltas,declarerWon,declarerEyes:r.declarerEyes,
    schneider,schwarz,runners:usedRunners,runnersKind:withTop?'mit':'ohne',
    tariff:{...rates},createdAt:new Date().toISOString()};
  }
@@ -97,5 +106,5 @@
   const previous=load();
   return store({version:1,balances:Object.fromEntries(PEOPLE.map(id=>[id,START_CENTS])),settled:previous.settled});
  }
- return Object.freeze({VERSION:'7.8.0',KEY,START_CENTS,PEOPLE,load,reset,readSettings,money,quote,settle,receipt,roundId});
+ return Object.freeze({VERSION:'7.9.0',KEY,START_CENTS,PEOPLE,load,reset,readSettings,money,quote,settle,receipt,roundId});
 });
