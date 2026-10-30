@@ -3,7 +3,7 @@
  */
 (function(){
  'use strict';
- const B=window.WastlBots,E=window.WastlEngine,BANK=window.WastlBotBank;
+ const B=window.WastlBots,E=window.WastlEngine,BANK=window.WastlBotBank,COINS=window.WastlBotCoins;
  const KEY='schafkopf-botspiel-v1';
  const POSITIONS={vh:'Vorhand',mh:'Mittelhand',hh:'Hinterhand',g:'Geber'};
  const SUITS={eichel:'Eichel',gras:'Gras',herz:'Herz',schell:'Schellen'};
@@ -30,6 +30,7 @@
      if(game.shotEnabled===undefined)game.shotEnabled=false;
      if(!Array.isArray(game.knocks))game.knocks=[];
      if(!Array.isArray(game.shotQueue))game.shotQueue=[];
+     if(!Array.isArray(game.shots))game.shots=[];
      if(!Number.isInteger(game.shotLevel))game.shotLevel=0;
      if(game.phase!=='done')game.cashEligible=true;
     }
@@ -259,6 +260,8 @@
     <div class="bots-playing-area" aria-label="Ausgelegte Karten">
       ${playedCards(g)}
     </div>
+    ${COINS.tokens(g,relative)}
+    ${COINS.bowl()}
     <div class="bots-self-spot ${active===g.mySeat?'bots-self-active':''}">
      ${speech(g,g.mySeat)}
     </div>
@@ -306,6 +309,7 @@
   const finalUnit=perPerson*(paid.totalFactor||1);
   const all=[['you','Du'],['resi','Resi'],['sepp','Sepp'],['xaver','Xaver']];
   const row=(name,cents,extra='')=>`<div class="bots-receipt-row ${extra}"><span>${esc(name)}</span><strong>${money(cents)}</strong></div>`;
+  const hasExtra=!!(paid.schneider&&schneider||paid.schwarz&&schwarz||paid.runners&&runners||paid.leger||paid.shotLevel);
   const eyes=Number.isFinite(paid.declarerEyes)?paid.declarerEyes:0;
   const getStatus=you>0?'Du gewinnst':you<0?'Du verlierst':'Dein Ergebnis';
   return `<div class="bots-receipt-content" aria-label="Genaue Preisauflistung">
@@ -315,20 +319,20 @@
    <div class="bots-receipt-subtitle">Ansagerpartei: ${eyes} Augen · Gegner: ${120-eyes} Augen</div>
    <div class="bots-receipt-lines">
     ${row('Grundpreis '+(paid.type==='rufspiel'?'Rufspiel':paid.type==='solo'?'Solo':'Wenz'),base)}
-    ${row('Schneider'+(paid.schneider?' ✓':' – nicht erreicht'),schneider)}
-    ${row('Schwarz'+(paid.schwarz?' ✓':' – nicht erreicht'),schwarz)}
-    ${row((paid.runners||0)+' Laufende'+(paid.runners?' ('+paid.runnersKind+')':''),runners)}
-    ${row('Zwischensumme vor Verdopplungen',perPerson,'bots-receipt-subtotal')}
-    ${row((paid.leger||0)+' Leger (×'+(paid.legerFactor||1)+')',perPerson*(paid.legerFactor||1))}
-    ${row((paid.shotLevel===2?'Schuss + Retour':paid.shotLevel===1?'Schuss':'Kein Schuss')+' (×'+(paid.shotFactor||1)+')',perPerson*(paid.totalFactor||1))}
-    ${row('Spielwert pro Gegenspieler',perPerson*(paid.totalFactor||1),'bots-receipt-subtotal')}
+    ${paid.schneider&&schneider>0?row('Schneider',schneider):''}
+    ${paid.schwarz&&schwarz>0?row('Schwarz',schwarz):''}
+    ${paid.runners>0&&runners>0?row(paid.runners+' Läufer ('+paid.runnersKind+')',runners):''}
+    ${paid.leger>0||paid.shotLevel>0?row('Zwischensumme',perPerson,'bots-receipt-subtotal'):''}
+    ${paid.leger>0?row(paid.leger+' Leger (×'+paid.legerFactor+')',perPerson*(paid.legerFactor||1)):''}
+    ${paid.shotLevel>0?row(paid.shotLevel===2?'Schuss + Retour (×4)':'Schuss (×2)',perPerson*(paid.totalFactor||1)):''}
+    ${hasExtra?row('Spielwert pro Gegenspieler',perPerson*(paid.totalFactor||1),'bots-receipt-subtotal'):''}
     ${paid.type!=='rufspiel'? `<div class="bots-receipt-rule">${mineAsDeclarer?'Du spielst allein: 3 Gegner × '+money(finalUnit):'Solo/Wenz: der Alleinspieler zahlt/erhält 3 × '+money(finalUnit)+'; die anderen jeweils 1 ×'}</div>`:''}
     <div class="bots-receipt-row bots-receipt-total"><span>Dein Ergebnis${factor!==1?' (× '+factor+')':''}</span><strong>${signed(you)}</strong></div>
    </div>
    <div class="bots-receipt-table-title">Abrechnung am Stammtisch</div>
    <div class="bots-receipt-players">${all.map(([id,label])=>`<div class="bots-receipt-person ${id==='you'?'bots-receipt-self':''}">
     <span>${label}</span><strong class="${paid.deltas[id]<0?'bots-receipt-loss':''}">${signed(paid.deltas[id])}</strong></div>`).join('')}</div>
-   <p class="bots-receipt-caption">Legen: ${paid.leger||0} × · Schuss: ${paid.shotLevel===2?'mit Retour':paid.shotLevel===1?'ohne Retour':'keiner'}. Gesamtfaktor: ×${paid.totalFactor||1}. Tarife sind zum Zeitpunkt der Abrechnung gespeichert.</p>
+   ${paid.totalFactor>1?`<p class="bots-receipt-caption">Gesamtfaktor ×${paid.totalFactor}. Spieltarife zum Zeitpunkt der Abrechnung gespeichert.</p>`:''}
    <div class="bots-receipt-current">Dein aktuelles Guthaben: <strong>${money(BANK.load().balances.you)}</strong></div>
   </div>`;
  }
@@ -427,6 +431,13 @@
    for(const [key,node] of currentCards)if(!needed.has(key))node.remove();
   }
   swap('.bots-self-spot',currentWood,newWood);
+  for(const selector of ['.bots-table-tokens','.bots-money-bowl']){
+   const existing=currentWood.querySelector(selector),fresh=newWood.querySelector(selector);
+   if(existing&&fresh){
+    if(existing.innerHTML!==fresh.innerHTML||existing.getAttribute('aria-label')!==fresh.getAttribute('aria-label'))existing.replaceWith(fresh);
+   }else if(existing)existing.remove();
+   else if(fresh)currentWood.appendChild(fresh);
+  }
   for(const selector of ['.bots-mid-action','.bots-shade','.bots-finish'])swap(selector,currentWood,newWood);
   const hand=root.querySelector('.bots-hand'),nextHand=next.querySelector('.bots-hand');
   if(hand&&nextHand){
@@ -544,5 +555,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.9.0'};
+ window.WastlBotsUI={render,version:'7.10.0'};
 })();

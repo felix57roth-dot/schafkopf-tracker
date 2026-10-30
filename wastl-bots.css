@@ -1972,3 +1972,103 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-wallet-modal,.bots-settings-modal{max-height:calc(100dvh - 24px)!important}
  .bots-knock-offer,.bots-shot-offer{top:58%;gap:7px;padding:9px}
 }
+
+/* Stammtisch 7.10 – verwendete Zuschläge statt Nullzeilen;
+ * originale Münzgrafiken als 7-Feld-Sprite (klein und offlinefähig). */
+.bots-coin-icon{
+ display:block;flex:0 0 auto;width:32px;height:32px;aspect-ratio:1;
+ background-image:url('./players/stammtisch-muenzen.webp');
+ background-size:700% 100%;background-position:var(--coin-x) center;
+ background-repeat:no-repeat;border-radius:50%;
+ filter:drop-shadow(1px 2px 2px #25150a68);
+}
+.bots-table-tokens{position:absolute;inset:0;z-index:6;pointer-events:none}
+.bots-token-position{
+ position:absolute;display:flex;align-items:center;justify-content:center;
+ gap:3px;max-width:32%;min-height:42px;
+}
+.bots-token-position-left{top:50%;left:25%;transform:translate(-50%,-50%)}
+.bots-token-position-top{top:46%;left:64%;transform:translate(-50%,-50%)}
+.bots-token-position-right{top:50%;right:25%;transform:translate(50%,-50%)}
+.bots-token-position-bottom{bottom:18%;right:17%;transform:translate(50%,0)}
+.bots-table-token{
+ position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ font-size:10px;font-weight:900;line-height:1.1;color:#fff8d5;
+ text-shadow:0 1px 3px #1d140d,1px 0 2px #24150c;
+ filter:drop-shadow(0 2px 2px #34210e55);
+ animation:bots-special-placed .38s cubic-bezier(.15,.85,.2,1.25) both;
+}
+.bots-special-chip{width:clamp(25px,7vw,34px);height:clamp(25px,7vw,34px)}
+.bots-table-token small{
+ padding:2px 5px;border-radius:7px;border:1px solid #f9d99b77;
+ background:#392a1cc7;font-size:clamp(8px,2vw,10px);white-space:nowrap;
+}
+.bots-token-schuss small{background:#7c3d23ed}
+.bots-token-retour small{background:#2f6a4beb}
+@keyframes bots-special-placed{
+ from{opacity:0;transform:translateY(-23px) scale(.55) rotate(-19deg)}
+ 74%{opacity:1;transform:translateY(2px) scale(1.07) rotate(3deg)}
+ to{opacity:1;transform:translateY(0) scale(1) rotate(0)}
+}
+/* Eigene Holz-Münzschale bleibt auf dem Tisch, außerhalb des Fächers
+ * und der Spielfeldmitte. Sie kann angetippt werden, um die Kasse zu öffnen. */
+.bots-money-bowl{
+ position:absolute;left:3%;bottom:27%;z-index:7;
+ width:clamp(100px,27vw,148px);height:clamp(62px,10svh,85px);
+ background:transparent;border:0;padding:0;margin:0;
+ cursor:pointer;touch-action:manipulation;
+ filter:drop-shadow(0 4px 4px #29180992);
+}
+.bots-bowl-well{
+ position:absolute;inset:9% 2% 11%;border-radius:50%;
+ background:radial-gradient(ellipse at 47% 38%,#25130c 0%,#4b2919 50%,#8c5128 80%,#4d2715 100%);
+ border:5px solid #92572d;
+ box-shadow:inset 0 7px 11px #0e0908b3,inset 0 -3px 5px #dba16c88,0 2px 1px #3c2213a6;
+}
+.bots-bowl-rim{
+ position:absolute;inset:11% 0 10%;
+ border-radius:50%;border:clamp(5px,1.3vw,8px) solid transparent;
+ border-top-color:#c48d58;border-bottom-color:#5b321e;
+ box-shadow:inset 0 2px 2px #dbb07b99;
+ pointer-events:none;
+}
+.bots-bowl-piles{
+ position:absolute;z-index:2;inset:15% 11% 16%;
+ display:flex;align-items:center;justify-content:center;align-content:center;
+ flex-wrap:wrap;column-gap:1px;row-gap:1px;pointer-events:none;
+}
+.bots-coin-pile{
+ position:relative;display:flex;align-items:center;
+ min-height:20px;max-height:24px;padding-right:2px;
+}
+.bots-coin-pile .bots-bowl-chip{width:clamp(13px,3.6vw,19px);height:clamp(13px,3.6vw,19px)}
+.bots-coin-pile .bots-bowl-chip+.bots-bowl-chip{margin-left:-10px;transform:translateY(-1px)}
+.bots-coin-pile small{
+ position:absolute;right:-1px;bottom:-3px;z-index:2;
+ background:#392414d6;color:#fff7d6;border-radius:5px;padding:0 2px;
+ font-size:8px;font-weight:900;line-height:1.2;
+}
+.bots-bowl-caption{
+ position:absolute;z-index:3;bottom:-5px;left:50%;transform:translateX(-50%);
+ border:1px solid #9f754a;border-radius:9px;
+ background:#fff3c9f2;color:#493018;font-size:clamp(10px,2.4vw,12px);
+ font-weight:900;white-space:nowrap;padding:2px 7px;
+ box-shadow:0 2px 3px #20160778;font-variant-numeric:tabular-nums;
+}
+.bots-bowl-debt{
+ position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+ background:#743b28;border-radius:6px;color:white;padding:1px 4px;
+ font-size:10px;font-weight:800;z-index:4;
+}
+.bots-money-bowl:focus-visible{outline:3px solid #286b4d;outline-offset:5px;border-radius:20px}
+@media(max-width:390px){
+ .bots-token-position-top{left:66%}
+ .bots-token-position-left{left:27%}
+ .bots-token-position-right{right:27%}
+ .bots-money-bowl{left:2%;bottom:27%;width:100px;height:64px}
+}
+@media(max-height:700px){
+ .bots-money-bowl{bottom:24%;height:59px}
+ .bots-token-position-bottom{bottom:20%}
+}
+@media(prefers-reduced-motion:reduce){.bots-table-token{animation:none}}

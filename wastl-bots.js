@@ -131,7 +131,7 @@
   const game={
    version:9,phase:knockEnabled?'knocking':'bidding',started:new Date().toISOString(),round,session:session||{played:0,won:0,lost:0,passed:0},
    mySeat,initialHands:copyHands(initial),hands:copyHands(initial),
-   knockEnabled:!!knockEnabled,shotEnabled:!!shotEnabled,knockCursor:0,knocks:[],shotLevel:0,shotQueue:[],shotStage:null,
+   knockEnabled:!!knockEnabled,shotEnabled:!!shotEnabled,knockCursor:0,knocks:[],shotLevel:0,shotQueue:[],shotStage:null,shots:[],
    bids:[],bidCursor:0,auctionStage:'opening',activeBidders:[],auctionQueue:[],best:null,type:null,calledSuit:'eichel',trumpSuit:'herz',
    declarerSeat:null,leaderSeat:'vh',turn:null,current:[],tricks:[],lastTrick:null,lastAction:null
   };
@@ -192,6 +192,8 @@
   if(g.phase!=='shotOffer'||g.shotQueue?.[0]!==seat)throw Error('Schuss oder Retour ist gerade nicht möglich.');
   if(accept){
    g.shotLevel++;
+   if(!Array.isArray(g.shots))g.shots=[];
+   g.shots.push({seat,kind:g.shotStage==='offer'?'schuss':'retour'});
    g.lastAction={seat,text:g.shotLevel===1?'Schuss!':'Retour!',kind:'shot'};
    if(g.shotStage==='offer'){
     g.shotStage='retour';
@@ -412,6 +414,6 @@
   if(!review.ok)throw Error('Die Partie konnte nicht regelkonform gespeichert werden: '+(review.errors[0]?.message||'Unbekannter Fehler'));
   return record;
  }
- return Object.freeze({VERSION:'7.9.0',SEATS,PEOPLE,deal,sortHand,personAt,firstFour,currentActor,knock,shot,declarerTeam,bidOptions,bidStrength,
+ return Object.freeze({VERSION:'7.10.0',SEATS,PEOPLE,deal,sortHand,personAt,firstFour,currentActor,knock,shot,declarerTeam,bidOptions,bidStrength,
   create,bidderSeat,declareInterest,chooseToPlay,cancelChoice,submitBid,stepBot,advance,finishBidding,startPlay,play,playable,nextTrick,nextRound,result,toRecord});
 });
