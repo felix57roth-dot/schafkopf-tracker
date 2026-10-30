@@ -3,13 +3,13 @@
  */
 (function(){
  'use strict';
- const B=window.WastlBots,E=window.WastlEngine;
+ const B=window.WastlBots,E=window.WastlEngine,BANK=window.WastlBotBank;
  const KEY='schafkopf-botspiel-v1';
  const POSITIONS={vh:'Vorhand',mh:'Mittelhand',hh:'Hinterhand',g:'Geber'};
  const SUITS={eichel:'Eichel',gras:'Gras',herz:'Herz',schell:'Schellen'};
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\u0027':'&#39;'}[c]));
  const face=(id,cls='')=>`<img draggable="false" class="bots-face ${cls}" src="./cards/${encodeURIComponent(id)}.webp" alt="${esc(id.replace('-',' '))}">`;
- let game=null,error='',timer=null;
+ let game=null,error='',timer=null,walletOpen=false;
  try{
   const old=JSON.parse(localStorage.getItem(KEY)||'null');
   if(old&&[6,7].includes(old.version)&&B.SEATS.includes(old.mySeat)&&
@@ -23,6 +23,7 @@
        bids:[],activeBidders:[],auctionQueue:[],best:null,lastAction:null});
      }
      game.version=7;
+     if(game.phase!=='done')game.cashEligible=true;
     }
  }catch(e){console.warn('Stammtisch konnte nicht geladen werden:',e);}
  function save(){
@@ -99,6 +100,25 @@
   const us=g.tricks.filter(t=>team.includes(t.winnerSeat)===mine).reduce((v,t)=>v+t.eyes,0);
   return {us,them:g.tricks.reduce((v,t)=>v+t.eyes,0)-us,mine};
  }
+
+ function money(c){return BANK.money(c);}
+ function signed(c){return (c>0?'+':'')+money(c);}
+ function walletPanel(){
+  const w=BANK.load(),cfg=BANK.readSettings();
+  const persons=[['you','Du'],['resi','Resi'],['sepp','Sepp'],['xaver','Xaver']];
+  return `<div class="bots-wallet-overlay"><section class="bots-wallet-modal" role="dialog" aria-modal="true" aria-label="Stammtischkasse">
+   <header><h3>🪙 Stammtischkasse</h3><button type="button" data-bots-wallet-close aria-label="Schließen">✕</button></header>
+   <p>Virtuelles Guthaben · getrennt von deiner bisherigen Geldbilanz.</p>
+   <div class="bots-wallet-grid">${persons.map(([id,name])=>`<div class="bots-wallet-person"><span>${name}</span><strong>${money(w.balances[id])}</strong></div>`).join('')}</div>
+   <div class="bots-wallet-tariffs"><b>Tarife aus Einstellungen</b>
+    <span>Rufspiel ${money(cfg.rates.rufspiel)} · Solo/Wenz ${money(cfg.rates.solo)}</span>
+    <span>Schneider +${money(cfg.rates.schneider)} · Schwarz +${money(cfg.rates.schwarz)}</span>
+    <span>Läufer +${money(cfg.rates.laeufer)} je Karte (Rufspiel ab ${cfg.rufMinRunners})</span>
+    <small>Neue Spielpreise gelten bei der nächsten Abrechnung. Schuss/Kontra sind im Botspiel noch nicht verfügbar. Ein negatives Guthaben ist beim Training erlaubt.</small>
+   </div>
+   <div class="bots-wallet-actions"><button type="button" class="bots-wallet-reset" data-bots-wallet-reset>Alle Guthaben auf 10,00 € zurücksetzen</button><button type="button" class="bots-gold-btn" data-bots-wallet-close>Zurück zum Tisch</button></div>
+  </section></div>`;
+ }
  function startUI(){
   return `<section class="bots-intro">
    <button class="bots-exit-start" type="button" data-bots-exit aria-label="Zur Startseite">← Zurück</button>
@@ -106,7 +126,9 @@
    <h2>Servus am Stammtisch!</h2>
    <p>Resi, Sepp und Xaver sitzen schon bereit. Der erste Platz wird ausgelost, danach wechselt der Geber jede Runde.</p>
    <button class="bots-gold-btn" type="button" data-bots-new>🃏 Hinsetzen und Karten geben</button>
-   <small>Offline-Training · keine Änderung deiner Geldbilanz</small>
+   <small>Offline-Training · eigene virtuelle Spielkasse</small>
+    <button type="button" class="bots-wallet-intro-btn" data-bots-wallet>🪙 Guthaben ansehen</button>
+    ${walletOpen?walletPanel():''}
   </section>`;
  }
  function cardMenu(g){
@@ -162,7 +184,7 @@
    <img src="${esc(person.portrait)}" alt="${esc(person.name)}" draggable="false">
   </div>
   <div class="bots-seat-label bots-seat-label-${pos} ${acting?'bots-seat-label-active':''}">
-   <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc({vh:'VH',mh:'MH',hh:'HH',g:'G'}[seat])}${announced?' · '+esc(announced):''}</small></div>
+   <div class="bots-player-label"><b>${esc(person.name)}</b><small>${esc({vh:'VH',mh:'MH',hh:'HH',g:'G'}[seat])}${announced?' · '+esc(announced):''}</small><span class="bots-seat-cash">${money(BANK.load().balances[person.id])}</span></div>
   </div>
   <div class="bots-portrait-front bots-portrait-front-${pos}" aria-hidden="true">
    <img src="${esc(person.portrait)}" alt="" draggable="false">
@@ -193,6 +215,7 @@
      ${speech(g,g.mySeat)}
     </div>
     ${bidOverlay(g)}
+     ${walletOpen?walletPanel():''}
     ${g.phase==='noGame'?`<div class="bots-mid-action"><h3>Alle haben weiter gesagt.</h3><button type="button" class="bots-gold-btn" data-bots-round>Neue Karten geben</button></div>`:''}
     ${g.phase==='done'?finish(g):''}
    </div>
@@ -222,8 +245,10 @@
  }
  function finish(g){
   const r=B.result(g),archived=!!g.savedId&&stitch.archive.some(x=>x.id===g.savedId);
+  const paid=BANK.receipt(g),delta=paid?.deltas?.you;
   return `<section class="bots-finish"><h3>${r?.win?'🏆 Gewonnen!':'Runde beendet'}</h3>
    <p>${esc(title(g))} · ${r?.declarerEyes||0} Augen für die Ansagerpartei</p>
+   ${paid?`<p class="bots-financial-result">Dein Ergebnis: <strong>${signed(delta)}</strong><span>Guthaben: ${money(BANK.load().balances.you)}</span>${paid.runners?' · '+paid.runnersKind+' '+paid.runners+' Läufer':''}${paid.schneider?' · Schneider':''}${paid.schwarz?' · Schwarz':''}</p>`:'<p class="bots-financial-result">Ältere Partie – nicht rückwirkend abgerechnet.</p>'}
    <div class="bots-finish-actions"><button class="bots-gold-btn" data-bots-round type="button">Nochmal spielen</button>
    <button class="bots-analyze-btn" data-bots-analyze type="button" ${archived?'':'disabled'}>Mit Wastl analysieren</button></div>
    <small>Der Geber wechselt automatisch mit der nächsten Runde.</small>
@@ -231,7 +256,10 @@
  }
  function render(){
   if(!game)return `<div class="bots-page bots-page-start">${startUI()}</div>`;
-  if(game.phase==='done')archiveCompleted();
+  if(game.phase==='done'){
+   archiveCompleted();
+   if(game.savedId){try{BANK.settle(game);}catch(ex){error='Guthaben nicht verbucht: '+String(ex?.message||ex);}}
+  }
   schedule();
   const g=game,sc=score(g);
   return `<section class="bots-page">
@@ -242,8 +270,9 @@
    ${error?`<div class="bots-error" role="alert">${esc(error)}</div>`:''}
    ${board(g)}
    ${g.phase!=='noGame'?hand(g):''}
-   <footer class="bots-tally">${sc?`Dein Team: ${sc.us} Augen <span>Gegner: ${sc.them}</span>`:'Die Karten bleiben für die anderen Spieler verdeckt.'}
-   </footer>
+   <footer class="bots-tally bots-cash-tally"><span class="bots-your-cash">🪙 Du: <strong>${money(BANK.load().balances.you)}</strong></span>
+    ${sc?`<span class="bots-eyes-tally">${sc.us}:${sc.them} Augen</span>`:''}
+    <button type="button" class="bots-wallet-show" data-bots-wallet>Alle Guthaben</button></footer>
   </section>`;
  }
  // Karten nicht erneut zeichnen: Das bisherige DOM bleibt erhalten, nur die
@@ -306,7 +335,7 @@
    for(const [key,node] of currentCards)if(!needed.has(key))node.remove();
   }
   swap('.bots-self-spot',currentWood,newWood);
-  for(const selector of ['.bots-mid-action','.bots-shade','.bots-finish'])swap(selector,currentWood,newWood);
+  for(const selector of ['.bots-mid-action','.bots-shade','.bots-finish','.bots-wallet-overlay'])swap(selector,currentWood,newWood);
   const hand=root.querySelector('.bots-hand'),nextHand=next.querySelector('.bots-hand');
   if(hand&&nextHand){
    hand.style.setProperty('--fan-count',nextHand.style.getPropertyValue('--fan-count')||'8');
@@ -337,11 +366,18 @@
   swap('.bots-tally');
  }
  function click(e){
-  const b=e.target.closest('[data-bots-exit],[data-bots-new],[data-bots-abandon],[data-bots-round],[data-bots-choose],[data-bots-back],[data-bots-bid],[data-bots-pass],[data-bots-play],[data-bots-analyze]');
+  const b=e.target.closest('[data-bots-exit],[data-bots-new],[data-bots-abandon],[data-bots-round],[data-bots-choose],[data-bots-back],[data-bots-bid],[data-bots-pass],[data-bots-play],[data-bots-analyze],[data-bots-wallet],[data-bots-wallet-close],[data-bots-wallet-reset]');
   if(!b||typeof tab==='undefined'||tab!=='bots')return;
   e.preventDefault();cancelTimer();
   try{
    error='';
+   if(b.hasAttribute('data-bots-wallet')){walletOpen=true;renderApp();return;}
+   if(b.hasAttribute('data-bots-wallet-close')){walletOpen=false;renderApp();return;}
+   if(b.hasAttribute('data-bots-wallet-reset')){
+    if(confirm('Alle vier Spielguthaben auf jeweils 10,00 € zurücksetzen?')){BANK.reset();renderApp();}
+    else schedule();
+    return;
+   }
    if(b.hasAttribute('data-bots-exit')){
     save();switchTab('home');return;
    }
@@ -349,9 +385,9 @@
     if(game&&['playing','chooseGame','bidding','biddingResult'].includes(game.phase)&&!confirm('Laufende Runde wirklich beenden?')){schedule();return;}
     game=null;
    }else if(b.hasAttribute('data-bots-new')){
-    game=B.create();
+    game=B.create();game.cashEligible=true;walletOpen=false;
    }else if(b.hasAttribute('data-bots-round')){
-    game=B.nextRound(game);
+    game=B.nextRound(game);game.cashEligible=true;walletOpen=false;
    }else if(b.hasAttribute('data-bots-choose')){
     if(game.auctionStage==='opening')B.declareInterest(game,true);
     else B.chooseToPlay(game);
@@ -396,5 +432,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.6.3'};
+ window.WastlBotsUI={render,version:'7.7.0'};
 })();

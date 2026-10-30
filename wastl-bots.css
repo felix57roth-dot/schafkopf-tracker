@@ -1749,3 +1749,37 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 @media(orientation:landscape) and (max-height:490px){
  .bots-page:not(.bots-page-start) .bots-index-finger{display:none!important}
 }
+
+/* Stammtisch 7.7: Virtuelles Guthaben an allen Figuren und Kassenfenster. */
+.bots-seat-label .bots-player-label{gap:1px;padding:4px 7px 5px}
+.bots-seat-label .bots-seat-cash{display:block;font-size:clamp(10px,2.6vw,12px);line-height:1.1;color:#286343;font-weight:900;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bots-page:not(.bots-page-start){--bots-tally-height:clamp(36px,5dvh,44px)}
+.bots-page .bots-cash-tally{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:4px 10px;white-space:nowrap;min-width:0;font-size:clamp(10px,2.6vw,12px);font-variant-numeric:tabular-nums}
+.bots-cash-tally .bots-your-cash,.bots-cash-tally .bots-eyes-tally{margin:0!important}
+.bots-cash-tally .bots-your-cash strong{font-size:1.1em}
+.bots-cash-tally .bots-eyes-tally{font-size:10px}
+.bots-wallet-show,.bots-wallet-intro-btn{border:1px solid #a78a59;border-radius:9px;padding:6px 8px;background:#fff0cc;color:#503218;font-size:11px;font-weight:800;cursor:pointer}
+.bots-wallet-intro-btn{padding:10px 14px}
+.bots-financial-result{background:#f7eac5;color:#422b1c;border-radius:10px;padding:8px;font-size:12px!important;line-height:1.4!important}
+.bots-financial-result strong{font-size:16px}
+.bots-financial-result span{display:block;font-weight:800}
+.bots-scene:has(.bots-wallet-overlay){z-index:89}
+.bots-page .bots-wallet-overlay{position:absolute;inset:0;z-index:140;background:#160c06c9;display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto;overscroll-behavior:contain}
+.bots-page-start .bots-wallet-overlay{position:fixed;z-index:140}
+.bots-wallet-modal{background:linear-gradient(#fff9e8,#ebd7aa);border:2px solid #bd975b;border-radius:20px;box-shadow:0 15px 45px #0009;color:#3a281a;padding:15px;width:min(100%,440px);max-height:97%;overflow:auto;display:grid;gap:10px;text-align:left}
+.bots-wallet-modal header{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.bots-wallet-modal h3{margin:0;font-size:20px;color:#3a281a}
+.bots-wallet-modal header button{font-size:20px;background:#fff3d5;color:#5a3820;border:1px solid #c3a276;border-radius:9px;padding:4px 10px}
+.bots-wallet-modal p{font-size:12px;margin:0}
+.bots-wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bots-wallet-person{display:flex;align-items:center;justify-content:space-between;gap:4px;border:1px solid #d7bb87;border-radius:10px;background:#fff9ed;padding:9px 7px;font-size:12px}
+.bots-wallet-person strong{font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bots-wallet-tariffs{border-top:1px solid #d2b27a;padding-top:10px;display:grid;gap:5px}
+.bots-wallet-tariffs b{font-size:13px}
+.bots-wallet-tariffs span{font-size:12px}
+.bots-wallet-tariffs small{font-size:11px;line-height:1.4;color:#715637}
+.bots-wallet-actions{display:grid;gap:8px}
+.bots-wallet-reset{border:1px solid #b78d6e;border-radius:11px;padding:9px;background:#fff2e7;color:#914e35;font-size:12px;font-weight:800}
+.bots-wallet-actions .bots-gold-btn{min-height:40px}
+@media(max-width:375px){.bots-cash-tally .bots-eyes-tally{display:none}.bots-seat-label .bots-seat-cash{font-size:10px}}
+@media(max-height:690px){.bots-page:not(.bots-page-start){--bots-tally-height:36px}.bots-wallet-modal{padding:10px;gap:6px}}
