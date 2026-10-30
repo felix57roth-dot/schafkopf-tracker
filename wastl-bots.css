@@ -1861,3 +1861,11 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-receipt-content{padding:7px}
  .bots-receipt-person{padding:5px}
 }
+
+/* 7.8.1: Nach Abschluss keine unsichtbare Kartenhand über Ergebnisbuttons. */
+.bots-page:has(.bots-finish) .bots-hand{display:none!important;pointer-events:none!important}
+.bots-page:has(.bots-finish) .bots-scene{z-index:45}
+.bots-page .bots-wood .bots-finish.bots-finish-detailed{z-index:160;pointer-events:auto}
+.bots-page .bots-finish-actions,.bots-page .bots-finish-actions button{
+ position:relative;z-index:161;pointer-events:auto;touch-action:manipulation;
+}

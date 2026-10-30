@@ -288,7 +288,7 @@
    <p>${esc(title(g))} · ${r?.declarerEyes||0} Augen für die Ansagerpartei</p>
    <div class="bots-receipt-scroll">${paid?priceReceipt(g,paid):'<p class="bots-financial-result">Für diese ältere Partie wurde kein virtuelles Guthaben verrechnet.</p>'}</div>
    <div class="bots-finish-actions"><button class="bots-gold-btn" data-bots-round type="button">Nochmal spielen</button>
-   <button class="bots-analyze-btn" data-bots-analyze type="button" ${archived?'':'disabled'}>Mit Wastl analysieren</button></div>
+   <button class="bots-analyze-btn" data-bots-analyze type="button" title="Spiel bei Bedarf erneut archivieren">Mit Wastl analysieren</button></div>
    <small>Der Geber wechselt automatisch mit der nächsten Runde.</small>
   </section>`;
  }
@@ -307,7 +307,7 @@
     <button class="bots-reset" type="button" data-bots-abandon aria-label="Partie verlassen">↺ Neu</button></header>
    ${error?`<div class="bots-error" role="alert">${esc(error)}</div>`:''}
    ${board(g)}
-   ${g.phase!=='noGame'?hand(g):''}
+   ${g.phase!=='noGame'&&g.phase!=='done'?hand(g):''}
    <footer class="bots-tally bots-cash-tally"><span class="bots-your-cash">🪙 Du: <strong>${money(BANK.load().balances.you)}</strong></span>
     ${sc?`<span class="bots-eyes-tally">${sc.us}:${sc.them} Augen</span>`:''}
     <button type="button" class="bots-wallet-show" data-bots-wallet>Alle Guthaben</button></footer>
@@ -442,7 +442,11 @@
    }else if(b.hasAttribute('data-bots-play')){
     B.play(game,b.dataset.botsPlay);
    }else if(b.hasAttribute('data-bots-analyze')){
-    if(!game?.savedId||!stitch.archive.some(x=>x.id===game.savedId))throw Error('Partie ist noch nicht archiviert.');
+    if(game?.phase!=='done')throw Error('Beende zunächst die Partie.');
+    if(!game.savedId||!stitch.archive.some(x=>x.id===game.savedId))archiveCompleted();
+    if(!game.savedId||!stitch.archive.some(x=>x.id===game.savedId)){
+     throw Error('Die Partie konnte noch nicht gespeichert werden. Bitte den Speicherplatz prüfen und erneut versuchen.');
+    }
     const id=game.savedId;
     mentorGameId=id;mentorStep=0;switchTab('mentor');
     setTimeout(()=>window.WastlAutoSimulation?.startFor?.(id,350),40);
@@ -470,5 +474,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.8.0'};
+ window.WastlBotsUI={render,version:'7.8.1'};
 })();
