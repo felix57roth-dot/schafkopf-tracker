@@ -1,5 +1,5 @@
 /* Wastl 4.3: offline Komplettsimulation mit Fortschrittsmeldungen. */
-importScripts('./wastl-engine.js','./wastl-policy.js','./wastl-montecarlo.js');
+importScripts('./wastl-engine.js','./wastl-policy.js','./wastl-opponents.js','./wastl-montecarlo.js');
 self.onmessage=event=>{
  const {game,turn,options,requestId,wholeGame}=event.data||{};
  try{

@@ -1,5 +1,5 @@
 /* Komplett lokal. Unbekannte Referenzhaende sind NUR dem Pruefer bekannt. */
-importScripts('./wastl-engine.js','./wastl-policy.js','./wastl-montecarlo.js','./wastl-benchmark.js');
+importScripts('./wastl-engine.js','./wastl-policy.js','./wastl-opponents.js','./wastl-montecarlo.js','./wastl-benchmark.js');
 self.onmessage=event=>{
  const {requestId,options}=event.data||{};
  try{

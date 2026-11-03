@@ -1,5 +1,5 @@
 /* Eigene Offline-A/B-Verifikation; keine personenbezogenen Daten werden versendet. */
-importScripts('./wastl-engine.js','./wastl-policy.js','./wastl-montecarlo.js','./wastl-benchmark.js','./wastl-validation.js');
+importScripts('./wastl-engine.js','./wastl-policy.js','./wastl-opponents.js','./wastl-montecarlo.js','./wastl-benchmark.js','./wastl-validation.js');
 self.onmessage=event=>{
  const {requestId,options}=event.data||{};
  try{
