@@ -11,10 +11,9 @@
  if(root)root.WastlMonteCarlo=api;
 })(typeof globalThis!=='undefined'?globalThis:this, function(E,Policy){
  'use strict';
- const VERSION='4.5.0';
+ const VERSION='5.0.0';
  const SUPPORTED=new Set(['rufspiel','solo','wenz','farbwenz','geier','farbgeier','ramsch','kreuzrunde']);
  function seeded(seed){let a=seed>>>0;return function(){a=(a+0x6d2b79f5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
- function shuffle(arr,random){for(let i=arr.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
  function seatIndex(leader,seat){return (E.SEATS.indexOf(seat)-E.SEATS.indexOf(leader)+4)%4;}
  function cloneHands(h){return Object.fromEntries(E.SEATS.map(s=>[s,[...h[s]]]));}
  function addVoids(voids,lead,cards,leader){
@@ -56,23 +55,69 @@
   const knownCalledAce=game.type==='rufspiel'?`${game.calledSuit}-A`:null;
   return {ok:true,game,turn,t,seat,idx,past,prefix,myHand,legal,actual:t.cards[idx],unknown,capacities,voids,used,knownCalledAce};
  }
- // Randomized randomized DFS with void constraints, valid ownership count and
- // called ace excluded from caller. This is a feasibility sampler, not uniform.
- function assignUnknown(pos,random){
-  const hands=Object.fromEntries(E.SEATS.map(s=>[s,[]]));
-  const caps={...pos.capacities};
-  const cards=shuffle([...pos.unknown],random);
-  const possible=c=>E.SEATS.filter(s=>s!==pos.seat&&!pos.voids[s].has(E.colorClass(c,pos.game))&&!(c===pos.knownCalledAce&&s===pos.game.declarerSeat));
-  const choices=cards.map(c=>({c,seats:possible(c)})).sort((a,b)=>a.seats.length-b.seats.length||(random()-.5));
-  if(choices.some(x=>!x.seats.length))return null;
-  const visit=(n)=>{
-    if(n===choices.length)return E.SEATS.every(s=>caps[s]===0);
-    const {c,seats}=choices[n];const opts=shuffle([...seats].filter(s=>caps[s]>0),random);
-    for(const s of opts){caps[s]--;hands[s].push(c);if(visit(n+1))return true;hands[s].pop();caps[s]++;}
-    return false;
-  };
-  return visit(0)?hands:null;
+ // Wastl 5.0: genaue bedingte Gleichverteilung unbekannter Karten.
+ // Statt verzerrter Zufalls-DFS zaehlen wir mit dynamischer Programmierung
+ // alle vollstaendigen Zuteilungen. Die Wahl jedes Besitzers ist proportional
+ // zur Zahl der danach noch moeglichen Komplettierungen.
+ // Bei maximal 24 unbekannten Karten bleiben die Anzahlen sichere JS-Integer.
+ function prepareDealSampler(pos){
+  const seats=E.SEATS.filter(s=>s!==pos.seat);
+  if(seats.length!==3)return {count:0,sample:()=>null};
+  const caps=seats.map(s=>pos.capacities[s]);
+  const cards=pos.unknown.map(card=>({
+   card,choices:seats.map((seat,index)=>({seat,index}))
+    .filter(x=>!pos.voids[x.seat].has(E.colorClass(card,pos.game))
+     &&!(card===pos.knownCalledAce&&x.seat===pos.game.declarerSeat))
+    .map(x=>x.index)
+  })).sort((a,b)=>a.choices.length-b.choices.length);
+  if(caps.some(n=>!Number.isInteger(n)||n<0||n>8)
+   ||caps.reduce((a,b)=>a+b,0)!==cards.length
+   ||cards.some(c=>!c.choices.length))return {count:0,sample:()=>null};
+  const memo=new Map();
+  function ways(index,left){
+   if(left.some(n=>n<0))return 0;
+   if(index===cards.length)return left.every(n=>n===0)?1:0;
+   // Die dritte Restkapazitaet ist durch Index und erste zwei festgelegt.
+   const key=index+':'+left[0]+':'+left[1];
+   if(memo.has(key))return memo.get(key);
+   let count=0;
+   for(const seat of cards[index].choices){
+    if(left[seat]===0)continue;
+    left[seat]--;
+    count+=ways(index+1,left);
+    left[seat]++;
+   }
+   memo.set(key,count);
+   return count;
+  }
+  const count=ways(0,[...caps]);
+  if(!Number.isSafeInteger(count))throw Error('Zu viele Kartenverteilungen fuer exakte Ziehung.');
+  function sample(random){
+   if(!count)return null;
+   const remaining=[...caps],hands=Object.fromEntries(E.SEATS.map(s=>[s,[]]));
+   for(let index=0;index<cards.length;index++){
+    const options=[];
+    let total=0;
+    for(const candidate of cards[index].choices){
+     if(remaining[candidate]===0)continue;
+     remaining[candidate]--;
+     const n=ways(index+1,remaining);
+     remaining[candidate]++;
+     if(n>0){options.push({candidate,n});total+=n;}
+    }
+    if(!total)return null;
+    let draw=Math.max(0,Math.min(1-Number.EPSILON,Number(random())))*total;
+    let selected=options[options.length-1].candidate;
+    for(const {candidate,n} of options){if(draw<n){selected=candidate;break;}draw-=n;}
+    hands[seats[selected]].push(cards[index].card);
+    remaining[selected]--;
+   }
+   return hands;
+  }
+  return {count,sample};
  }
+ // Bestehende Test-API bleibt kompatibel.
+ function assignUnknown(pos,random){return prepareDealSampler(pos).sample(random);}
  function worldTeams(pos,hands){
   const g=pos.game;
   if(g.type==='ramsch')return new Set([pos.seat]);
@@ -140,11 +185,13 @@
   const pos=buildPosition(game,turn);if(!pos.ok)return {version:VERSION,...pos};
   const samples=Math.max(20,Math.min(500,Number(options.samples)||120));
   const seed=(Number(options.seed)||0x4192026)>>>0;
+  const sampler=prepareDealSampler(pos);
+  if(!sampler.count)return {ok:false,version:VERSION,reason:'Keine zur bisherigen Kartenfolge passende Verteilung unbekannter Haende gefunden.'};
   const rnd=seeded(seed),totals=Object.fromEntries(pos.legal.map(c=>[c,{card:c,wins:0,eyes:0,count:0}]));
   let rejected=0;
   const paired=Object.fromEntries(pos.legal.map(c=>[c,[]]));
   for(let i=0;i<samples;i++){
-   let hand=null;for(let retry=0;retry<35&&!hand;retry++)hand=assignUnknown(pos,rnd);
+   const hand=sampler.sample(rnd);
    if(!hand){rejected++;continue;}
    // Dieselbe Kartenverteilung und identische Zufalls-Startwerte für jeden Zug.
    const common=(rnd()*0xffffffff)>>>0;
@@ -176,11 +223,12 @@
     ? 'Die Alternative erzielte in diesem Modell häufiger einen Sieg; der Unterschied ist innerhalb dieser Stichprobe erkennbar.'
     : 'Mehrere Karten liegen im Bereich der statistischen Unsicherheit. Kein klar besserer Zug nachweisbar.';
   return {ok:true,version:VERSION,turn:turn+1,actual:pos.actual,candidates:evaluated,
-   sampleCount:n,rejected,supported:game.type,method:'Wiederholte Kartenzuteilung und Stichsimulation mit öffentlicher Bedienpflicht-Information; situationsabhängige Offline-Mitspieler (Wastl Policy 4.5)',
+   sampleCount:n,rejected,supported:game.type,method:'Bedingt gleichverteilte Kartenverteilungen nach bekannten Fehlfarben und Ruf-Ass-Einschraenkungen; heuristische Offline-Mitspieler (Wastl Policy 4.5)',
+   sampler:'exact-uniform-conditional-v1',possibleDeals:sampler.count,
    estimated:true,confidence:lowSamples?'low':'experimental',policyVersion:Policy.VERSION,clearAlternative:clear,
    note:'Modellergebnis, keine kalibrierte Gewinnwahrscheinlichkeit oder sichere Bestzug-Aussage. Die simulierten Mitspieler sind heuristisch; Kartenverteilungen und Annahmen bleiben vereinfacht.',
    comparison,pairedWinGap:gain,pairedUncertainty:margin,
    pointsGap:Math.max(0,game.type==='ramsch'?recorded.meanEyes-best.meanEyes:best.meanEyes-recorded.meanEyes),recorded,reference:best};
  }
- return Object.freeze({VERSION,analyze,buildPosition,assignUnknown});
+ return Object.freeze({VERSION,analyze,buildPosition,assignUnknown,prepareDealSampler});
 });
