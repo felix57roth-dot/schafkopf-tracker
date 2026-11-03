@@ -6,12 +6,13 @@
 (function(root, factory){
  const E = (typeof module==='object' && module.exports) ? require('./wastl-engine.js') : root.WastlEngine;
  const Policy=(typeof module==='object' && module.exports) ? require('./wastl-policy.js') : root.WastlPolicy;
- const api=factory(E,Policy);
+ const Opponents=(typeof module==='object' && module.exports) ? require('./wastl-opponents.js') : root.WastlOpponents;
+ const api=factory(E,Policy,Opponents);
  if(typeof module==='object' && module.exports)module.exports=api;
  if(root)root.WastlMonteCarlo=api;
-})(typeof globalThis!=='undefined'?globalThis:this, function(E,Policy){
+})(typeof globalThis!=='undefined'?globalThis:this, function(E,Policy,Opponents){
  'use strict';
- const VERSION='5.0.0';
+ const VERSION='5.1.0';
  const SUPPORTED=new Set(['rufspiel','solo','wenz','farbwenz','geier','farbgeier','ramsch','kreuzrunde']);
  function seeded(seed){let a=seed>>>0;return function(){a=(a+0x6d2b79f5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
  function seatIndex(leader,seat){return (E.SEATS.indexOf(seat)-E.SEATS.indexOf(leader)+4)%4;}
@@ -138,8 +139,11 @@
   if(!teammate||teammate===g.declarerSeat)return null;
   return new Set([g.declarerSeat,teammate]);
  }
- function rollout(pos,sampled,candidate,random){
+ function rollout(pos,sampled,candidate,random,opponentModel){
   const g={...pos.game};
+  // Feste Charaktere fuer die gesamte simulierte Fortsetzung. Durch den
+  // identischen Seed gelten dieselben Stile fuer alle Kartenalternativen.
+  const profiles=opponentModel==='mixed'?Opponents.assignStyles(random):null;
   const hands=cloneHands(sampled);hands[pos.seat]=[...pos.myHand];
   const team=worldTeams(pos,hands);if(!team)return null;
   const actualSide=team.has(pos.seat),knownAce=pos.knownCalledAce;
@@ -159,7 +163,9 @@
    g.__simLeader=trickLeader;
    for(let j=begin;j<4;j++){
     const s=E.nextSeat(trickLeader,j);
-    const card=k===pos.turn&&j===pos.idx?candidate:Policy.choose(hands[s],play,s,trickLeader,g,publicState,random);
+    const card=k===pos.turn&&j===pos.idx?candidate
+      :profiles?Opponents.choose(hands[s],play,s,trickLeader,g,publicState,profiles[s],random)
+      :Policy.choose(hands[s],play,s,trickLeader,g,publicState,random);
     const at=hands[s].indexOf(card);if(at<0)throw Error('Simulierte Hand enthält die gespielte Karte nicht.');
     hands[s].splice(at,1);play.push(card);
     if(card===knownAce){publiclyKnownPartner=s;publicState.partner=s;}
@@ -185,6 +191,7 @@
   const pos=buildPosition(game,turn);if(!pos.ok)return {version:VERSION,...pos};
   const samples=Math.max(20,Math.min(500,Number(options.samples)||120));
   const seed=(Number(options.seed)||0x4192026)>>>0;
+  const opponentModel=options.opponentModel==='legacy'?'legacy':'mixed';
   const sampler=prepareDealSampler(pos);
   if(!sampler.count)return {ok:false,version:VERSION,reason:'Keine zur bisherigen Kartenfolge passende Verteilung unbekannter Haende gefunden.'};
   const rnd=seeded(seed),totals=Object.fromEntries(pos.legal.map(c=>[c,{card:c,wins:0,eyes:0,count:0}]));
@@ -197,7 +204,7 @@
    const common=(rnd()*0xffffffff)>>>0;
    const results={};
    for(const card of pos.legal){
-    const sim=rollout(pos,hand,card,seeded(common));
+    const sim=rollout(pos,hand,card,seeded(common),opponentModel);
     if(!sim)continue;
     const x=totals[card];x.count++;x.wins+=sim.myWin;x.eyes+=sim.myPoints;
     results[card]=sim;
@@ -223,7 +230,10 @@
     ? 'Die Alternative erzielte in diesem Modell häufiger einen Sieg; der Unterschied ist innerhalb dieser Stichprobe erkennbar.'
     : 'Mehrere Karten liegen im Bereich der statistischen Unsicherheit. Kein klar besserer Zug nachweisbar.';
   return {ok:true,version:VERSION,turn:turn+1,actual:pos.actual,candidates:evaluated,
-   sampleCount:n,rejected,supported:game.type,method:'Bedingt gleichverteilte Kartenverteilungen nach bekannten Fehlfarben und Ruf-Ass-Einschraenkungen; heuristische Offline-Mitspieler (Wastl Policy 4.5)',
+   sampleCount:n,rejected,supported:game.type,opponentModel,
+   method:opponentModel==='mixed'
+    ?'Gleichverteilte plausible Kartenwelten; variierende vorsichtige, offensive und ausgewogene Offline-Mitspieler (experimentell)'
+    :'Gleichverteilte plausible Kartenwelten; bisherige einheitliche heuristische Offline-Mitspieler',
    sampler:'exact-uniform-conditional-v1',possibleDeals:sampler.count,
    estimated:true,confidence:lowSamples?'low':'experimental',policyVersion:Policy.VERSION,clearAlternative:clear,
    note:'Modellergebnis, keine kalibrierte Gewinnwahrscheinlichkeit oder sichere Bestzug-Aussage. Die simulierten Mitspieler sind heuristisch; Kartenverteilungen und Annahmen bleiben vereinfacht.',
