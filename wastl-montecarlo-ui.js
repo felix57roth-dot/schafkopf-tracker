@@ -138,46 +138,23 @@
  }
  function overlay(game,automatic=false){
   cleanup();
-  activeSelection={game:JSON.parse(JSON.stringify(game))};
-  const label=typeof stitchTypeName==='function'?stitchTypeName(game.type):game.type;
+  activeSelection={game:JSON.parse(JSON.stringify(game)),samples:160};
   const div=document.createElement('div');div.className='mc-overlay';div.dataset.monteDialog='';
-  div.innerHTML=`<section class="mc-dialog" role="dialog" aria-modal="true" aria-label="Wastl Ganze Partie simulieren" tabindex="-1">
-   <div class="mc-head"><div><small>WASTL-ENGINE 4.6 · OFFLINE · MODELLPRÜFUNG</small><h2>Ganze Partie simulieren</h2><p>${esc(label)} · alle acht Stiche in einem Durchlauf</p></div><button type="button" data-monte-close class="mc-close" aria-label="Schließen">×</button></div>
-   ${existingSummary(game)}
-   <p class="mc-intro">Wastl simuliert deine Entscheidung bei <strong>allen acht Stichen</strong> mit zum jeweiligen Zeitpunkt plausiblen unbekannten Händen. Die Ergebnisse fließen danach automatisch in seine Erklärungen ein. Bei Ramsch zählt eine möglichst geringe eigene Augenzahl, bei Kreuzrunde die Augen deines Zweierteams. Du musst nicht jeden Zug einzeln anstoßen.</p>
-   <div class="mc-controls"><label>Verteilungen je Stich<select data-monte-count>
-    <option value="80">Schnell · 80 × 8 · ohne Spielnote</option><option value="160" selected>Normal · 160 × 8 · Modellnote möglich</option><option value="350">Gründlicher · 350 × 8 · Modellnote möglich</option>
-   </select></label><button type="button" data-monte-run class="mc-run">Gesamte Partie simulieren</button></div>
-   <details class="mc-benchmark"><summary>🧪 Engine-Prüflabor <small>Optional: Modellqualität untersuchen</small></summary><div class="mc-bench-body">
-    <p>Vergleiche Wastls Vorschläge mit getrennt ausgewerteten Fortsetzungen auf vollständig bekannten Referenzhänden. Der Entscheidungsindex wird für abgeschlossene Partien berechnet, seine Unsicherheit wird separat ausgewiesen. Das Prüflabor dient unabhängig davon der Qualitätskontrolle der Engine.</p>
-    <div class="mc-bench-controls"><label>Prüfumfang<select data-bench-count><option value="24">24 Vergleichssituationen (schnell)</option><option value="48" selected>48 Vergleichssituationen (6 Spielarten)</option><option value="72">72 Vergleichssituationen (mind. 12 je Art)</option></select></label><button type="button" data-bench-run class="mc-bench-button">Modell prüfen</button></div>
-    <div data-bench-output aria-live="polite">${benchmarkSummary(game.type)}</div>
-   </div></details>
-   <details class="mc-benchmark"><summary>⚖️ Neu: Strategie A/B-Test <small>Monte Carlo gegen bisherige Heuristik</small></summary><div class="mc-bench-body">
-    <p>Gleiche Kartenverteilungen, zwei unterschiedliche Zugempfehlungen: Die alte Heuristik und Wastls Monte-Carlo-Auswahl werden auf getrennten Testfällen überprüft. Die Ergebnisse zeigen, ob sich unter diesen Testbedingungen ein Vorteil nachweisen lässt; keine Aussage über menschliche Spielstärke.</p>
-    <div class="mc-bench-controls"><label>Testumfang<select data-validation-count><option value="24" selected>24 Situationen · 12 zurückgehaltene Tests</option><option value="48">48 Situationen · 24 Tests</option><option value="96">96 Situationen · 48 Tests (langsam)</option></select></label><button type="button" data-validation-run class="mc-bench-button">A/B-Test starten</button></div>
-    <div data-validation-output aria-live="polite">${validationSummary()}</div>
-   </div></details>
-   <div class="mc-output" data-monte-output role="status" aria-live="polite"><p>${automatic?'Wähle einmal den Rechenumfang und starte anschließend die Analyse.':'Du kannst die Partie neu berechnen oder die bisherigen Ergebnisse verwenden.'}</p></div>
-   <div class="mc-bottom"><button type="button" class="mc-skip" data-monte-close>${cache()?.get(game)?'Zur Analyse zurück':'Ohne Simulation fortfahren'}</button></div>
-   <p class="mc-disclaimer">Die gesamte Berechnung erfolgt auf deinem Gerät. Während des Laufs bleibt die bereits gespeicherte Partie unverändert. Die später tatsächlich gespielten Karten der Gegner werden nicht als Wissen vorweggenommen. Der 1–10-Entscheidungsindex ist nicht gegen menschliche Spielstärke kalibriert; das A/B-Labor allein kann dies nicht ersetzen. Ein solcher Test ersetzt keine Bewertung durch erfahrene Spieler.</p>
+  div.innerHTML=`<section class="mc-dialog mc-dialog-simple" role="dialog" aria-modal="true" aria-label="Wastl: Gesamte Partie analysieren" tabindex="-1">
+   <div class="mc-head"><button type="button" data-monte-close class="mc-close" aria-label="Schließen">×</button></div>
+   <button type="button" data-monte-run class="mc-run">Gesamte Partie analysieren</button>
+   <div class="mc-output" data-monte-output role="status" aria-live="polite"></div>
   </section>`;
-  document.body.appendChild(div);div.querySelector('.mc-dialog')?.focus();
+  document.body.appendChild(div);div.querySelector('[data-monte-run]')?.focus();
  }
  function setRunning(isRunning){
-  const modal=container();if(!modal)return;
-  const run=modal.querySelector('[data-monte-run]'),select=modal.querySelector('[data-monte-count]'),bench=modal.querySelector('[data-bench-run]'),benchSelect=modal.querySelector('[data-bench-count]'),vButton=modal.querySelector('[data-validation-run]'),vSelect=modal.querySelector('[data-validation-count]');
-  if(run){run.disabled=isRunning;run.textContent=isRunning?'Simulation läuft …':'Erneut simulieren';}
-  if(select)select.disabled=isRunning;
-  if(bench)bench.disabled=isRunning;
-  if(benchSelect)benchSelect.disabled=isRunning;
-  if(vButton)vButton.disabled=isRunning;
-  if(vSelect)vSelect.disabled=isRunning;
+  const run=container()?.querySelector('[data-monte-run]');
+  if(run){run.disabled=isRunning;run.textContent=isRunning?'Analyse läuft …':'Gesamte Partie analysieren';}
  }
  function showProgress(completed,total){
   const out=container()?.querySelector('[data-monte-output]');if(!out)return;
-  const progress=Math.round(completed/total*100);
-  out.innerHTML=`<div class="mc-progress-heading"><b>Berechnung läuft: ${completed} von ${total} Stichen</b><span>${progress} %</span></div><progress class="mc-progress" value="${completed}" max="${total}"></progress><p>${completed===0?'Wastl verteilt unbekannte Karten und simuliert mögliche Fortsetzungen.':`Stich ${completed} abgeschlossen. Die restlichen Stiche folgen automatisch.`} Die Dauer hängt vom Handy und der Anzahl Verteilungen ab.</p><p class="mc-progress-note">Du kannst abbrechen, indem du den Dialog schließt. Eine unterbrochene Berechnung wird nicht als abgeschlossen gespeichert.</p>`;
+  const done=Math.max(0,Math.min(total,completed));
+  out.innerHTML=`<div class="mc-progress-heading"><b>Stich ${done} von ${total}</b><span>${Math.round(done/Math.max(1,total)*100)} %</span></div><progress class="mc-progress" value="${done}" max="${total}" aria-label="Analysefortschritt"></progress>`;
  }
  function showDone(data){
   const out=container()?.querySelector('[data-monte-output]');if(!out)return;
@@ -195,7 +172,7 @@
  }
  function simulate(){
   const selection=activeSelection,modal=container();if(!selection||!modal)return;
-  const n=Number(modal.querySelector('[data-monte-count]')?.value)||160;
+  const n=Number(activeSelection?.samples)||160;
   const g=selection.game;
   if(worker){worker.terminate();worker=null;}
   const job=++sequence;
@@ -211,9 +188,9 @@
     if(payload.kind==='error'){showError(payload.reason);return;}
     if(payload.kind!=='complete'||payload.reports?.length!==8){showError('Unvollständige Simulation. Bitte erneut starten.');return;}
     try{
-     const data=cache().save(g,payload.reports,n);
+     cache().save(g,payload.reports,n);
+     cleanup();
      if(typeof render==='function'&&currentGame()?.id===g.id)render();
-     showDone(data);
     }catch(e){showError('Konnte die abgeschlossene Auswertung nicht übernehmen: '+String(e.message||e));}
    };
    worker.onerror=()=>{if(!container()||job!==sequence)return;worker?.terminate();worker=null;showError('Die lokale Berechnung konnte nicht gestartet werden. Bitte die PWA einmal mit Internetverbindung aktualisieren.');};
@@ -224,15 +201,11 @@
  // Die maximal angebotenen 350 Verteilungen je Stich werden sofort gestartet.
  window.WastlAutoSimulation={startFor(id,n=350){
   const g=currentGame();if(!g||String(g.id)!==String(id)||!cache())return false;
-  prompted.add(cache().fingerprint(g));overlay(g,true);
-  const choice=container()?.querySelector('[data-monte-count]');if(choice)choice.value=String(n);
-  const modal=container();
-  // Ein-Klick-Modus: keine erneute Auswahl und keine Labor-Optionen im Weg.
-  const top=modal?.querySelector('.mc-head h2');if(top)top.textContent='Wastl analysiert deine Partie';
-  const intro=modal?.querySelector('.mc-intro');if(intro)intro.textContent='Alle acht Stiche werden mit 350 Verteilungen pro Stich verglichen. Wastl übernimmt die Ergebnisse direkt in die Stichkommentare.';
-  const controls=modal?.querySelector('.mc-controls');if(controls)controls.hidden=true;
-  modal?.querySelectorAll('.mc-benchmark').forEach(el=>el.hidden=true);
-  simulate();return true;
+  prompted.add(cache().fingerprint(g));
+  overlay(g,true);
+  if(activeSelection)activeSelection.samples=Math.max(1,Number(n)||350);
+  simulate();
+  return true;
  }};
  document.addEventListener('click',event=>{
   if(event.target.closest('[data-monte-start]')){

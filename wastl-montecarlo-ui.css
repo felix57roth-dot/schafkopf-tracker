@@ -61,3 +61,13 @@
 .ws-grade-method{width:100%;border-top:1px solid #dfd3b7;padding-top:7px;color:#506458;font-size:12px;text-align:left}
 .ws-grade-method summary{font-weight:750;cursor:pointer}
 .ws-grade-method p{margin:7px 0 0;line-height:1.45}
+
+/* 7.14: Ein einziger Startbutton fuer die Wastl-Vollpartieanalyse. */
+.mc-dialog.mc-dialog-simple{width:min(100%,390px);padding:14px 16px 16px;display:grid;gap:10px}
+.mc-dialog-simple .mc-head{justify-content:flex-end}
+.mc-dialog-simple .mc-close{cursor:pointer}
+.mc-dialog-simple .mc-run{display:block;width:100%;min-height:54px;font-size:16px;cursor:pointer}
+.mc-dialog-simple .mc-output{margin-top:0}
+.mc-dialog-simple .mc-output:empty{display:none}
+.mc-dialog-simple .mc-progress{margin:5px 0 0}
+@media(max-width:365px){.mc-dialog.mc-dialog-simple{padding:12px 14px 14px}}
