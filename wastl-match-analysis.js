@@ -71,6 +71,65 @@
    averageN:meaningful?Math.round(meanSamples/meaningful):0,quality:evidence,relative,rawIndex:Math.round(raw*10)/10,
    reason:`${msg} Datengrundlage: ${eligible.length} vergleichbare Züge, ${forced} erzwungene Züge${missing?`, ${missing} nicht berechenbare Stiche`:''}. Modellzuverlässigkeit: ${evidence}. Keine an Schafkopf-Experten kalibrierte Leistungsnote; selbst bei 10/10 ist kein fehlerfreies Spiel bewiesen.`};
  }
+ // Wastl 5.2: Modellbasierte Spielqualitaet (0–100), nicht die Schafkopf-Spielstaerke.
+ // Gewinnwahrscheinlichkeit ist entscheidend; erwartete Teamaugen (beim Ramsch
+ // wenige eigene Augen) helfen, auch bei gleicher Gewinnquote zu differenzieren.
+ // Nur echte Wahlmoeglichkeiten mit ausreichend Modell-Signal werden bewertet.
+ // Paired-Unsicherheit und ein kleiner Vorsichtsabschlag beugen Scheingenauigkeit vor.
+ function quality(data,type){
+  const unavailable=(reason,values={})=>({score:null,label:'Nicht bewertbar',evidence:'ungenuegend',
+   reason,informative:0,considered:0,forced:0,missing:0,...values});
+  if(!Array.isArray(data?.reports)||data.reports.length!==8)
+   return unavailable('Bitte zuerst die gesamte Partie analysieren.');
+  const reports=data.reports, forced=reports.filter(r=>r?.onlyLegal||r?.ok&&r.candidates?.length===1).length;
+  const missing=reports.filter(r=>!r?.ok&&!r?.onlyLegal).length;
+  const eligible=reports.filter(r=>r?.ok&&Array.isArray(r.candidates)&&r.candidates.length>1
+    &&r.recorded&&r.reference&&r.candidates.every(c=>Number.isFinite(c.winRate)&&Number.isFinite(c.meanEyes))
+    &&Number.isFinite(r.recorded.winRate)&&Number.isFinite(r.reference.winRate)
+    &&Number.isFinite(r.recorded.meanEyes)&&Number.isFinite(r.reference.meanEyes));
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const objective=c=>0.8*clamp(c.winRate,0,1)
+    +0.2*(type==='ramsch'?1-clamp(c.meanEyes/120,0,1):clamp(c.meanEyes/120,0,1));
+  let opportunities=0, opportunitySum=0, lost=0, samples=0, clear=0;
+  for(const r of eligible){
+   const best=objective(r.reference),chosen=objective(r.recorded);
+   const mean=r.candidates.reduce((n,c)=>n+objective(c),0)/r.candidates.length;
+   const room=Math.max(0,best-mean);
+   if(room<0.006)continue;
+   const n=Number(r.sampleCount)||0;
+   if(n<80)continue;
+   opportunities++;samples+=n;
+   opportunitySum+=room;
+   const winGap=Math.max(0,r.reference.winRate-r.recorded.winRate);
+   // Nur den ueber die halbe gepaarte Stichprobenunsicherheit hinausgehenden
+   // Gewinnvorteil als vermeidbaren Verlust werten.
+   const margin=Number.isFinite(r.pairedUncertainty)?Math.max(0,r.pairedUncertainty):1;
+   const robustWinGap=Math.max(0,winGap-0.5*margin);
+   const eyeGap=type==='ramsch'
+    ?r.recorded.meanEyes-r.reference.meanEyes
+    :r.reference.meanEyes-r.recorded.meanEyes;
+   // Erwartete Augen sind unkalibriert; geringe Unterschiede ignorieren.
+   const robustEyeGap=Math.max(0,eyeGap-3);
+   const penalty=0.8*robustWinGap+0.2*robustEyeGap/120;
+   lost+=Math.min(room*1.5,Math.max(0,penalty));
+   if(r.clearAlternative)clear++;
+  }
+  const values={informative:opportunities,considered:eligible.length,forced,missing,clear,
+   averageN:opportunities?Math.round(samples/opportunities):0,
+   opportunity:Math.round(opportunitySum*1000)/1000,
+   regret:Math.round(lost*1000)/1000};
+  if(missing>1)return unavailable('Für mehrere Stiche fehlen belastbare Simulationsdaten. Bitte die Partie erneut analysieren.',values);
+  if(opportunities<2||opportunitySum<0.03)
+   return unavailable('Zu wenige aussagekräftige Kartenalternativen für eine faire Zahl. Das ist kein schlechtes Spielergebnis.',values);
+  const evidence=opportunities>=4&&samples/opportunities>=150&&missing===0?'mittel':'gering';
+  // Kleine Regularisierung: wenig Daten ergeben nicht automatisch 100 Punkte.
+  // Kein einzelner Ausgang (Sieg/Niederlage) fliesst in diese Zahl ein.
+  const score=clamp(Math.round(100*(1-(lost+0.008)/(opportunitySum+0.04))),0,100);
+  const label=score>=90?'Sehr gute Modellbilanz':score>=75?'Gute Modellbilanz'
+    :score>=55?'Gemischte Modellbilanz':'Verbesserungspotenzial im Modell';
+  return {...values,score,label,evidence,modelScore:true,version:'5.2.0',
+   reason:'Die Zahl vergleicht deine frei gewaehlten Karten mit Wastls simulierten Alternativen (80 % Gewinnchance, 20 % erwartete Augen; beim Ramsch weniger eigene Augen). Pflichtzuege werden nicht benotet. Unsichere Abweichungen werden abgemildert. Die Wertung ist experimentell, keine an echten Experten kalibrierte Spielstaerke.'};
+ }
  // Ergebnisse des getrennten Prueflabors; kein Nachweis menschlicher Spielstaerke.
  function saveBenchmark(report){
   if(!report||report.version!==BENCH_VERSION||report.model!=='wastl-policy-4.5'||!report.ok)throw Error('Pruefprotokoll ungueltig');
@@ -217,5 +276,5 @@
   const row=r.candidates.slice(0,8).map(c=>`<tr><td>${escape(cardLabel(c.card))}${c.card===r.actual?' (dein Zug)':''}</td><td>${Math.round(c.winRate*100)} %</td><td>${asNumber(c.meanEyes).toFixed(1)}</td></tr>`).join('');
   return `<section class="wm43-detail"><h4>🎲 Berechneter Zugvergleich</h4><p>${escape(explanation(game,step))}</p><table><thead><tr><th>Spielzug</th><th>${ramsch?'Nicht Ramschverlierer':'Modell-Siege'}</th><th>${ramsch?'Ø eigene Augen':'Ø Teamaugen'}</th></tr></thead><tbody>${row}</tbody></table><p class="wm43-caution">${r.sampleCount} Verteilungen · ${escape(r.method||'Monte-Carlo-Verteilung mit heuristischen Mitspielern')}. Werte sind keine kalibrierten Wahrscheinlichkeiten. Die Unsicherheit bezieht sich nur auf die Stichprobe, nicht auf Modellfehler.</p></section>`;
  }
- return Object.freeze({VERSION,fingerprint,get,save,grade,modelGrade,saveBenchmark,getBenchmark,benchmarkAssessment,item,explanation,shortExplanation,learningPoints,detail});
+ return Object.freeze({VERSION,fingerprint,get,save,grade,modelGrade,quality,saveBenchmark,getBenchmark,benchmarkAssessment,item,explanation,shortExplanation,learningPoints,detail});
 });
