@@ -8,10 +8,11 @@
  const E=node?require('./wastl-engine.js'):root.WastlEngine;
  const P=node?require('./wastl-policy.js'):root.WastlPolicy;
  const MC=node?require('./wastl-montecarlo.js'):root.WastlMonteCarlo;
- const api=factory(E,P,MC);
+ const O=node?require('./wastl-opponents.js'):root.WastlOpponents;
+ const api=factory(E,P,MC,O);
  if(node)module.exports=api;
  if(root)root.WastlBenchmark=api;
-})(typeof globalThis!=='undefined'?globalThis:this,function(E,P,MC){
+})(typeof globalThis!=='undefined'?globalThis:this,function(E,P,MC,O){
  'use strict';
  const VERSION='4.5.0', MODEL='wastl-policy-4.5';
  function rng(seed){let a=seed>>>0;return ()=>{a=(a+0x6d2b79f5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
@@ -52,7 +53,7 @@
   if(!checked.ok||checked.result.status!=='known')throw Error('Referenzspiel ungültig: '+checked.errors.map(e=>e.message).join('; '));
   return {game,initial};
  }
- function heldout(game,turn,card,seed,randomRate=.14){
+ function heldout(game,turn,card,seed,randomRate=.14,referenceModel='legacy'){
   const rand=rng(seed),all=E.reconstructHands(game),teams=E.partnership(game,all);
   if(!teams&&game.type!=='ramsch')throw Error('Unklare Teams in Referenzspiel');
   const mySide=teams?teams.team.includes(game.mySeat):true,hands=Object.fromEntries(E.SEATS.map(s=>[s,[...all[s]]]));
@@ -82,7 +83,12 @@
     else if(original&&i===idx)chosen=card;
     else {
      const legal=E.legalMoves(hands[s],cards[0]||null,game,{past,trickIndex:t});
-     chosen=rand()<randomRate?legal[Math.floor(rand()*legal.length)]:P.choose(hands[s],cards,s,leader,game,{past,partner},rand);
+     // Der eigenstaendige Testgegner nutzt kein Policy.evaluate und keine
+     // verdeckten Haende anderer Spieler bei seiner Entscheidung.
+     chosen=referenceModel==='independent'
+      ?O.chooseIndependent(hands[s],cards,s,leader,game,{past,partner},rand)
+      :rand()<randomRate?legal[Math.floor(rand()*legal.length)]
+       :P.choose(hands[s],cards,s,leader,game,{past,partner},rand);
     }
     const j=hands[s].indexOf(chosen);
     if(j<0)throw Error('Holdout: Karte fehlt ('+chosen+')');
