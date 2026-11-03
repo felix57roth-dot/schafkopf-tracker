@@ -16,7 +16,7 @@
  try{
   const old=JSON.parse(localStorage.getItem(KEY)||'null');
   if(old&&[6,7,8,9].includes(old.version)&&B.SEATS.includes(old.mySeat)&&
-    ['knocking','shotOffer','bidding','chooseGame','biddingResult','playing','trickDone','done','noGame'].includes(old.phase)&&
+    ['knocking','shotOffer','bidding','chooseGame','biddingResult','playing','trickDone','finalTrick','done','noGame'].includes(old.phase)&&
     old.initialHands&&old.hands&&Array.isArray(old.tricks)&&old.tricks.length<=8){
      game=old;
      // Laufende Runden bleiben erhalten. Nur alte, noch unvollständige
@@ -63,6 +63,7 @@
   if(g.phase==='biddingResult')return seatLabel(g,g.best.seat)+' spielt '+g.best.label;
   if(g.phase==='playing')return seatLabel(g,g.turn)+' legt als Nächstes';
   if(g.phase==='trickDone')return 'Stich beendet';
+  if(g.phase==='finalTrick')return 'Letzter Stich · '+(g.lastTrick?.eyes??0)+' Augen';
   if(g.phase==='done')return 'Runde beendet';
   return 'Neue Karten';
  }
@@ -74,14 +75,16 @@
   const botCard=g.phase==='playing'&&g.turn!==g.mySeat;
   const nextTrick=g.phase==='trickDone';
   const finalBid=g.phase==='biddingResult';
-  if(!botSpecial&&!botBid&&!botCard&&!nextTrick&&!finalBid)return;
+  const lastTrick=g.phase==='finalTrick';
+  if(!botSpecial&&!botBid&&!botCard&&!nextTrick&&!finalBid&&!lastTrick)return;
   // Langsame, einzeln erkennbare Spielzüge. Ein kompletter Stich wird
   // zunächst gezeigt, bevor er automatisch eingesammelt wird.
-  const duration=nextTrick?1900:finalBid?1850:botSpecial?1150:botBid?1350:1150;
+  const duration=lastTrick?2600:nextTrick?1900:finalBid?1850:botSpecial?1150:botBid?1350:1150;
   timer=setTimeout(()=>{
    timer=null;if(game!==g||tab!=='bots')return;
    try{
-    if(g.phase==='trickDone')B.nextTrick(g);
+    if(g.phase==='finalTrick')B.showResult(g);
+    else if(g.phase==='trickDone')B.nextTrick(g);
     else if(g.phase==='biddingResult')B.startPlay(g);
     else B.stepBot(g);
     save();renderApp();
@@ -241,7 +244,7 @@
  }
  function playedCards(g){
   let cards=g.current.map(x=>({seat:x.seat,id:x.card}));
-  if((g.phase==='trickDone'||g.phase==='done')&&g.lastTrick){
+  if((g.phase==='trickDone'||g.phase==='finalTrick'||g.phase==='done')&&g.lastTrick){
    cards=g.lastTrick.cards.map((id,i)=>({seat:E.nextSeat(g.lastTrick.leaderSeat,i),id}));
   }
   return cards.map(x=>`<div class="bots-played bots-played-${relative(g,x.seat)}" data-bots-card-key="${esc(x.seat+':'+x.id)}">${face(x.id)}</div>`).join('');
@@ -363,7 +366,7 @@
     <div class="bots-hud-actions"><button class="bots-settings-open" type="button" data-bots-settings title="Spieleinstellungen" aria-label="Spieleinstellungen">⚙</button><button class="bots-reset" type="button" data-bots-abandon aria-label="Partie verlassen">↺ Neu</button></div></header>
    ${error?`<div class="bots-error" role="alert">${esc(error)}</div>`:''}
    ${board(g)}
-   ${g.phase!=='noGame'&&g.phase!=='done'?hand(g):''}
+   ${g.phase!=='noGame'&&g.phase!=='done'&&g.phase!=='finalTrick'?hand(g):''}
    <footer class="bots-tally bots-cash-tally"><span class="bots-your-cash">🪙 Du: <strong>${money(BANK.load().balances.you)}</strong></span>
     ${sc?`<span class="bots-eyes-tally">${sc.us}:${sc.them} Augen</span>`:''}
     <button type="button" class="bots-wallet-show" data-bots-wallet>Alle Guthaben</button></footer>
@@ -555,5 +558,5 @@
    img.src='./players/stammtisch-szene.webp';
   }
  },true);
- window.WastlBotsUI={render,version:'7.10.0'};
+ window.WastlBotsUI={render,version:'7.12.0'};
 })();

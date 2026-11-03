@@ -22,7 +22,8 @@ function bowl(){
  const cents=w.WastlBotBank.load().balances.you;
  const {coins}=change(cents),total=coins.reduce((n,c)=>n+c.qty,0),compact=total>15;
  const visible=coins.map(({value,qty})=>{
-  const shown=compact?Math.min(qty,3):qty;
+  // Pro Münzsorte zwei sichtbare Münzen; bei mehr Münzen zeigt ×N die exakte Stückzahl.
+   const shown=Math.min(qty,2);
   return '<span class="bots-bowl-coin-group" title="'+qty+' × '+(value>=100?(value/100)+' €':value+' ct')+'">'+
    Array.from({length:shown},()=>coin(value,'bots-bowl-chip')).join('')+
    (shown<qty?'<small class="bots-bowl-quantity">×'+qty+'</small>':'')+
@@ -31,7 +32,7 @@ function bowl(){
  const label=euro(cents),debt=cents<0;
  return '<button type="button" class="bots-money-bowl'+(compact?' bots-bowl-compact':'')+'" data-bots-wallet aria-label="Deine Münzschale, Guthaben '+label+'">'+
   '<img class="bots-bowl-art" src="./players/stammtisch-schale.png" alt="" draggable="false">'+
-  '<span class="bots-bowl-contents">'+(debt?'<span class="bots-bowl-empty">Schulden</span>':visible||'<span class="bots-bowl-empty">Leer</span>')+'</span>'+
+  '<span class="bots-bowl-contents" style="--bots-bowl-rows:'+Math.ceil(coins.length/3)+'">'+(debt?'<span class="bots-bowl-empty">Schulden</span>':visible||'<span class="bots-bowl-empty">Leer</span>')+'</span>'+
   '<span class="bots-bowl-caption">'+label+'</span>'+
   (debt?'<span class="bots-bowl-debt">Schulden</span>':'')+
   '</button>';
@@ -43,5 +44,5 @@ function tokens(g,relative){
   '<div class="bots-token-position bots-token-position-'+relative(g,seat)+'">'+
   all.filter(x=>x.seat===seat).map(x=>'<span class="bots-table-token bots-token-'+x.kind+'" title="'+B.personAt(g,seat).name+': '+x.label+'">'+coin('special','bots-special-chip')+'<small>'+x.label+'</small></span>').join('')+'</div>').join('')+'</div>';
 }
-w.WastlBotCoins=Object.freeze({VERSION:'7.11.0',coin,change,bowl,tokens});
+w.WastlBotCoins=Object.freeze({VERSION:'7.12.0',coin,change,bowl,tokens});
 })(typeof globalThis!=='undefined'?globalThis:this);

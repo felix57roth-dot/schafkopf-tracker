@@ -56,9 +56,8 @@
  }
  function bidOptions(hand,top=null,seat=null){
   const options=[],min=top?.priority||0;
-  // Bei gleichrangigen Spielen erhält die früher sitzende Person das Spielrecht.
-  const hasSeatPriority=top&&seat&&SEATS.indexOf(seat)<SEATS.indexOf(top.seat);
-  const allowed=priority=>priority>min||(priority===min&&hasSeatPriority);
+  // Sobald eine Spielart genannt ist, darf nur eine höhere Spielart überbieten.
+  const allowed=priority=>priority>min;
   if(allowed(PRIORITY.rufspiel)){
    for(const s of ['eichel','gras','schell']){
     if(!hand.includes(s+'-A')&&hand.some(c=>E.colorClass(c,{type:'rufspiel'})===s))
@@ -365,7 +364,7 @@
    const trick={cards,leaderSeat:g.leaderSeat,winnerSeat,eyes,winner:'pending'};
    g.tricks.push(trick);g.lastTrick=trick;
    g.current=[];g.leaderSeat=winnerSeat;g.turn=winnerSeat;
-   g.phase=g.tricks.length===8?'done':'trickDone';
+   g.phase=g.tricks.length===8?'finalTrick':'trickDone';
   }else{g.turn=E.nextSeat(seat);openShotWindow(g);}
   return g;
  }
@@ -377,6 +376,10 @@
  function nextTrick(g){
   if(g.phase!=='trickDone')throw Error('Der Stich ist noch nicht abgeschlossen.');
   g.phase='playing';g.lastAction=null;return g;
+ }
+ function showResult(g){
+  if(g.phase!=='finalTrick'||g.tricks.length!==8)throw Error('Der letzte Stich muss vollständig liegen.');
+  g.phase='done';return g;
  }
  function result(g){
   if(g.phase!=='done')return null;
@@ -414,6 +417,6 @@
   if(!review.ok)throw Error('Die Partie konnte nicht regelkonform gespeichert werden: '+(review.errors[0]?.message||'Unbekannter Fehler'));
   return record;
  }
- return Object.freeze({VERSION:'7.10.0',SEATS,PEOPLE,deal,sortHand,personAt,firstFour,currentActor,knock,shot,declarerTeam,bidOptions,bidStrength,
-  create,bidderSeat,declareInterest,chooseToPlay,cancelChoice,submitBid,stepBot,advance,finishBidding,startPlay,play,playable,nextTrick,nextRound,result,toRecord});
+ return Object.freeze({VERSION:'7.12.0',SEATS,PEOPLE,deal,sortHand,personAt,firstFour,currentActor,knock,shot,declarerTeam,bidOptions,bidStrength,
+  create,bidderSeat,declareInterest,chooseToPlay,cancelChoice,submitBid,stepBot,advance,finishBidding,startPlay,play,playable,nextTrick,showResult,nextRound,result,toRecord});
 });

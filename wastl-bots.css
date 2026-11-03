@@ -2114,3 +2114,44 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 .bots-money-bowl .bots-bowl-debt{top:10%;font-size:10px}
 @media(max-width:390px){.bots-money-bowl{width:clamp(118px,33vw,145px);height:auto}}
 @media(max-height:700px){.bots-money-bowl{height:auto;width:clamp(112px,29vw,155px);bottom:25%}}
+
+/* Stammtisch 7.12: Schale außerhalb des Stichbereichs, Münzen in der Vertiefung. */
+.bots-wood .bots-money-bowl{
+ left:1%;bottom:21.5%;width:clamp(110px,29vw,160px);
+ height:auto;aspect-ratio:1 / 1;
+}
+.bots-money-bowl .bots-bowl-contents{
+ top:32%;bottom:39%;left:18%;right:18%;z-index:2;
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ grid-template-rows:repeat(var(--bots-bowl-rows,2),minmax(0,1fr));
+ justify-items:center;align-items:center;align-content:center;
+ gap:0;overflow:clip;pointer-events:none;
+}
+.bots-money-bowl .bots-bowl-coin-group{
+ display:flex;align-items:center;justify-content:center;
+ width:100%;max-width:100%;min-width:0;min-height:0;height:100%;
+ padding:0;margin:0;overflow:visible;white-space:nowrap;
+}
+.bots-money-bowl .bots-bowl-coin-group .bots-bowl-chip,
+.bots-money-bowl.bots-bowl-compact .bots-bowl-coin-group .bots-bowl-chip{
+ flex:0 0 auto;width:clamp(20px,5.5vw,27px);height:clamp(20px,5.5vw,27px);
+ transform:none;
+}
+.bots-money-bowl .bots-bowl-coin-group .bots-bowl-chip+.bots-bowl-chip,
+.bots-money-bowl.bots-bowl-compact .bots-bowl-coin-group .bots-bowl-chip+.bots-bowl-chip{
+ margin-left:-20px;transform:translateY(-2px);
+}
+.bots-money-bowl .bots-bowl-coin-group:nth-child(2n) .bots-bowl-chip,
+.bots-money-bowl .bots-bowl-coin-group:nth-child(3n) .bots-bowl-chip{transform:none}
+.bots-money-bowl .bots-bowl-quantity{right:0;bottom:0;z-index:5;font-size:9px;line-height:1.1}
+.bots-money-bowl .bots-bowl-caption{bottom:5%}
+@media(orientation:portrait){
+ .bots-wood .bots-playing-area .bots-played-left{
+  left:27%;top:13%;right:auto;transform:rotate(-9deg);
+ }
+ .bots-wood .bots-money-bowl{bottom:21.5%;left:1%}
+}
+@media(orientation:portrait) and (max-height:700px){
+ .bots-wood .bots-money-bowl{bottom:20%;width:clamp(105px,28vw,146px)}
+ .bots-wood .bots-playing-area .bots-played-left{left:29%;top:10%}
+}
