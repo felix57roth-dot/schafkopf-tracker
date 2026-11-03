@@ -719,6 +719,8 @@ html:has(.ws-fullscreen), body:has(.ws-fullscreen){overflow:hidden!important; ov
 .ws-result-tally{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);align-items:center;gap:8px;width:min(100%,430px);background:#f5ecd5;border:1px solid #e6d5ae;border-radius:18px;padding:8px 14px}
 .ws-result-tally>div{display:grid;gap:0}.ws-result-tally strong{font-size:clamp(34px,8vw,52px);line-height:1.1;color:#166844;font-variant-numeric:tabular-nums}.ws-result-tally small{font-size:clamp(10px,2.7vw,14px)}
 .ws-result-grade{display:flex;flex-direction:column;gap:2px;align-items:center}.ws-result-grade span{font-size:clamp(12px,3vw,16px);font-weight:700}.ws-result-grade strong{color:#157448;font-size:clamp(36px,9vw,66px);line-height:1;font-variant-numeric:tabular-nums}.ws-result-grade strong small{font-size:.42em;color:#737e72}
+.ws-quality-track{width:min(220px,70%);height:8px;border-radius:999px;background:#e3e9df;overflow:hidden;margin:8px auto 0}
+.ws-quality-track span{display:block;height:100%;background:#198454;border-radius:999px;transition:width .25s ease}
 .ws-result-note{margin:0;font-size:clamp(10px,2.9vw,13px);line-height:1.35;color:#62675a}
 .ws-result-done{border:1px solid #e5ca87;background:#178754;color:white;border-radius:13px;font-size:14px;font-weight:800;min-height:42px;cursor:pointer}
 .ws-result-people{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%}.ws-result-people>span{background:#f6ecd4;border-radius:12px;padding:7px 4px;font-size:12px;display:flex;justify-content:space-around}.ws-result-people b{color:#137c51}
@@ -1898,6 +1900,15 @@ function wastlResult(game,info){
  const result=wastlScoreProgress(game,game.tricks.length);
  if(!result.ready||game.tricks.length!==8||result.total!==120)return {ok:false,reason:'Die Partie ist noch nicht vollständig oder die Stichgewinner stimmen nicht mit den Karten überein. Bitte korrigiere den Verlauf.'};
  if(!result.teamReady&&!result.individual)return {ok:false,reason:result.reason||'Die Teamzuordnung ist noch nicht eindeutig.'};
+ // Nur das neue 0–100-Modell bewertet Entscheidungen. Sieg/Niederlage und
+ // fruehere Ergebnis-Heuristiken beeinflussen die Qualitaetszahl nicht.
+ const match=window.WastlMatchAnalysis?.get(game);
+ const model=window.WastlMatchAnalysis?.quality(match,game.type);
+ const grade=model?.score??null;
+ const gradeReason=model?.reason||'Noch keine vollstaendige Modellanalyse vorhanden.';
+ const gradeBrief=grade===null
+  ?(model?.reason||'Analysiere zuerst die gesamte Partie.')
+  :`${model.label} · ${model.informative} bewertbare Entscheidungen · ${model.forced} Pflichtzüge · Evidenz ${model.evidence}.`;
  // Official formats have game-dependent win conditions. Do not rank skill when rules are uncertain.
  if(result.individual){
   const check=window.WastlEngine?.review(game);
@@ -1905,7 +1916,7 @@ function wastlResult(game,info){
   const r=check.result,decisive=r.winner==='durchmarsch'?r.winnerSeat:r.loserSeat;
   const who=mentorSeatNameShort(decisive,game),me=r.winner==='durchmarsch'?decisive===game.mySeat:decisive!==game.mySeat;
   const myResult=r.winner==='durchmarsch'?`Durchmarsch! ${who} hat alle acht Stiche gewonnen. ${me?'Du hast gewonnen.':'Du hast verloren.'}`:`Ramsch: ${who} verliert mit den meisten Augen. ${me?'Du hast gewonnen.':'Du hast verloren.'}`;
-  return {ok:true,individual:true,people:result.people,myResult,winningText:r.reason,grade:null,gradeReason:'Die Augen und der Ramschverlierer sind regelbasiert bestimmt. Eine 1–10-Spielnote für Ramsch ist noch nicht an Expertenentscheidungen kalibriert.'};
+  return {ok:true,individual:true,people:result.people,myResult,winningText:r.reason,grade,gradeReason,gradeBrief};
  }
  const myWon=game.type==='kreuzrunde' ? (['vh','hh'].includes(game.mySeat)?result.myEyes>=61:result.myEyes>=60) : result.callerSide===null ? result.myEyes>=61 : (result.callerSide?result.myEyes>=61:result.myEyes>=60);
  let myResult='';
@@ -1919,35 +1930,6 @@ function wastlResult(game,info){
  }else if(game.type==='sie')myResult='Sie: Sonderwertung – dieser Spieltyp wird gewöhnlich nicht ausgespielt.';
  else myResult=myWon?'Dein Team hat gewonnen!':'Die Gegenpartei hat gewonnen.';
  const teamWinner=(game.type==='bettel'||game.type==='tout'||game.type==='sie')?null:(myWon?'mein':'gegner');
- let grade=null,gradeReason='';
- const checked=info.valid.ready && !['sie','bettel','ramsch','bockrunde'].includes(game.type);
- if(checked){
-  const ev=mentorStichEvidence(game);
-  const warnings=ev.tricks.flatMap(t=>t.notes).filter(n=>n.type==='warn'&&['Bedienpflicht prüfen','Stichgewinner prüfen'].includes(n.heading));
-  if(warnings.length)gradeReason=`${warnings.length} möglicher Regelfehler: Bewertung erst nach Korrektur.`;
-  else{
-   // A conservative HEURISTIC, not a learned evaluator or objective skill score.
-   const ownSideWin=game.type==='tout'?(result.wonStitches[game.declarerSeat]===8)===(game.mySeat===game.declarerSeat):myWon;
-   let points=5+(ownSideWin?1:-1);
-   const margin=result.myEyes-60;
-   if(margin>=15)points++;
-   if(margin<=-15)points--;
-   const secured=ev.tricks.filter(t=>t.myPlay && t.winTeam==='us' && CARD_MAP[t.myPlay.id]?.eyes>=10).length;
-   if(secured>=2)points++;
-   const lateLoss=ev.tricks.filter(t=>t.myPlay && t.winTeam==='them' && CARD_MAP[t.myPlay.id]?.eyes>=10 && t.myPlay.position===3).length;
-   if(lateLoss>=2)points--;
-   grade=Math.min(10,Math.max(1,points));
-   gradeReason='Vorläufige Regelbewertung aus Ergebnis, Teamaugen und ausgewählten eigenen Spielzügen – keine objektive KI-Leistungsnote.';
-  }
- }else if(!info.valid.ready)gradeReason='Die Partie ist nicht ausreichend geprüft, um deine Spielleistung seriös zu bewerten.';
- else gradeReason='Für diese Sonder-Spielart liegt noch kein belastbares Bewertungsschema vor.';
- // 4.3: Keine frei berechnete Ergebnisnote. Nur die explizit dokumentierte
- // Monte-Carlo-Modellnote relativ zu zufällig legalen Zügen ist zulässig.
- const match=window.WastlMatchAnalysis?.get(game);
- const model=window.WastlMatchAnalysis?.grade(match,game.type);
- grade=match?(model?.grade??null):null;
- gradeReason=match?(model?.reason||'Modellbewertung derzeit nicht möglich.'):'Noch keine ganze Partie simuliert. Eine Ergebnisnote allein aus Sieg oder Niederlage wäre irreführend.';
- const gradeBrief=grade!==null?`${model?.informative||0} von 8 Stichen mit unterscheidbaren Modellalternativen · Evidenz ${model?.quality||'gering'}. Keine Expertennote.`:'Zum Berechnen der Note zunächst die Partie vollständig simulieren.';
  return {ok:true,individual:false,myEyes:result.myEyes,theirEyes:result.theirEyes,teamWinner,myResult,grade,gradeReason,gradeBrief};
 }
 function wastlScoreWidget(game,step){
@@ -1961,10 +1943,13 @@ function wastlEnding(game,info){
  const result=wastlResult(game,info);
  const score=result.individual?`<div class="ws-result-people">${result.people.map(p=>`<span>${esc(p.name)} <b>${p.eyes}</b></span>`).join('')}</div>`:`<div class="ws-result-tally"><div><small>Dein Team</small><strong>${result.myEyes??'–'}</strong><small>Augen</small></div><span>:</span><div><small>Gegner</small><strong>${result.theirEyes??'–'}</strong><small>Augen</small></div></div>`;
  const title=result.ok?result.myResult:'Spielauswertung prüfen';
- const speech=result.ok?(result.grade!==null?`Servus! ${result.myResult} Dein vorläufiger Entscheidungsindex ist ${result.grade}/10. Unten zeig i dir, welche Züge dahinterstecken.`:`Servus! ${result.myResult} Ohne abgeschlossene Simulation gibts noch keinen Entscheidungsindex.`):`Da stimmt noch etwas nicht. ${result.reason}`;
+ const speech=result.ok?(result.grade!==null
+  ?`Servus! ${result.myResult} Nach meiner Rechnung sind's ${result.grade} von 100 Punkten. Unten siehst, was du verbessern kannst.`
+  :`Servus! ${result.myResult} Für eine faire Spielnote hab i noch zu wenig aussagekräftige Daten.`)
+  :`Da stimmt noch etwas nicht. ${result.reason}`;
  return `<div class="ws-fullscreen ws-result-screen" role="dialog" aria-modal="true" aria-label="Wastls Endauswertung">
   <header class="ws-topbar"><button type="button" id="wsClose" aria-label="Zur Partieübersicht">←</button><div class="ws-step-label"><strong>Partie beendet</strong><small>${esc(stitchTypeName(game.type))} · 8 von 8 Stichen</small></div><div class="ws-nav"><button type="button" data-mentor-step="7" aria-label="Zum letzten Stich">‹</button></div></header>
-  <main class="ws-result-body"><div class="ws-result-mentor"><img src="wastl.png" alt="Wastl"><div class="ws-result-speech">${esc(speech)}</div></div><section class="ws-result-card"><div class="ws-result-trophy" aria-hidden="true">🏆</div><h2>${esc(title)}</h2>${result.ok?score:`<p>${esc(result.reason)}</p>`}<div class="ws-result-grade"><span>Wastls Entscheidungsindex (vorläufig)</span><strong>${result.grade===null||result.grade===undefined?'–':result.grade}<small>/10</small></strong></div><p class="ws-result-note">${esc(result.gradeBrief||result.gradeReason||'Bitte prüfe zuerst die Aufzeichnung.')}</p>${result.ok&&result.gradeReason?`<details class="ws-grade-method"><summary>Wie entsteht diese Bewertung?</summary><p>${esc(result.gradeReason)}</p></details>`:''}${result.ok?`<section class="ws-lessons"><h3>🎯 Wastls Lernpunkte</h3>${(window.WastlMatchAnalysis?.learningPoints(game)||[]).map(x=>`<div><b>${esc(x.title)}</b><p>${esc(x.body)}</p></div>`).join('')}</section>`:''}</section><button type="button" class="ws-result-done" id="wsCloseResult">Zurück zu meinen Partien</button></main>
+  <main class="ws-result-body"><div class="ws-result-mentor"><img src="wastl.png" alt="Wastl"><div class="ws-result-speech">${esc(speech)}</div></div><section class="ws-result-card"><div class="ws-result-trophy" aria-hidden="true">🏆</div><h2>${esc(title)}</h2>${result.ok?score:`<p>${esc(result.reason)}</p>`}<div class="ws-result-grade"><span>Wastls Spielqualität (Modellwert)</span><strong>${result.grade===null||result.grade===undefined?'–':result.grade}<small>/100</small></strong>${result.grade===null?'':`<div class="ws-quality-track" aria-hidden="true"><span style="width:${result.grade}%"></span></div>`}</div><p class="ws-result-note">${esc(result.gradeBrief||result.gradeReason||'Bitte prüfe zuerst die Aufzeichnung.')}</p>${result.ok&&result.gradeReason?`<details class="ws-grade-method"><summary>Wie entsteht diese Bewertung?</summary><p>${esc(result.gradeReason)}</p></details>`:''}${result.ok?`<section class="ws-lessons"><h3>🎯 Wastls Lernpunkte</h3>${(window.WastlMatchAnalysis?.learningPoints(game)||[]).map(x=>`<div><b>${esc(x.title)}</b><p>${esc(x.body)}</p></div>`).join('')}</section>`:''}</section>${result.ok&&!window.WastlMatchAnalysis?.get(game)?'<button type="button" class="ws-result-done" data-monte-start>Gesamte Partie analysieren</button>':''}<button type="button" class="ws-result-done" id="wsCloseResult">Zurück zu meinen Partien</button></main>
  </div>`;
 }
 
