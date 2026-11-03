@@ -2115,17 +2115,18 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 @media(max-width:390px){.bots-money-bowl{width:clamp(118px,33vw,145px);height:auto}}
 @media(max-height:700px){.bots-money-bowl{height:auto;width:clamp(112px,29vw,155px);bottom:25%}}
 
-/* Stammtisch 7.12: Schale außerhalb des Stichbereichs, Münzen in der Vertiefung. */
+/* Stammtisch 7.13: symmetrischer Stich, nahe Sepp-Karte und vollständig sichtbare Münzen. */
 .bots-wood .bots-money-bowl{
  left:1%;bottom:21.5%;width:clamp(110px,29vw,160px);
  height:auto;aspect-ratio:1 / 1;
 }
 .bots-money-bowl .bots-bowl-contents{
- top:32%;bottom:39%;left:18%;right:18%;z-index:2;
+ top:27%;bottom:34%;left:18%;right:18%;z-index:2;
  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
  grid-template-rows:repeat(var(--bots-bowl-rows,2),minmax(0,1fr));
  justify-items:center;align-items:center;align-content:center;
- gap:0;overflow:clip;pointer-events:none;
+ gap:0;overflow:visible;pointer-events:none;
+ --bots-bowl-chip-size:min(clamp(19px,5vw,25px),calc(41px / max(1,var(--bots-bowl-rows,2))));
 }
 .bots-money-bowl .bots-bowl-coin-group{
  display:flex;align-items:center;justify-content:center;
@@ -2134,12 +2135,12 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 }
 .bots-money-bowl .bots-bowl-coin-group .bots-bowl-chip,
 .bots-money-bowl.bots-bowl-compact .bots-bowl-coin-group .bots-bowl-chip{
- flex:0 0 auto;width:clamp(20px,5.5vw,27px);height:clamp(20px,5.5vw,27px);
+ flex:0 0 auto;width:var(--bots-bowl-chip-size);height:var(--bots-bowl-chip-size);
  transform:none;
 }
 .bots-money-bowl .bots-bowl-coin-group .bots-bowl-chip+.bots-bowl-chip,
 .bots-money-bowl.bots-bowl-compact .bots-bowl-coin-group .bots-bowl-chip+.bots-bowl-chip{
- margin-left:-20px;transform:translateY(-2px);
+ margin-left:calc(2px - var(--bots-bowl-chip-size));transform:translateY(-1px);
 }
 .bots-money-bowl .bots-bowl-coin-group:nth-child(2n) .bots-bowl-chip,
 .bots-money-bowl .bots-bowl-coin-group:nth-child(3n) .bots-bowl-chip{transform:none}
@@ -2147,11 +2148,20 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
 .bots-money-bowl .bots-bowl-caption{bottom:5%}
 @media(orientation:portrait){
  .bots-wood .bots-playing-area .bots-played-left{
-  left:27%;top:13%;right:auto;transform:rotate(-9deg);
+  left:17%;top:5%;right:auto;transform:rotate(-9deg);
  }
- .bots-wood .bots-money-bowl{bottom:21.5%;left:1%}
+ .bots-wood .bots-playing-area .bots-played-right{right:17%;left:auto;top:5%;transform:rotate(9deg)}
+ .bots-wood .bots-playing-area .bots-played-top{top:-3%}
+ .bots-wood .bots-playing-area .bots-played{width:clamp(40px,12vw,68px)}
+ .bots-wood .bots-token-position-left{left:12%;top:51%}
+ .bots-wood .bots-token-position-right{right:12%;top:51%}
+ .bots-wood.bots-art-loaded.bots-art-modern .bots-seat-label-left,
+ .bots-wood.bots-art-loaded.bots-art-modern .bots-seat-label-right{top:44%}
+ .bots-wood .bots-money-bowl{bottom:20.5%;left:1%}
 }
 @media(orientation:portrait) and (max-height:700px){
- .bots-wood .bots-money-bowl{bottom:20%;width:clamp(105px,28vw,146px)}
- .bots-wood .bots-playing-area .bots-played-left{left:29%;top:10%}
+ .bots-wood .bots-money-bowl{bottom:18%;width:clamp(105px,28vw,146px)}
+ .bots-wood .bots-playing-area .bots-played-left{left:17%;top:11%;width:clamp(35px,10vw,50px)}
+ .bots-wood .bots-playing-area .bots-played-right{right:17%;top:11%;width:clamp(35px,10vw,50px)}
+ .bots-wood .bots-playing-area .bots-played-top{top:5%}
 }
