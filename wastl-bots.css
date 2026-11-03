@@ -2072,3 +2072,45 @@ html:has(.bots-page),body:has(.bots-page){overflow:hidden;overscroll-behavior:no
  .bots-token-position-bottom{bottom:20%}
 }
 @media(prefers-reduced-motion:reduce){.bots-table-token{animation:none}}
+
+
+/* Stammtisch 7.11: originale Edelweiss-Holzschale mit Guthabenmuenzen.
+ * Tischposition bleibt erhalten; der Kartenfaecher und die Spiellogik bleiben unveraendert. */
+.bots-money-bowl{
+ width:clamp(128px,33vw,185px);
+ height:auto;
+ aspect-ratio:340/340;
+ background:none;border:0;overflow:visible;
+ filter:drop-shadow(0 4px 4px #29180992);
+}
+.bots-bowl-art{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.bots-bowl-contents{
+ position:absolute;z-index:2;top:29%;bottom:39%;left:16%;right:16%;
+ display:flex;flex-wrap:wrap;justify-content:center;align-content:center;align-items:center;
+ gap:0 1px;overflow:visible;pointer-events:none;
+}
+.bots-bowl-coin-group{display:inline-flex;position:relative;align-items:center;justify-content:center;padding:0 2px;min-height:23px}
+.bots-bowl-coin-group .bots-bowl-chip{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:clamp(21px,6.2vw,31px);height:clamp(21px,6.2vw,31px);
+ font-size:11px;line-height:1;font-weight:900;
+ box-shadow:0 1px 2px #1b120c77;
+}
+.bots-bowl-coin-group .bots-bowl-chip+.bots-bowl-chip{margin-left:-17px;transform:translateY(-2px)}
+.bots-bowl-coin-group:nth-child(2n) .bots-bowl-chip{transform:rotate(-9deg)}
+.bots-bowl-coin-group:nth-child(3n) .bots-bowl-chip{transform:rotate(7deg)}
+.bots-bowl-compact .bots-bowl-coin-group .bots-bowl-chip{width:clamp(18px,5vw,27px);height:clamp(18px,5vw,27px)}
+.bots-bowl-compact .bots-bowl-coin-group .bots-bowl-chip+.bots-bowl-chip{margin-left:-14px}
+.bots-bowl-quantity{
+ position:absolute;z-index:5;right:-5px;bottom:-6px;line-height:1.2;font-size:10px;font-weight:900;
+ color:#fff9e1;background:#402814eb;border-radius:5px;padding:1px 3px;text-shadow:0 1px #100c09;
+}
+.bots-small-cent{
+ background-image:none!important;background:radial-gradient(circle at 35% 30%,#f7ddaa 0%,#bb8550 60%,#81512b 100%);
+ border:2px solid #e8bd7e;border-radius:50%;color:#44210e;text-shadow:0 1px #fbe6c1;
+}
+.bots-bowl-empty{color:#572c12;font-size:11px;font-weight:900;background:#f3d49cbb;padding:2px 5px;border-radius:7px}
+.bots-money-bowl .bots-bowl-caption{bottom:8%;font-size:clamp(10px,2.5vw,13px);padding:2px 6px;z-index:5}
+.bots-money-bowl .bots-bowl-debt{top:10%;font-size:10px}
+@media(max-width:390px){.bots-money-bowl{width:clamp(118px,33vw,145px);height:auto}}
+@media(max-height:700px){.bots-money-bowl{height:auto;width:clamp(112px,29vw,155px);bottom:25%}}
