@@ -515,8 +515,9 @@ body.cards-fs-open{overflow:hidden}
 .home-v3 .balance-v3{padding:22px 23px}.home-v3 .balance-v3 strong{font-size:clamp(34px,8vw,46px)}.balance-counters{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.balance-counters span{border-radius:99px;background:#eff4ee;color:#4c6958;padding:7px 10px;font-size:11px;font-weight:800}
 .quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.quick-action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:1px solid #e3e9df;background:#fff;border-radius:18px;padding:14px 3px;min-width:0;color:#183d30;box-shadow:0 4px 17px rgba(21,50,34,.055)}.quick-action svg{width:27px;height:27px;color:#0d7454}.quick-action b{font-size:12px}.quick-action small{font-size:10px;color:#75867e}
 .mentor-home{display:flex;align-items:center;gap:12px;text-align:left;background:linear-gradient(120deg,#184d38,#0e3129);border:1px solid #3e6449;border-radius:18px;padding:9px 15px;width:100%;color:white}.mentor-home img{width:65px;height:65px;object-fit:cover;object-position:center top;border-radius:13px}.mentor-home span:nth-of-type(1){flex:1;min-width:0}.mentor-home b{display:block;font-size:15px}.mentor-home small{display:block;color:#d7e4d6;line-height:1.4;margin-top:5px;font-size:11px}
-.segmented-v3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:5px;border:1px solid #e0e6dd;background:#eef1ea;border-radius:16px;gap:4px;margin-bottom:18px}
+.segmented-v3{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:5px;border:1px solid #e0e6dd;background:#eef1ea;border-radius:16px;gap:4px;margin-bottom:18px}
 .segmented-v3 button{border:0;background:transparent;color:#6b7b70;padding:12px 4px;border-radius:11px;font-size:13px;font-weight:750}.segmented-v3 button.active{background:var(--green);color:white;box-shadow:0 4px 12px #0d74542b}
+@media(max-width:480px){.statistics-v3 .segmented-v3{grid-template-columns:repeat(2,minmax(0,1fr))}.statistics-v3 .segmented-v3 button{min-height:43px}}
 .statistics-v3 .sectionhead.stats-heading{margin-top:10px}.statistics-v3 .training-stat-section{margin-top:6px}
 .settings-heading h2{margin:4px 0 4px;font-size:23px}.settings-heading p{margin:0 0 20px;color:#718178;font-size:13px}
 .settings-panel{border:1px solid #e0e6df;border-radius:18px;background:#fff;margin:0 0 11px;box-shadow:0 4px 20px #183d3010;overflow:hidden}
@@ -1412,15 +1413,13 @@ function trainingChart(title,values,unit='',axisMax=null){
  return `<div class="training-chart-card"><h3>${esc(title)}</h3><svg viewBox="0 0 ${W} ${H}" class="training-chart-svg" role="img" aria-label="${esc(title)} über ${nums.length} Partien">${ticks}<path d="${path}" fill="none" stroke="#0d7454" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}<text x="${left}" y="${H-6}" font-size="12" fill="#65796b">1. Partie</text><text x="${W-right}" y="${H-6}" text-anchor="end" font-size="12" fill="#65796b">${nums.length}. Partie</text></svg><p class="help">${nums.length} auswertbare Trainingspartien · keine Geldwertung</p></div>`;
 }
 function trainingStatsPage(){
- window.WastlPlayerProfile?.syncArchived(stitch.archive);
- const playerProfile=window.WastlPlayerProfile?.render()||'';
  const games=[...stitch.archive].sort((a,b)=>String(a.started).localeCompare(String(b.started)));
  const byType=stitchTrainingSummary().types;
  const decided=games.map(g=>({game:g,outcome:stitchTrainingResult(g)})).filter(x=>x.outcome!==null);
  let wins=0;const rateSeries=decided.map((x,i)=>{if(x.outcome)wins++;return {value:Math.round(wins/(i+1)*100)};});
  const eyeSeries=games.filter(g=>g.tricks.length===8&&g.tricks.every(t=>validStitchSeat(t.winnerSeat))&&!isRamsch(g.type)&&stitchMyDeclarerTeam(g)!==null).map(g=>({value:stitchTeamTotalsBySeats(g).us}));
  const maxType=Math.max(1,...byType.map(x=>x[1]));
- return `${playerProfile}<section class="section training-stat-section"><div class="sectionhead"><h2>Trainingsstatistik</h2><span class="badge">Stichverlauf</span></div><div class="card formcard">${stitchTrainingStatsUI()}</div><div class="training-charts">${trainingChart('Gewinnquote im Verlauf',rateSeries,'%',100)}${trainingChart('Eigene Team-Augen je Partie',eyeSeries,'',120)}</div><div class="card formcard training-type-chart"><h3>Spielarten im Training</h3>${byType.length?byType.map(([name,count])=>`<div class="training-type-bar"><span>${esc(name)}</span><div class="training-type-track"><div style="width:${(count/maxType)*100}%"></div></div><b>${count}</b></div>`).join(''):'<p class="help">Noch keine archivierten Partien.</p>'}</div><p class="help">Die Quoten basieren auf tatsächlich entschiedenen Partien. Beim Rufspiel wird die Partnerschaft erst nach dem ausgespielten Ruf-Ass gewertet. Je mehr Partien, desto aussagekräftiger die Werte.</p></section>`;
+ return `<section class="section training-stat-section"><div class="sectionhead"><h2>Trainingsstatistik</h2><span class="badge">Stichverlauf</span></div><div class="card formcard">${stitchTrainingStatsUI()}</div><div class="training-charts">${trainingChart('Gewinnquote im Verlauf',rateSeries,'%',100)}${trainingChart('Eigene Team-Augen je Partie',eyeSeries,'',120)}</div><div class="card formcard training-type-chart"><h3>Spielarten im Training</h3>${byType.length?byType.map(([name,count])=>`<div class="training-type-bar"><span>${esc(name)}</span><div class="training-type-track"><div style="width:${(count/maxType)*100}%"></div></div><b>${count}</b></div>`).join(''):'<p class="help">Noch keine archivierten Partien.</p>'}</div><p class="help">Die Quoten basieren auf tatsächlich entschiedenen Partien. Beim Rufspiel wird die Partnerschaft erst nach dem ausgespielten Ruf-Ass gewertet. Je mehr Partien, desto aussagekräftiger die Werte.</p></section>`;
 }
 function stitchArchiveDetailUI(game){
  const stage=Math.max(0,Math.min(7,stitchReplayStep)),row=game.tricks[stage],scores=stitchReplayTotals(game,stage),ramsch=isRamsch(game.type);
@@ -1596,7 +1595,7 @@ function homeV3(){
 }
 let statView='finances';
 function statsV3(){
- const labels=[['finances','Finanzen'],['types','Spielarten'],['training','Training']];
+ const labels=[['finances','Finanzen'],['types','Spielarten'],['training','Training'],['strength','Spielstärke']];
  // Die vorhandenen vollständigen Statistik-Bausteine werden unverändert weiterverwendet.
  const wrap=document.createElement('div');wrap.innerHTML=statsLegacy();
  const sections=Array.from(wrap.querySelectorAll('section'));
@@ -1607,6 +1606,10 @@ function statsV3(){
   body=`${header?.outerHTML||''}${kpis?.outerHTML||''}${findSection('Monatsübersicht')?.outerHTML||''}<section class="section"><div class="sectionhead"><h2>Gewinnentwicklung</h2><span class="subtle">Abende · kumuliert</span></div><div class="card chartcard" id="chartContainer">${chart()}</div></section>${findSection('Rekorde deiner Abende')?.outerHTML||''}${findSection('Dein freiwilliges Jahresziel')?.outerHTML||''}`;
  }else if(statView==='types'){
   body=findSection('Statistik der Einzelspiele')?.outerHTML||'<div class="card empty">Noch keine Spielarten erfasst.</div>';
+ }else if(statView==='training'){body=trainingStatsPage();}
+ else if(statView==='strength'){
+  window.WastlPlayerProfile?.syncArchived(stitch.archive);
+  body=window.WastlPlayerProfile?.render()||'<div class="card empty">Spielerstärke ist noch nicht verfügbar.</div>';
  }else{body=trainingStatsPage();}
  return `<div class="content-page statistics-v3"><div class="segmented-v3" role="tablist" aria-label="Statistikbereich">${labels.map(([id,label])=>`<button type="button" role="tab" data-stat-view="${id}" class="${statView===id?'active':''}" aria-selected="${statView===id}">${label}</button>`).join('')}</div>${body}</div>`;
 }
@@ -2026,7 +2029,7 @@ function mentorUI(){
  if(!g){
  const all=stitch.archive.filter(x=>Array.isArray(x?.tricks)),imported=all.filter(x=>mentorSource(x)==='palast').length,bots=all.filter(x=>mentorSource(x)==='bot').length,local=all.length-imported-bots;
  const segments=[['all',`Alle (${all.length})`],['palast',`Schafkopf Palast (${imported})`],['tracked',`Selbst getrackt (${local})`],['bot',`Bot-Partien (${bots})`]];
- return `<div class="content-page mentor-view"><div class="wastl-single-intro"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><div class="ey">Dein Schafkopf-Mentor</div><h2>Servus! I bin da Wastl.</h2><p>Such dir eine gespeicherte Partie aus, dann schauen wir uns Stich für Stich gemeinsam an, was die Karten hergeben.</p></div></div>${window.WastlPlayerProfile?.render()||''}<div class="palast-entry"><button class="btn" id="palastStart" type="button">📷 Schafkopf-Palast-Partie importieren</button><p class="help">Geteiltes Spielbild auswählen, Karten prüfen und mit Wastl analysieren – kostenlos und offline.</p></div><div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${all.length} Partien</span></div>
+ return `<div class="content-page mentor-view"><div class="wastl-single-intro"><img src="wastl.png" alt="Wastl, dein Schafkopf-Mentor"><div><div class="ey">Dein Schafkopf-Mentor</div><h2>Servus! I bin da Wastl.</h2><p>Such dir eine gespeicherte Partie aus, dann schauen wir uns Stich für Stich gemeinsam an, was die Karten hergeben.</p></div></div><div class="palast-entry"><button class="btn" id="palastStart" type="button">📷 Schafkopf-Palast-Partie importieren</button><p class="help">Geteiltes Spielbild auswählen, Karten prüfen und mit Wastl analysieren – kostenlos und offline.</p></div><div class="mentor-title"><h2>Gespeicherte Trainingspartien</h2><span class="badge">${all.length} Partien</span></div>
  <div class="mentor-source-filters" role="group" aria-label="Partien nach Herkunft filtern">${segments.map(([key,label])=>`<button type="button" data-mentor-source="${key}" class="${mentorArchiveFilter===key?'active':''}" aria-pressed="${mentorArchiveFilter===key}">${label}</button>`).join('')}</div>
  <div class="mentor-list section">${mentorGameList().map(x=>`<button class="mentor-game-row" type="button" data-mentor-open="${esc(x.id)}"><span class="gico">${richGameIcon(x.type)}</span><span class="maintext"><b>${esc(stitchTypeName(x.type))}</b><small>${new Date(x.started).toLocaleDateString('de-DE')} · ${x.tricks.length} Stiche · ${x.tricks.reduce((n,t)=>n+(t.eyes||0),0)} Augen</small><span class="mentor-source-tag ${mentorSource(x)}">${mentorSource(x)==='palast'?'↗ Schafkopf Palast':mentorSource(x)==='bot'?'🃏 Gegen Bots':'✓ Selbst getrackt'}</span></span><span>→</span></button>`).join('')||'<div class="card empty">Für diese Auswahl sind noch keine Partien gespeichert.</div>'}</div><p class="mentor-rule">Wastl ist ein kostenloser, lokaler Lernbegleiter. Seine Hinweise beruhen auf den gespeicherten Stichen und einfachen Regeln, nicht auf einer Online-KI.</p></div>`;
  }
