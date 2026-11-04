@@ -1840,6 +1840,8 @@ function wastlCardOrder(cards,game){
  });
 }
 function wastlCompactSpeech(game,t,step,valid){
+ const newSpeech=window.WastlSpeech?.short(game,step,{ready:valid?.ready});
+ if(newSpeech)return newSpeech;
  const modelSpeech=window.WastlMatchAnalysis?.shortExplanation(game,step);
  if(modelSpeech)return modelSpeech;
  if(!valid.ready)return 'Des schau ma uns an. Manche Karten sind noch nicht ganz eindeutig erfasst.';
@@ -2078,6 +2080,7 @@ document.addEventListener('keydown',e=>{
 <script src="./wastl-opponents.js"></script>
 <script src="./wastl-montecarlo.js"></script>
 <script src="./wastl-match-analysis.js"></script>
+<script src="./wastl-speech.js"></script>
 <script src="./wastl-montecarlo-ui.js"></script>
 <link rel="stylesheet" href="./wastl-montecarlo-ui.css">
 <script src="./palast-game-labels.js"></script>
