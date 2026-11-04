@@ -136,3 +136,25 @@ test('Entwicklungskurve rendert bei mehrfacher Bewertung ein SVG',()=>{
  assert.match(html,/polyline/);
  assert.match(html,/aria-label=/);
 });
+
+test('Bisheriger Analyse-Cache wird ohne neue Simulation einmalig nachgetragen',()=>{
+ reset();const game=makeGame('cached','palast');
+ A.save(game,analysis().reports,160);
+ const first=P.syncArchived([game]);
+ assert.equal(first,1);
+ assert.equal(P.stats().allAnalyzed,1);
+ assert.equal(P.syncArchived([game]),0);
+ assert.equal(P.stats().allAnalyzed,1);
+});
+test('Speicherfehler darf vorhandene Spielerhistorie nicht veraendern',()=>{
+ reset();
+ P.restore({version:1,records:[row(0)]},'replace');
+ const before=JSON.stringify(P.exportData());
+ const initial=globalThis.localStorage.setItem;
+ globalThis.localStorage.setItem=()=>{throw Error('Speicher voll')};
+ try {
+  const result=P.record(makeGame('quota'),analysis());
+  assert.equal(result.ok,false);
+  assert.equal(JSON.stringify(P.exportData()),before);
+ }finally{globalThis.localStorage.setItem=initial;}
+});
