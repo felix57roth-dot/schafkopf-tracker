@@ -13,7 +13,7 @@
  'use strict';
  const VERSION='5.4.0',STORAGE='wastl-player-profile-v1',FORMAT=1;
  const ENGINE='5.1.0',QUALITY='5.2.0',MAX_IMPORT=30000;
- const MIN_GAMES=5,MIN_DECISIONS=12,PRIOR_GAMES=6,PRIOR_QUALITY=60;
+ const MIN_GAMES=5,MIN_DECISIONS=12;
  const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
  function hash(input,seed){
   let h=seed>>>0;
@@ -136,9 +136,10 @@
   const weighted=q.map(r=>({score:r.score,weight:clamp(r.informative/3,0.67,1.6)*(r.evidence==='mittel'?1:0.85)}));
   const weights=weighted.reduce((n,x)=>n+x.weight,0);
   const average=weights?weighted.reduce((n,x)=>n+x.score*x.weight,0)/weights:null;
-  const estimate=(PRIOR_QUALITY*PRIOR_GAMES+weighted.reduce((n,x)=>n+x.score*x.weight,0))/(PRIOR_GAMES+weights);
   const enough=q.length>=MIN_GAMES&&decisions>=MIN_DECISIONS;
-  const points=enough?Math.round(clamp((estimate-45)*0.6,0,40)*10)/10:null;
+  // Die Partiezahl ist nur Mindestvoraussetzung, kein Punktebonus.
+  // Konstante durchschnittliche Spielqualitaet ergibt konstante Sterne.
+  const points=enough?Math.round(clamp((average-45)*0.6,0,40)*10)/10:null;
   const stars=points===null?0:points>=30?5:points>=20?4:points>=10?3:points>=5?2:1;
   return {games:q.length,decisions,average:average===null?null:Math.round(average*10)/10,
    points,stars,provisional:points!==null&&(q.length<15||decisions<40),
