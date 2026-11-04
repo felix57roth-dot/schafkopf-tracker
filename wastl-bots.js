@@ -315,11 +315,24 @@
    const seat=bidderSeat(g);
    if(!seat)return finishBidding(g);
    if(seat===g.mySeat)return g;
+   // Nur durch das Regelwerk erlaubte Ansagen werden uebernommen.
+   // Ein Worker-Fehler oder Timeout faellt transparent auf die alte KI zurueck.
+   const modelReady=decision?.bidReady===true;
+   const chosen=modelReady&&decision.offer
+    ?bidOptions(g.hands[seat],g.auctionStage==='opening'?null:g.best,seat)
+      .find(o=>o.type===decision.offer.type
+       &&o.trumpSuit===decision.offer.trumpSuit&&o.calledSuit===decision.offer.calledSuit)
+    :null;
+   const offer=modelReady?(chosen||null)
+    :botBid(g.hands[seat],g.auctionStage==='opening'?null:g.best,random,seat);
+   if(modelReady){
+    g.botBidBrainVersion='8.1.0';
+    g.botBidBrainActions=(g.botBidBrainActions||0)+1;
+   }else g.botBidFallbackActions=(g.botBidFallbackActions||0)+1;
    if(g.auctionStage==='opening'){
-    // Erst Absicht äußern, nicht schon die Spielart verraten.
-    return recordIntent(g,seat,!!botBid(g.hands[seat],null,random,seat));
+    // Erst Absicht aeussern; keine Spielart vorzeitig offenlegen.
+    return recordIntent(g,seat,!!offer);
    }
-   const offer=botBid(g.hands[seat],g.best,random,seat);
    if(offer)return recordBid(g,seat,offer);
    if(!g.best){
     // Ein bereits verbindlich interessierter Spieler muss die Spielart
@@ -419,6 +432,8 @@
    initialHandsSource:'bots-known-deal-v6.0',initialHands:copyHands(g.initialHands),
    botEngineVersion:g.botEngineVersion||'7.12.0-policy',
    botBrainMoves:g.botBrainMoves||0,botFallbackMoves:g.botFallbackMoves||0,
+   botBidBrainVersion:g.botBidBrainVersion||null,
+   botBidBrainActions:g.botBidBrainActions||0,botBidFallbackActions:g.botBidFallbackActions||0,
    linkedGameId:null,round:g.round,
    tricks:g.tricks.map(t=>({...t,cards:[...t.cards],winner:team.includes(t.winnerSeat)===team.includes(g.mySeat)?'us':'them'}))
   };
