@@ -300,7 +300,7 @@
   g.phase='bidding';return recordBid(g,g.mySeat,choice);
  }
  // Ein Bot = eine sichtbare Ansage oder eine einzige ausgespielte Karte.
- function stepBot(g,random=Math.random){
+ function stepBot(g,random=Math.random,decision=null){
   if(g.phase==='knocking'){
    const seat=currentActor(g);
    if(seat&&seat!==g.mySeat)return knock(g,seat,botKnock(g,seat,random));
@@ -338,9 +338,16 @@
    const view={type:g.type,trumpSuit:g.trumpSuit,calledSuit:g.calledSuit,declarerSeat:g.declarerSeat};
    const options=playable(g,seat);
    if(!options.length)throw Error('Bot hat keine spielbare Karte.');
-   let chosen;
-   try{chosen=P.choose(hand,cards,seat,g.leaderSeat,view,{past:g.tricks},random);}catch{chosen=null;}
+   let chosen=decision?.card;
+   const liveChoice=options.includes(chosen);
+   if(!liveChoice){
+    try{chosen=P.choose(hand,cards,seat,g.leaderSeat,view,{past:g.tricks},random);}catch{chosen=null;}
+   }
    if(!options.includes(chosen))chosen=options[0];
+   if(liveChoice){
+    g.botEngineVersion='8.0.0-hybrid';
+    g.botBrainMoves=(g.botBrainMoves||0)+1;
+   }else g.botFallbackMoves=(g.botFallbackMoves||0)+1;
    put(g,seat,chosen);
    g.lastAction={seat,text:'Legt eine Karte',card:chosen,kind:'card'};
   }
@@ -410,6 +417,8 @@
    seatNames:Object.fromEntries(SEATS.map(s=>[s,personAt(g,s).name])),
    started:g.started,finished:new Date().toISOString(),
    initialHandsSource:'bots-known-deal-v6.0',initialHands:copyHands(g.initialHands),
+   botEngineVersion:g.botEngineVersion||'7.12.0-policy',
+   botBrainMoves:g.botBrainMoves||0,botFallbackMoves:g.botFallbackMoves||0,
    linkedGameId:null,round:g.round,
    tricks:g.tricks.map(t=>({...t,cards:[...t.cards],winner:team.includes(t.winnerSeat)===team.includes(g.mySeat)?'us':'them'}))
   };
@@ -417,6 +426,6 @@
   if(!review.ok)throw Error('Die Partie konnte nicht regelkonform gespeichert werden: '+(review.errors[0]?.message||'Unbekannter Fehler'));
   return record;
  }
- return Object.freeze({VERSION:'7.12.0',SEATS,PEOPLE,deal,sortHand,personAt,firstFour,currentActor,knock,shot,declarerTeam,bidOptions,bidStrength,
+ return Object.freeze({VERSION:'8.0.0',SEATS,PEOPLE,deal,sortHand,personAt,firstFour,currentActor,knock,shot,declarerTeam,bidOptions,bidStrength,
   create,bidderSeat,declareInterest,chooseToPlay,cancelChoice,submitBid,stepBot,advance,finishBidding,startPlay,play,playable,nextTrick,showResult,nextRound,result,toRecord});
 });
