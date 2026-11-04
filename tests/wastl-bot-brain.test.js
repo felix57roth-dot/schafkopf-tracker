@@ -38,6 +38,22 @@ test('Verborgene Gegnerkarten beeinflussen die Botentscheidung nicht unmittelbar
  assert.deepEqual(a,b);
  assert.deepEqual(Brain.analyze(a,{samples:12,seed:42}),Brain.analyze(b,{samples:12,seed:42}));
 });
+test('Rufspiel: Ein Bot darf aus eigener Ruf-Sau seine echte Teamzugehoerigkeit ableiten',()=>{
+ let g,owner;
+ for(let seed=100;seed<200;seed++){
+  const candidate=game('rufspiel',seed);
+  const seat=['mh','hh'].find(s=>candidate.hands[s].includes('eichel-A'));
+  if(seat){g=candidate;owner=seat;break;}
+ }
+ assert.ok(owner,'Kein deterministischer Ruf-Sau-Testfall gefunden');
+ g.leaderSeat=owner;g.turn=owner;
+ const view=Brain.publicView(g,owner),built=Brain.build(view);
+ assert.equal(built.ok,true,built.reason);
+ assert.ok(view.hand.includes('eichel-A'));
+ const result=Brain.analyze(view,{samples:10,seed:987654});
+ assert.equal(result.ok,true,result.reason);
+ assert.ok(B.playable(g,owner).includes(result.card));
+});
 test('Wiederholte Berechnung mit gleichem Seed liefert dieselbe Empfehlung',()=>{
  const view=Brain.publicView(game(),'vh'),settings={samples:12,seed:123456};
  const a=Brain.analyze(view,settings),b=Brain.analyze(view,settings);
