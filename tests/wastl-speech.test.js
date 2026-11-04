@@ -74,3 +74,33 @@ test('Kompatibilitaet: Alte Analysen und Modellnoten bleiben erreichbar',()=>{
  assert.equal(typeof A.quality,'function');
  assert.equal(typeof Speech.short,'function');
 });
+
+test('Bei jeder unsicheren Entscheidung werden beide konkreten Karten genannt',()=>{
+ const cases=[
+  {g:game('solo'),played:'herz-O',best:'eichel-7',step:0,category:'unclearTrump'},
+  {g:game('wenz'),played:'eichel-7',best:'gras-K',step:0,category:'unclearWenz'},
+  {g:game('rufspiel'),played:'eichel-7',best:'gras-K',step:0,category:'unclearRuf'},
+  {g:game('solo'),played:'eichel-7',best:'gras-K',step:7,category:'unclearLate'},
+  {g:game('solo'),played:'eichel-7',best:'gras-K',step:0,category:'unclearDefault'}
+ ];
+ const names={'herz-O':'Herz Ober','eichel-7':'Eichel Sieben','gras-K':'Gras König'};
+ for(const c of cases){
+  const r=report(c.played,c.best,false),dataSet=data(r);
+  assert.equal(Speech.category(c.g,c.step,r,true),c.category);
+  for(let i=0;i<8;i++){
+   const step=c.category==='unclearLate'?7:i;
+   const text=Speech.short(c.g,step,{data:dataSet,ready:true});
+   assert.ok(text.includes(names[c.played]),c.category+' ohne gespielte Karte: '+text);
+   assert.ok(text.includes(names[c.best]),c.category+' ohne Alternative: '+text);
+   assert.ok(text.length<=140,c.category+' zu lang: '+text);
+  }
+ }
+});
+test('Spielstärke ist in der Statistik ein eigener, auf Handys zugänglicher Reiter',()=>{
+ const fs=require('node:fs');
+ const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+ assert.match(html,/\['strength','Spielstärke'\]/);
+ assert.match(html,/else if\(statView==='strength'\)/);
+ assert.match(html,/WastlPlayerProfile\?\.render\(\)/);
+ assert.match(html,/\.statistics-v3 \.segmented-v3\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+});
