@@ -3,10 +3,17 @@
  */
 'use strict';
 importScripts('./wastl-engine.js','./wastl-policy.js','./wastl-opponents.js',
- './wastl-montecarlo.js','./wastl-bot-brain.js');
+ './wastl-montecarlo.js','./wastl-bot-brain.js','./wastl-bots.js','./wastl-bid-brain.js');
 self.onmessage=function(event){
  const data=event.data||{},id=data.requestId;
  try{
+  if(data.kind==='bid'){
+   const bid=self.WastlBidBrain.analyze(data.view,{samples:data.samples,seed:data.seed});
+   self.postMessage({requestId:id,kind:'bid',ok:!!bid.ok,
+    offer:bid.ok?bid.offer:null,version:self.WastlBidBrain.VERSION,
+    reason:bid.reason||null,samples:bid.samples||0});
+   return;
+  }
   const result=self.WastlBotBrain.analyze(data.view,{
    samples:data.samples,seed:data.seed
   });
