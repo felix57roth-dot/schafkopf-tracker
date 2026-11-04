@@ -31,7 +31,6 @@
   if(!r.ok||!r.recorded||!r.reference||!E?.parse(r.actual)||!E.parse(r.reference.card))return 'unavailable';
   const played=r.actual,best=r.reference.card;
   const usedTrump=E.isTrump(played,game),bestTrump=E.isTrump(best,game);
-  const highTrump=id=>E.isTrump(id,game)&&E.FULL.filter(c=>E.isTrump(c,game)&&E.compare(c,id,id,game)<0).length<5;
   if(played===best){
    if(game.type==='ramsch')return 'bestRamsch';
    if(step>=6)return 'bestLate';
@@ -47,7 +46,7 @@
    return 'unclearDefault';
   }
   if(game.type==='ramsch')return 'clearRamsch';
-  if(usedTrump&&(!bestTrump||highTrump(played)&&!highTrump(best)))return 'clearTrump';
+  if(usedTrump&&!bestTrump)return 'clearTrump';
   if(!usedTrump&&bestTrump)return 'clearNonTrump';
   if(Number.isFinite(r.recorded.meanEyes)&&Number.isFinite(r.reference.meanEyes)
     &&r.reference.meanEyes-r.recorded.meanEyes>=3)return 'clearEyes';
