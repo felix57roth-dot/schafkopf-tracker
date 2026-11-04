@@ -72,6 +72,29 @@
    worker.postMessage({requestId:id,view,samples,seed:(Math.random()*0x100000000)>>>0});
   }catch{stopBotWorker();}
  }
+ function prepareBotBid(g){
+  stopBotWorker();
+  if(typeof Worker!=='function'||!window.WastlBidBrain?.analyze)return;
+  const seat=B.bidderSeat(g);
+  if(!seat||seat===g.mySeat)return;
+  const top=g.auctionStage==='opening'?null:g.best;
+  const view={seat,hand:[...g.hands[seat]],
+   top:top?{priority:top.priority}:null};
+  const id=++botJobSerial;
+  try{
+   const worker=new Worker('./wastl-bot-worker.js');
+   const job={id,worker,game:g,seat,card:null,bidReady:false,offer:null};
+   botJob=job;
+   worker.onmessage=event=>{
+    const data=event.data;
+    if(botJob!==job||data?.requestId!==id||data.kind!=='bid'||!data.ok)return;
+    job.bidReady=true;job.offer=data.offer||null;
+   };
+   worker.onerror=()=>{if(botJob===job)stopBotWorker();};
+   worker.postMessage({requestId:id,kind:'bid',view,samples:22,
+    seed:(Math.random()*0x100000000)>>>0});
+  }catch{stopBotWorker();}
+ }
  function seatLabel(g,seat){return B.personAt(g,seat).name;}
  function relative(g,seat){
   const offset=(B.SEATS.indexOf(seat)-B.SEATS.indexOf(g.mySeat)+4)%4;
@@ -113,16 +136,19 @@
   // zunächst gezeigt, bevor er automatisch eingesammelt wird.
   const duration=lastTrick?2600:nextTrick?1900:finalBid?1850:botSpecial?1150:botBid?1350:1150;
   if(botCard)prepareBotDecision(g);
+  else if(botBid)prepareBotBid(g);
   timer=setTimeout(()=>{
    timer=null;
    const recommended=botCard&&botJob?.game===g&&botJob?.seat===g.turn?botJob.card:null;
+   const bidDecision=botBid&&botJob?.game===g&&botJob?.seat===B.bidderSeat(g)&&botJob.bidReady
+    ?{bidReady:true,offer:botJob.offer}:null;
    stopBotWorker();
    if(game!==g||tab!=='bots')return;
    try{
     if(g.phase==='finalTrick')B.showResult(g);
     else if(g.phase==='trickDone')B.nextTrick(g);
     else if(g.phase==='biddingResult')B.startPlay(g);
-    else B.stepBot(g,Math.random,recommended?{card:recommended}:null);
+    else B.stepBot(g,Math.random,botBid?bidDecision:recommended?{card:recommended}:null);
     save();renderApp();
    }catch(e){error=e?.message||String(e);renderApp();}
   },duration);
