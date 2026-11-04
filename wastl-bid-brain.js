@@ -45,7 +45,6 @@
     const player=E.nextSeat(leader,i);
     const info={past,partner:publicPartner(game,past,cards,leader)};
     const card=mode==='independent'?O.chooseIndependent(hands[player],cards,player,leader,game,info,random)
-      :mode==='legacy'?B.policyChoose?.(hands[player],cards,player,leader,game,info,random)
       :O.choose(hands[player],cards,player,leader,game,info,styles[player],random);
     if(!card||!hands[player].includes(card))return null;
     const legal=E.legalMoves(hands[player],cards[0]||null,game,{past,trickIndex:round});
