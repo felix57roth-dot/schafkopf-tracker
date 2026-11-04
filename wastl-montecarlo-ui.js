@@ -158,13 +158,13 @@
  }
  function showDone(data){
   const out=container()?.querySelector('[data-monte-output]');if(!out)return;
-  const grade=cache().grade(data,activeSelection?.game?.type);
+  const grade=cache().quality(data,activeSelection?.game?.type);
   const results=data.reports.map((r,i)=>{
    const desc=r.ok ? `${r.sampleCount} Verteilungen · ${r.clearAlternative?'Modellalternative erkennbar':'kein klar besserer Zug'}`
     :r.onlyLegal?'Bedienpflicht · keine Alternative':`Nicht bewertbar: ${r.reason||'Keine Daten'}`;
    return `<li><span>Stich ${i+1}</span><span>${esc(desc)}</span></li>`;
   }).join('');
-  out.innerHTML=`<div class="mc-finished"><strong>✓ Alle acht Stiche verarbeitet</strong><p>${grade.grade==null?esc(grade.reason):`Wastls vorläufiger Entscheidungsindex: <strong>${grade.grade}/10</strong>`}</p><p>${esc(grade.reason)}</p><ul class="mc-turn-list">${results}</ul><p>Die Ergebnisse erscheinen jetzt automatisch in Wastls Stichkommentaren und am Spielende.</p><button type="button" data-monte-close class="mc-run">Zur analysierten Partie</button></div>`;
+  out.innerHTML=`<div class="mc-finished"><strong>✓ Alle acht Stiche verarbeitet</strong><p>${grade.score==null?esc(grade.reason):`Wastls Spielqualität: <strong>${grade.score}/100</strong>`}</p><p>${esc(grade.reason)}</p><ul class="mc-turn-list">${results}</ul><p>Die Ergebnisse erscheinen jetzt automatisch in Wastls Stichkommentaren und am Spielende.</p><button type="button" data-monte-close class="mc-run">Zur analysierten Partie</button></div>`;
  }
  function showError(reason){
   const out=container()?.querySelector('[data-monte-output]');if(out)out.innerHTML=`<div class="mc-warning">${esc(reason)}</div>`;
@@ -188,9 +188,11 @@
     if(payload.kind==='error'){showError(payload.reason);return;}
     if(payload.kind!=='complete'||payload.reports?.length!==8){showError('Unvollständige Simulation. Bitte erneut starten.');return;}
     try{
-     cache().save(g,payload.reports,n);
+     const completed=cache().save(g,payload.reports,n);
+     const profileSave=window.WastlPlayerProfile?.record(g,completed);
      cleanup();
      if(typeof render==='function'&&currentGame()?.id===g.id)render();
+     if(profileSave&&!profileSave.ok&&typeof flash==='function')flash('Wastl-Spielerprofil konnte nicht gespeichert werden.');
     }catch(e){showError('Konnte die abgeschlossene Auswertung nicht übernehmen: '+String(e.message||e));}
    };
    worker.onerror=()=>{if(!container()||job!==sequence)return;worker?.terminate();worker=null;showError('Die lokale Berechnung konnte nicht gestartet werden. Bitte die PWA einmal mit Internetverbindung aktualisieren.');};
