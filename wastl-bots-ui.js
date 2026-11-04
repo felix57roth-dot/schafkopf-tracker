@@ -10,6 +10,7 @@
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\u0027':'&#39;'}[c]));
  const face=(id,cls='')=>`<img draggable="false" class="bots-face ${cls}" src="./cards/${encodeURIComponent(id)}.webp" alt="${esc(id.replace('-',' '))}">`;
  let game=null,error='',timer=null,walletOpen=false,settingsOpen=false;
+ let botJob=null,botJobSerial=0;
  const OPTIONS_KEY='schafkopf-botoptionen-v1';
  function readOptions(){let o={};try{o=JSON.parse(localStorage.getItem(OPTIONS_KEY)||'null')||{};}catch{}return {knock:o.knock!==false,shot:o.shot===true};}
  function saveOptions(o){localStorage.setItem(OPTIONS_KEY,JSON.stringify(o));}
@@ -39,7 +40,38 @@
   try{if(game)localStorage.setItem(KEY,JSON.stringify(game));else localStorage.removeItem(KEY);return true;}
   catch(e){error='Speicher ist voll. Bitte Speicherplatz freigeben.';return false;}
  }
- function cancelTimer(){if(timer!==null){clearTimeout(timer);timer=null;}}
+ function stopBotWorker(){
+  if(botJob?.worker){try{botJob.worker.terminate();}catch{}}
+  botJob=null;
+ }
+ function cancelTimer(){
+  if(timer!==null){clearTimeout(timer);timer=null;}
+  stopBotWorker();
+ }
+ // Die Worker-Eingabe enthaelt die eigene Hand des Bots, nicht die
+ // im Tischmodell vorhandenen verdeckten Karten seiner Mitspieler.
+ function prepareBotDecision(g){
+  stopBotWorker();
+  if(typeof Worker!=='function'||!window.WastlBotBrain?.publicView)return;
+  const seat=g.turn,options=B.playable(g,seat);
+  if(options.length<=1)return;
+  const view=window.WastlBotBrain.publicView(g,seat);
+  if(!view)return;
+  const samples=options.length>=6?18:options.length>=4?26:38;
+  const id=++botJobSerial;
+  try{
+   const worker=new Worker('./wastl-bot-worker.js');
+   const job={id,worker,game:g,seat,card:null};
+   botJob=job;
+   worker.onmessage=event=>{
+    const data=event.data;
+    if(botJob!==job||data?.requestId!==id||!data.ok)return;
+    if(options.includes(data.card))job.card=data.card;
+   };
+   worker.onerror=()=>{if(botJob===job)stopBotWorker();};
+   worker.postMessage({requestId:id,view,samples,seed:(Math.random()*0x100000000)>>>0});
+  }catch{stopBotWorker();}
+ }
  function seatLabel(g,seat){return B.personAt(g,seat).name;}
  function relative(g,seat){
   const offset=(B.SEATS.indexOf(seat)-B.SEATS.indexOf(g.mySeat)+4)%4;
@@ -80,13 +112,17 @@
   // Langsame, einzeln erkennbare Spielzüge. Ein kompletter Stich wird
   // zunächst gezeigt, bevor er automatisch eingesammelt wird.
   const duration=lastTrick?2600:nextTrick?1900:finalBid?1850:botSpecial?1150:botBid?1350:1150;
+  if(botCard)prepareBotDecision(g);
   timer=setTimeout(()=>{
-   timer=null;if(game!==g||tab!=='bots')return;
+   timer=null;
+   const recommended=botCard&&botJob?.game===g&&botJob?.seat===g.turn?botJob.card:null;
+   stopBotWorker();
+   if(game!==g||tab!=='bots')return;
    try{
     if(g.phase==='finalTrick')B.showResult(g);
     else if(g.phase==='trickDone')B.nextTrick(g);
     else if(g.phase==='biddingResult')B.startPlay(g);
-    else B.stepBot(g);
+    else B.stepBot(g,Math.random,recommended?{card:recommended}:null);
     save();renderApp();
    }catch(e){error=e?.message||String(e);renderApp();}
   },duration);
