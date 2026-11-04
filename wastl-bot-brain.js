@@ -97,7 +97,10 @@
   const g=pos.game;
   if(g.type!=='rufspiel')return new Set([g.declarerSeat]);
   const ace=g.calledSuit+'-A';
-  const owner=SEATS.find(s=>hands[s].includes(ace))||
+  // Die eigene Ruf-Sau liegt in pos.hand, nicht im Sampler (dort hat
+  // der entscheidende Spieler Kapazitaet 0).
+  const owner=pos.hand.includes(ace)?pos.seat:
+   SEATS.find(s=>hands[s]?.includes(ace))||
    publicPartner(g,pos.past,pos.prefix,pos.leaderSeat);
   if(!owner||owner===g.declarerSeat)return null;
   return new Set([g.declarerSeat,owner]);
