@@ -1,4 +1,4 @@
-# Schafkopf-Einsteigerlehrgang – Lernkonzept 1.0
+# Schafkopf-Einsteigerlehrgang – Lernkonzept 1.1
 
 ## Zielgruppe und Grundidee
 
@@ -13,7 +13,7 @@ Erklärung bei Fehlern → nächste Lektion freischalten. Die Fragen sind
 beliebig oft wiederholbar. Die Lektionen sind bewusst kurz (ca. 3–7 Min.)
 und bauen aufeinander auf.
 
-## Lernpfad: 5 Kapitel / 19 Lektionen / 43 Aufgaben
+## Lernpfad: 5 Kapitel / 19 Lektionen / 46 Aufgaben
 
 | Kapitel | Lektionen | Ziel |
 | --- | --- | --- |
@@ -25,6 +25,39 @@ und bauen aufeinander auf.
 
 Jede Lektion hat die Struktur **Einführung – Merksätze – Beispielkarten –
 konkreter Tipp – interaktive Übung – Feedback**.
+
+## Verständlichkeits-Update 1.1: Regeln zuerst sehen, dann anwenden
+
+Für die drei schwierigsten Anfängerlektionen wurden die Texte neu gefasst:
+
+- **Bedienen/Fehlfarbe:** „Fehlfarbe“ bedeutet nicht falsch, sondern eine
+  normale Nicht-Trumpfkarte. Eichel-Sieben und Eichel-Ober werden mit
+  Kartenbildern einander gegenübergestellt. An konkreten Schritten wird
+  erklärt, warum der Eichel-Ober beim Rufspiel nicht Eichel bedienen kann.
+- **Trumpf:** Alle **14 Rufspiel-Trümpfe** stehen sichtbar mit tatsächlichen
+  Schafkopfkarten und Positionsnummern **1 bis 14**, in drei Gruppen:
+  Ober, Unter, sechs übrige Herzen. Der Kurs vergleicht zusätzlich
+  Augenwert und Stichstärke.
+- **Stichgewinner:** Ein einfaches 3-Schritte-Verfahren: angespielte
+  Farbe ansehen, Trumpf suchen, höchste passende Karte bestimmen.
+  Zwei zusätzliche echte Beispiele heben die vom Regelkern berechnete
+  Siegerkarte direkt hervor.
+
+Damit die späteren Spielarten denselben Standard erfüllen, zeigt der Kurs
+zusätzlich die **14 Trumpfkarten beim Gras-Solo** und die **vier Unter
+beim Wenz**, ebenfalls vom stärksten zum schwächsten Trumpf.
+
+Die drei zentralen Lektionen enthalten jetzt den Abschluss
+**„Kurz gesagt“**. Das Lexikon wurde für „Fehlfarbe“, „Bedienen“
+und „Trumpf“ präzisiert. Es gibt **46 statt 43** interaktive Fragen.
+
+Die kursinternen Lektion-IDs und das \`localStorage\`-Speicherformat
+\`schafkopf-einsteiger-v1\` bleiben **unverändert**. Bisherige
+Lernfortschritte und Backups bleiben gültig.
+
+Zusätzliche automatische Tests prüfen die vollständigen, bildlich
+gezeigten Trumpfreihenfolgen direkt gegen \`WastlEngine.compare()\`,
+die tatsächliche Trumpfzuordnung und die visuellen Siegerkarten.
 
 ## Interaktive Übungsformen
 
@@ -91,4 +124,4 @@ node --test tests/schafkopf-kurs.test.js
 
 Die Regressionstests umfassen Kartenbilder, Lehrgangsumfang, gültige
 Lösungen über den Regelkern, Freischaltung, Fehlerkorrektur, die komplette
-Abfolge aller 43 Antworten, Offline-Integration und Backup-Roundtrip.
+Abfolge aller 46 Antworten, Offline-Integration und Backup-Roundtrip.

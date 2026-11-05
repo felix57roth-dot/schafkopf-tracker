@@ -27,7 +27,7 @@
  }
 })(typeof globalThis!=='undefined'?globalThis:this,function(root,E,C){
  'use strict';
- const VERSION='1.0.0',STORAGE='schafkopf-einsteiger-v1',FORMAT=1;
+ const VERSION='1.1.0',STORAGE='schafkopf-einsteiger-v1',FORMAT=1;
  const lessons=C.lessons,groups=C.groups,ids=lessons.map(x=>x.id);
  let screen='overview',active=null,step=0,response=null;
  function esc(value){
@@ -151,6 +151,43 @@
   return '<div class="sk-cards" aria-label="Schafkopfkarten">'+cards.map(card=>cardImage(card)).join('')+'</div>'
    +(caption?'<p class="sk-caption">'+esc(caption)+'</p>':'');
  }
+
+ function renderCompare(items){
+  return '<section class="sk-comparison" aria-label="Vergleich normale Karte und Trumpf">'
+   +'<h3>Fehlkarte oder Trumpf? Schau auf die Karten!</h3>'
+   +'<div class="sk-compare-grid">'+items.map(x=>'<div class="sk-compare-item">'
+    +'<h4>'+esc(x.title)+'</h4>'+cardImage(x.card)
+    +'<p>'+esc(x.description)+'</p></div>').join('')+'</div></section>';
+ }
+ function renderTrumpGroups(groups){
+  return '<section class="sk-trump-order" aria-label="Trumpfreihenfolge von stark nach schwach">'
+   +'<h3>Die Trumpfreihenfolge als Kartenbilder</h3>'
+   +'<p class="sk-order-desc">Lies die Zahlen in der Reihenfolge: <strong>1 ist am stärksten.</strong> Danach werden die Trümpfe schwächer.</p>'
+   +groups.map(g=>'<div class="sk-trump-group '+(g.cards.length===6?'sk-six':'')+'">'
+    +'<h4>'+esc(g.title)+'</h4><p>'+esc(g.intro)+'</p>'
+    +'<div class="sk-cards sk-ranked-cards">'+g.cards.map((card,index)=>
+      '<div class="sk-ranked-card"><b class="sk-rank-num" aria-label="Rang '+(g.start+index)+'">#'+(g.start+index)+'</b>'
+      +cardImage(card)+'</div>').join('')+'</div></div>').join('')+'</section>';
+ }
+ function renderSteps(items){
+  return '<section class="sk-steps"><h3>So gehst du Schritt für Schritt vor</h3>'
+   +'<ol>'+items.map(step=>'<li>'+esc(step)+'</li>').join('')+'</ol></section>';
+ }
+ function renderScenes(scenes){
+  return '<section class="sk-scenes"><h3>Zwei echte Stichbeispiele</h3>'
+   +scenes.map(scene=>{
+    const win=E.winnerIndex(scene.cards,scene.game);
+    return '<div class="sk-scene"><h4>'+esc(scene.title)+'</h4>'
+     +'<div class="sk-cards">'+scene.cards.map((card,i)=>
+       '<div class="sk-scene-card '+(i===win?'sk-scene-winner':'')+'">'
+        +'<span class="sk-scene-label">'+(i===win?'✓ Gewinner':i===0?'Angespielt':'Karte '+(i+1))+'</span>'
+        +cardImage(card)+'</div>').join('')+'</div>'
+     +'<p><strong>Gewinner: '+esc(cardName(scene.cards[win]))+'.</strong> '+esc(scene.explanation)+'</p></div>';
+   }).join('')+'</section>';
+ }
+ function renderSummary(summary){
+  return '<div class="sk-summary"><strong>📌 Kurz gesagt</strong><p>'+esc(summary)+'</p></div>';
+ }
  function renderQuestion(q){
   const opts=choices(q),winner=expected(q),answered=!!response;
   const questionTitle=q.kind==='legal'?'Bedienübung':q.kind==='winner'?'Stichübung':'Wissensfrage';
@@ -181,8 +218,13 @@
    +'<section class="sk-lesson"><div class="sk-eyebrow">'+esc(group?.title||'Grundkurs')+' · ca. '+l.minutes+' Min.</div>'
    +'<h2>'+esc(l.title)+'</h2><p class="sk-lead">'+esc(l.lead)+'</p>'
    +'<ul class="sk-facts">'+l.facts.map(f=>'<li>'+esc(f)+'</li>').join('')+'</ul>'
+   +(l.comparisons?renderCompare(l.comparisons):'')
+   +(l.trumpGroups?renderTrumpGroups(l.trumpGroups):'')
    +(l.example?'<div class="sk-example"><div class="sk-eyebrow">So sieht das am Kartentisch aus</div><h3>'+esc(l.example.title)+'</h3>'
      +cardRow(l.example.cards,l.example.text)+'</div>':'')
+   +(l.steps?renderSteps(l.steps):'')
+   +(l.scenes?renderScenes(l.scenes):'')
+   +(l.summary?renderSummary(l.summary):'')
    +'<div class="sk-tip"><span aria-hidden="true">💡</span><p>'+esc(l.tip)+'</p></div>'
    +'<div class="sk-quiz-head"><span>Üben statt nur lesen</span><span>Aufgabe '+(step+1)+' / '+l.exercises.length+'</span></div>'
    +'<div class="sk-quiz-progress"><span style="width:'+Math.round(step/l.exercises.length*100)+'%"></span></div>'
@@ -237,9 +279,9 @@
  }
  const glossary=[
  ['Augen','Punkte einer Karte: Sau 11, Zehner 10, König 4, Ober 3, Unter 2, sonst 0.'],
- ['Bedienen','Eine Karte der angespielten Fehlfarbe oder einen geforderten Trumpf spielen, sofern vorhanden.'],
+ ['Bedienen','Du musst passend zur ersten Karte spielen: bei einer Fehlfarbe dieselbe Fehlfarbe, bei Trumpf einen Trumpf – sofern du eine solche Karte auf der Hand hast.'],
  ['Davonlaufen','Der Ruf-Sau-Besitzer spielt bei mindestens vier Ruffarbenkarten eine kleinere Ruffarbe an.'],
- ['Fehlfarbe','Eine Farbe, deren Karte im jeweiligen Spiel kein Trumpf ist.'],
+ ['Fehlfarbe','Normale Karte, die in der aktuellen Spielart kein Trumpf ist. Beim Rufspiel ist Eichel-Sieben eine Fehlkarte, Eichel-Ober aber Trumpf.'],
  ['Geber','Person, die in dieser Runde die Karten gibt. Der nächste Spieler ist Vorhand.'],
  ['Ober','Eine der vier Bildkarten. Beim Rufspiel und Solo Teil der höchsten Trümpfe.'],
  ['Rufspiel','Partnerspiel: Ansager und Besitzer der gerufenen Sau gegen die zwei anderen.'],
@@ -250,7 +292,7 @@
  ['Solo','Ein Spieler allein gegen drei, mit gewählter Trumpffarbe sowie Obern und Untern.'],
  ['Spatzen','Siebener, Achter und Neuner ohne Augen.'],
  ['Stich','Vier Karten, eine von jedem Spieler. Der Gewinner erhält alle Augen darin.'],
- ['Trumpf','Besonders starke Karten, die eine Fehlfarbe stechen können.'],
+ ['Trumpf','Sonderkarten, die normale Fehlfarben schlagen. Unter den Trümpfen entscheidet die feste Trumpfreihenfolge.'],
  ['Unter','Eine der vier Bildkarten. Beim Wenz sind ausschließlich die Unter Trumpf.'],
  ['Wenz','Alleinspiel mit genau vier Trümpfen: Eichel-, Gras-, Herz-, Schellen-Unter.']
  ];

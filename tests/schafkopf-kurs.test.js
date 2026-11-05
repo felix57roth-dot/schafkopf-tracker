@@ -139,3 +139,80 @@ test('Kurs bekommt eigenen sechsten mobilen Menuepunkt und Backups',()=>{
  for(const asset of ['schafkopf-kurs.js','schafkopf-kurs-inhalte.js','schafkopf-kurs.css'])
   assert.ok(sw.includes('"./'+asset+'"'),asset+' fehlt im Offlinecache');
 });
+
+
+test('Trumpfreihenfolge zeigt alle 14 Rufspiel-, 14 Solo- und vier Wenz-Truempfe in korrekter Ordnung',()=>{
+ const configs=[
+  ['trumpf',{type:'rufspiel',calledSuit:'eichel',declarerSeat:'vh'},14],
+  ['solo',{type:'solo',trumpSuit:'gras',declarerSeat:'vh'},14],
+  ['wenz',{type:'wenz',declarerSeat:'vh'},4]
+ ];
+ for(const [id,game,count] of configs){
+  const lesson=Content.lessons.find(l=>l.id===id);
+  assert.ok(lesson?.trumpGroups?.length>=1,'Keine visuelle Reihe in '+id);
+  const cards=lesson.trumpGroups.flatMap(group=>group.cards);
+  assert.equal(cards.length,count,'Kartenanzahl in '+id);
+  assert.equal(new Set(cards).size,count,'Doppelte Trumpfbilder in '+id);
+  assert.deepEqual(new Set(cards),new Set(E.FULL.filter(card=>E.isTrump(card,game))),id);
+  assert.ok(cards.every(c=>!!E.parse(c)&&E.isTrump(c,game)));
+  for(let i=0;i<cards.length-1;i++){
+   assert.ok(E.compare(cards[i],cards[i+1],cards[i],game)<0,
+    'Falsche Trumpf-Reihenfolge: '+cards[i]+' vor '+cards[i+1]+' ('+id+')');
+  }
+  for(const group of lesson.trumpGroups){
+   assert.ok(Number.isInteger(group.start)&&group.start>=1);
+   assert.ok(group.cards.length>=4);
+  }
+ }
+});
+test('Fehlfarbe wird in Alltagssprache anhand normaler Karte und Trumpf erklaert',()=>{
+ const l=Content.lessons.find(x=>x.id==='bedienen');
+ assert.match(l.facts.join(' '),/keine falsche Karte/i);
+ assert.match(l.facts.join(' '),/Eichel-Ober.*Trumpf/i);
+ assert.equal(l.comparisons.length,2);
+ assert.deepEqual(l.comparisons.map(x=>x.card),['eichel-7','eichel-O']);
+ const game={type:'rufspiel',calledSuit:'eichel',declarerSeat:'vh'};
+ assert.equal(E.isTrump('eichel-7',game),false);
+ assert.equal(E.isTrump('eichel-O',game),true);
+ assert.equal(l.steps.length,3);
+ assert.ok(l.summary.includes('Fehlfarbe'));
+});
+test('Trumpfkarten erscheinen nummeriert mit echten Kartenbildern',()=>{
+ reset();const before=Content.lessons.slice(0,Content.lessons.findIndex(l=>l.id==='trumpf')).map(l=>l.id);
+ Course.restore({version:1,completed:before},'replace');
+ assert.equal(Course.open('trumpf'),true);
+ const html=Course.render();
+ assert.match(html,/Trumpfreihenfolge als Kartenbilder/);
+ assert.match(html,/Rang 1/);
+ assert.match(html,/Rang 14/);
+ assert.match(html,/cards\/eichel-O.webp/);
+ assert.match(html,/cards\/herz-7.webp/);
+ assert.equal((html.match(/class="sk-ranked-card"/g)||[]).length,14);
+ assert.match(html,/Kurz gesagt/);
+});
+test('Stichgewinner zeigt zwei berechnete und richtig hervorgehobene Beispiele',()=>{
+ reset();const before=Content.lessons.slice(0,Content.lessons.findIndex(l=>l.id==='stichgewinner')).map(l=>l.id);
+ Course.restore({version:1,completed:before},'replace');
+ assert.equal(Course.open('stichgewinner'),true);
+ const l=Content.lessons.find(x=>x.id==='stichgewinner');
+ assert.equal(l.scenes.length,2);
+ for(const scene of l.scenes)assert.ok(E.winnerIndex(scene.cards,scene.game)>=0);
+ const html=Course.render();
+ assert.match(html,/Zwei echte Stichbeispiele/);
+ assert.equal((html.match(/class="sk-scene-winner"/g)||[]).length,0); // Klasse steht zusammen mit sk-scene-card.
+ assert.equal((html.match(/sk-scene-card sk-scene-winner/g)||[]).length,2);
+ assert.match(html,/Gewinner: Eichel Zehn/);
+ assert.match(html,/Gewinner: Herz Ober/);
+ assert.match(html,/So gehst du Schritt für Schritt vor/);
+});
+test('Lernfortschritt und altes Sicherungsformat bleiben nach dem Update kompatibel',()=>{
+ reset();const done=['start','farben','karten','ablauf','bedienen'];
+ const old={version:1,completed:done};
+ assert.equal(Course.restore(old,'replace').ok,true);
+ assert.deepEqual(Course.exportData(),old);
+ assert.equal(Course.stats().completed,5);
+ assert.equal(Course.isUnlocked('trumpf'),true);
+ assert.equal(Course.VERSION,'1.1.0');
+ assert.equal(Content.VERSION,'1.1.0');
+ assert.ok(Course.stats().questions>=46);
+});
