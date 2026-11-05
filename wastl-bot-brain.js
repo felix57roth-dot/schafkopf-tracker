@@ -10,12 +10,13 @@
  const P=node?require('./wastl-policy.js'):root.WastlPolicy;
  const O=node?require('./wastl-opponents.js'):root.WastlOpponents;
  const MC=node?require('./wastl-montecarlo.js'):root.WastlMonteCarlo;
- const api=factory(E,P,O,MC);
+ const T=node?require('./wastl-tactics.js'):root.WastlTactics;
+ const api=factory(E,P,O,MC,T);
  if(node)module.exports=api;
  if(root)root.WastlBotBrain=api;
-})(typeof globalThis!=='undefined'?globalThis:this,function(E,P,O,MC){
+})(typeof globalThis!=='undefined'?globalThis:this,function(E,P,O,MC,T){
  'use strict';
- const VERSION='8.0.0';
+ const VERSION='8.2.0';
  const SEATS=E.SEATS;
  function seeded(seed){
   let a=seed>>>0;
@@ -105,7 +106,7 @@
   if(!owner||owner===g.declarerSeat)return null;
   return new Set([g.declarerSeat,owner]);
  }
- function rollout(pos,world,candidate,random,styles){
+ function rollout(pos,world,candidate,random,styles,opponentModel='tactical'){
   const g=pos.game,team=actualTeam(pos,world);
   if(!team)return null;
   const hands=Object.fromEntries(SEATS.map(s=>[s,s===pos.seat?[...pos.hand]:[...world[s]]]));
@@ -126,7 +127,9 @@
     if(turn===pos.trickIndex&&j===pos.prefix.length){
      if(seat!==pos.seat)return null;
      card=candidate;
-    }else card=O.choose(hand,cards,seat,leader,g,info,styles[seat],random);
+    }else card=opponentModel==='classic'
+      ?O.choose(hand,cards,seat,leader,g,info,styles[seat],random)
+      :T.choose(hand,cards,seat,leader,g,info,styles[seat],random);
     if(!hand.includes(card))return null;
     const legal=E.legalMoves(hand,cards[0]||null,g,{past,trickIndex:turn});
     if(!legal.includes(card))return null;
@@ -153,6 +156,7 @@
   if(!sampler.count)return {ok:false,version:VERSION,reason:'Keine regelkonforme moegliche Kartenverteilung'};
   const samples=Math.max(8,Math.min(90,Number.isFinite(options.samples)?Math.floor(options.samples):26));
   const seed=Number.isFinite(options.seed)?options.seed>>>0:0x8030126;
+  const opponentModel=options.opponentModel==='classic'?'classic':'tactical';
   const rnd=seeded(seed),aggregate=Object.fromEntries(pos.legal.map(card=>[card,{card,count:0,wins:0,eyes:0,total:0}]));
   for(let i=0;i<samples;i++){
    const world=sampler.sample(rnd);
@@ -161,7 +165,7 @@
    // Gleiche Kartenwelt und gleicher Zufallssamen fuer alle erlaubten Karten.
    for(const card of pos.legal){
     const local=seeded(common),styles=O.assignStyles(local);
-    const report=rollout(pos,world,card,local,styles);
+    const report=rollout(pos,world,card,local,styles,opponentModel);
     if(!report)continue;
     const target=aggregate[card];
     target.count++;target.wins+=report.win;target.eyes+=report.eyes;target.total+=report.utility;
@@ -173,8 +177,11 @@
    .sort((a,b)=>b.utility-a.utility||a.card.localeCompare(b.card));
   if(!rows.length)return {ok:false,version:VERSION,reason:'Nicht genug konsistente Simulationen'};
   return {ok:true,version:VERSION,card:rows[0].card,forced:false,
-   samples,possibleDeals:sampler.count,rows,
-   method:'vollstaendige Monte-Carlo-Fortsetzungen mit verdeckten Handverteilungen und heuristischen Mitspielern',
+   samples,possibleDeals:sampler.count,rows,opponentModel,
+   tacticalVersion:opponentModel==='tactical'?T.VERSION:null,
+   method:opponentModel==='tactical'
+    ?'Monte-Carlo-Fortsetzungen mit Wenz-/Rufspiel-Taktik und verdeckten Handverteilungen'
+    :'Monte-Carlo-Fortsetzungen mit bisherigem Gegnermodell',
    calibrated:false};
  }
  return Object.freeze({VERSION,publicView,build,analyze});
