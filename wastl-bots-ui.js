@@ -11,8 +11,9 @@
  const face=(id,cls='')=>`<img draggable="false" class="bots-face ${cls}" src="./cards/${encodeURIComponent(id)}.webp" alt="${esc(id.replace('-',' '))}">`;
  let game=null,error='',timer=null,walletOpen=false,settingsOpen=false;
  let botJob=null,botJobSerial=0;
+ let coachHint=null,coachFeedback=null;
  const OPTIONS_KEY='schafkopf-botoptionen-v1';
- function readOptions(){let o={};try{o=JSON.parse(localStorage.getItem(OPTIONS_KEY)||'null')||{};}catch{}return {knock:o.knock!==false,shot:o.shot===true};}
+ function readOptions(){let o={};try{o=JSON.parse(localStorage.getItem(OPTIONS_KEY)||'null')||{};}catch{}return {knock:o.knock!==false,shot:o.shot===true,coach:['beginner','advanced','free'].includes(o.coach)?o.coach:'free'};}
  function saveOptions(o){localStorage.setItem(OPTIONS_KEY,JSON.stringify(o));}
  try{
   const old=JSON.parse(localStorage.getItem(KEY)||'null');
@@ -198,6 +199,15 @@
   </section></div>`;
  }
 
+ function coachModeButtons(mode){
+  const opts=[['beginner','🌱 Anfänger'],['advanced','💡 Fortgeschritten'],['free','🃏 Freies Spiel']];
+  return opts.map(([value,label])=>`<button type="button" data-bots-coach-mode="${value}" aria-pressed="${mode===value}" class="${mode===value?'active':''}">${label}</button>`).join('');
+ }
+ function coachModeDescription(mode){
+  if(mode==='beginner')return 'Wastl erklärt bei deinem Zug automatisch die Regeln. Auf Wunsch zeigt er eine Karte; nach dem Zug gibt es Rückmeldung.';
+  if(mode==='advanced')return 'Wastl gibt auf Wunsch einen Kartentipp. Nach deiner Entscheidung bekommst du eine kurze Einordnung.';
+  return 'Du spielst ohne Hinweise. Alle bisherigen Spielregeln und Statistiken bleiben wie gewohnt.';
+ }
  function settingsPanel(){
   const opts=readOptions();
   return `<div class="bots-settings-overlay"><section class="bots-settings-modal" role="dialog" aria-modal="true" aria-label="Spieleinstellungen">
@@ -209,7 +219,11 @@
    <div class="bots-settings-row"><div><strong>Schuss / Kontra & Retour</strong>
     <small>Vor der zweiten Karte: Gegenspieler ×2, Retour ×4.</small></div>
     <button type="button" data-bots-setting-toggle="shot" aria-pressed="${opts.shot}">${opts.shot?'Ein':'Aus'}</button></div>
-   <small>Änderungen gelten ab der nächsten Runde. Guthaben und laufende Partien bleiben erhalten.</small>
+   <div class="bots-settings-row bots-coach-setting"><div><strong>📚 Wastl als Lernbegleiter</strong>
+    <small>Du kannst die Hilfen jederzeit wechseln. Nur deine Hand und bereits gespielte Karten werden ausgewertet.</small></div>
+    <div class="bots-coach-modes" role="group" aria-label="Trainingsmodus">
+     ${coachModeButtons(opts.coach)}</div></div>
+   <small>Hausregeln gelten ab der nächsten Runde. Trainingshilfen kannst du sofort ändern. Guthaben und Partien bleiben erhalten.</small>
    <button class="bots-gold-btn" type="button" data-bots-settings-close>Zurück zum Spiel</button>
   </section></div>`;
  }
@@ -219,6 +233,10 @@
    <img src="./wastl.png" alt="Wastl">
    <h2>Servus am Stammtisch!</h2>
    <p>Resi, Sepp und Xaver sitzen schon bereit. Der erste Platz wird ausgelost, danach wechselt der Geber jede Runde.</p>
+   <div class="bots-coach-intro"><h3>Wie möchtest du üben?</h3>
+    <div class="bots-coach-modes" role="group" aria-label="Trainingsmodus">
+     ${coachModeButtons(readOptions().coach)}</div>
+    <p>${coachModeDescription(readOptions().coach)}</p></div>
    <button class="bots-gold-btn" type="button" data-bots-new>🃏 Hinsetzen und Karten geben</button>
    <small>Offline-Training · eigene virtuelle Spielkasse</small>
     <button type="button" class="bots-wallet-intro-btn" data-bots-wallet>🪙 Guthaben ansehen</button>
@@ -350,13 +368,36 @@
       const center=(sorted.length-1)/2;
       const tilt=(i-center)*3.4;
       const dip=Math.round(Math.abs(i-center)*3.5);
-      return `<button type="button" class="bots-card-button ${legal.has(id)?'playable':'locked'}" style="--fan-angle:${tilt.toFixed(1)}deg;--fan-dip:${dip}px;--fan-layer:${i+1}" aria-label="${esc(id.replace('-',' '))} ${legal.has(id)?'spielen':'nicht spielbar'}" data-bots-play="${esc(id)}" ${legal.has(id)?'':'disabled'}>${face(id)}</button>`;
+      return `<button type="button" class="bots-card-button ${legal.has(id)?'playable':'locked'} ${coachHint?.game===g&&coachHint.data?.ok&&coachHint.data.card===id&&active?'bots-card-coach-hint':''}" style="--fan-angle:${tilt.toFixed(1)}deg;--fan-dip:${dip}px;--fan-layer:${i+1}" aria-label="${esc(id.replace('-',' '))} ${legal.has(id)?'spielen':'nicht spielbar'}" data-bots-play="${esc(id)}" ${legal.has(id)?'':'disabled'}>${face(id)}</button>`;
      }).join('')}
    </div>
    <div class="bots-grip" aria-hidden="true">
     <img src="./players/griffhand.webp" alt="" draggable="false">
    </div>
    ${active?'<p class="bots-play-prompt">Du bist dran – tippe auf eine Karte.</p>':''}
+  </section>`;
+ }
+
+ function coachPanel(g){
+  const mode=readOptions().coach,Coach=window.WastlCoach;
+  if(mode==='free'||!Coach)return '';
+  const view=Coach.publicView(g),myTurn=g.phase==='playing'&&g.turn===g.mySeat;
+  const guidance=mode==='beginner'?Coach.rule(view):null;
+  const tip=coachHint?.game===g&&myTurn?coachHint.data:null;
+  const review=coachFeedback?.game===g?coachFeedback.data:null;
+  const showReview=!!review&&!myTurn;
+  const active=mode==='beginner'&&['bidding','chooseGame','knocking','shotOffer','playing'].includes(g.phase)&&
+    (g.phase==='playing'?myTurn:(g.phase==='knocking'||g.phase==='shotOffer')?
+    B.currentActor(g)===g.mySeat:B.bidderSeat(g)===g.mySeat);
+  return `<section class="bots-coach-panel" aria-label="Wastls Trainingshilfe">
+   <div class="bots-coach-heading"><img src="./wastl.png" alt="Wastl"><div><strong>Wastl trainiert mit dir</strong>
+    <small>${mode==='beginner'?'🌱 Anfängerhilfe':'💡 Tipps auf Wunsch'} · Nicht für die Sternebewertung</small></div></div>
+   ${active&&guidance?`<div class="bots-coach-message"><b>${esc(guidance.title)}</b><p>${esc(guidance.text)}</p></div>`:''}
+   ${tip?`<div class="bots-coach-message bots-coach-tip"><b>${esc(tip.title||'Kartentipp')}</b><p>${esc(tip.text)}</p></div>`:''}
+   ${showReview?`<div class="bots-coach-message bots-coach-review" role="status"><b>${esc(review.title||'Dein Zug')}</b><p>${esc(review.text)}</p></div>`:''}
+   ${myTurn?`<div class="bots-coach-actions"><button type="button" data-bots-coach-hint>💡 Kartentipp von Wastl</button>
+    <span>${mode==='beginner'?'Spielbare Karten sind bereits hervorgehoben.':'Tipps sind auf Wunsch verfügbar.'}</span></div>`:''}
+   ${!active&&!tip&&!showReview&&!myTurn?'<small class="bots-coach-wait">Beobachte die Karten. Beim nächsten eigenen Zug kann Wastl dir helfen.</small>':''}
   </section>`;
  }
  function priceReceipt(g,paid){
@@ -429,6 +470,7 @@
    ${error?`<div class="bots-error" role="alert">${esc(error)}</div>`:''}
    ${board(g)}
    ${g.phase!=='noGame'&&g.phase!=='done'&&g.phase!=='finalTrick'?hand(g):''}
+   ${coachPanel(g)}
    <footer class="bots-tally bots-cash-tally"><span class="bots-your-cash">🪙 Du: <strong>${money(BANK.load().balances.you)}</strong></span>
     ${sc?`<span class="bots-eyes-tally">${sc.us}:${sc.them} Augen</span>`:''}
     <button type="button" class="bots-wallet-show" data-bots-wallet>Alle Guthaben</button></footer>
@@ -533,15 +575,28 @@
   }else if(hand)hand.remove();
   else if(nextHand)root.querySelector('.bots-scene')?.after(nextHand);
   swap('.bots-tally');
+  swap('.bots-coach-panel');
   swap('.bots-wallet-overlay');
   swap('.bots-settings-overlay');
  }
  function click(e){
-  const b=e.target.closest('[data-bots-exit],[data-bots-new],[data-bots-abandon],[data-bots-round],[data-bots-choose],[data-bots-back],[data-bots-bid],[data-bots-pass],[data-bots-play],[data-bots-analyze],[data-bots-wallet],[data-bots-wallet-close],[data-bots-wallet-reset],[data-bots-settings],[data-bots-settings-close],[data-bots-setting-toggle],[data-bots-knock],[data-bots-shot]');
+  const b=e.target.closest('[data-bots-exit],[data-bots-new],[data-bots-abandon],[data-bots-round],[data-bots-choose],[data-bots-back],[data-bots-bid],[data-bots-pass],[data-bots-play],[data-bots-analyze],[data-bots-wallet],[data-bots-wallet-close],[data-bots-wallet-reset],[data-bots-settings],[data-bots-settings-close],[data-bots-setting-toggle],[data-bots-knock],[data-bots-shot],[data-bots-coach-mode],[data-bots-coach-hint]');
   if(!b||typeof tab==='undefined'||tab!=='bots')return;
   e.preventDefault();cancelTimer();
   try{
    error='';
+   if(b.hasAttribute('data-bots-coach-mode')){
+    const mode=b.dataset.botsCoachMode;
+    if(!['beginner','advanced','free'].includes(mode))throw Error('Ungültiger Trainingsmodus.');
+    const options=readOptions();options.coach=mode;saveOptions(options);
+    coachHint=null;coachFeedback=null;renderApp();return;
+   }
+   if(b.hasAttribute('data-bots-coach-hint')){
+    if(!game||game.phase!=='playing'||game.turn!==game.mySeat||readOptions().coach==='free')return;
+    const view=window.WastlCoach?.publicView(game);
+    coachHint={game,data:window.WastlCoach?.hint(view)||{ok:false,text:'Ein Tipp ist derzeit nicht verfügbar.'}};
+    renderApp();return;
+   }
    if(b.hasAttribute('data-bots-settings')){settingsOpen=true;renderApp();return;}
    if(b.hasAttribute('data-bots-settings-close')){settingsOpen=false;renderApp();return;}
    if(b.hasAttribute('data-bots-setting-toggle')){
@@ -567,11 +622,11 @@
    }
    if(b.hasAttribute('data-bots-abandon')){
     if(game&&['knocking','shotOffer','playing','chooseGame','bidding','biddingResult'].includes(game.phase)&&!confirm('Laufende Runde wirklich beenden?')){schedule();return;}
-    game=null;
+    game=null;coachHint=null;coachFeedback=null;
    }else if(b.hasAttribute('data-bots-new')){
-    game=B.create({knockEnabled:readOptions().knock,shotEnabled:readOptions().shot});game.cashEligible=true;walletOpen=false;settingsOpen=false;
+    game=B.create({knockEnabled:readOptions().knock,shotEnabled:readOptions().shot});game.cashEligible=true;walletOpen=false;settingsOpen=false;coachHint=null;coachFeedback=null;
    }else if(b.hasAttribute('data-bots-round')){
-    game=B.nextRound(game,Math.random,{knockEnabled:readOptions().knock,shotEnabled:readOptions().shot});game.cashEligible=true;walletOpen=false;settingsOpen=false;
+    game=B.nextRound(game,Math.random,{knockEnabled:readOptions().knock,shotEnabled:readOptions().shot});game.cashEligible=true;walletOpen=false;settingsOpen=false;coachHint=null;coachFeedback=null;
    }else if(b.hasAttribute('data-bots-choose')){
     if(game.auctionStage==='opening')B.declareInterest(game,true);
     else B.chooseToPlay(game);
@@ -586,7 +641,13 @@
     if(game.auctionStage==='opening')B.declareInterest(game,false);
     else B.submitBid(game,null);
    }else if(b.hasAttribute('data-bots-play')){
-    B.play(game,b.dataset.botsPlay);
+    const mode=readOptions().coach,view=mode==='free'?null:window.WastlCoach?.publicView(game);
+    const played=b.dataset.botsPlay;
+    // Die Karte zuerst regelkonform setzen. Feedback basiert nur auf dem
+    // vorherigen eigenen Blatt und den sichtbaren Karten.
+    B.play(game,played);
+    coachFeedback=view?{game,data:window.WastlCoach.feedback(view,played)}:null;
+    coachHint=null;
    }else if(b.hasAttribute('data-bots-analyze')){
     if(game?.phase!=='done')throw Error('Beende zunächst die Partie.');
     if(!game.savedId||!stitch.archive.some(x=>x.id===game.savedId))archiveCompleted();
