@@ -132,7 +132,7 @@
     }else card=opponentModel==='classic'
       ?O.choose(hand,cards,seat,leader,g,info,styles[seat],random)
       :T.choose(hand,cards,seat,leader,g,info,styles[seat],random,
-       opponentModel==='tactical'?'legacy':'partnerAware');
+       opponentModel==='tactical'?'legacy':opponentModel);
     if(!hand.includes(card))return null;
     const legal=E.legalMoves(hand,cards[0]||null,g,{past,trickIndex:turn});
     if(!legal.includes(card))return null;
@@ -161,7 +161,7 @@
   const seed=Number.isFinite(options.seed)?options.seed>>>0:0x8030126;
   // Experimental option "partnerAware" is deliberately NOT live default
   // until independent held-out comparisons demonstrate an improvement.
-  const opponentModel=['classic','tactical','partnerAware'].includes(options.opponentModel)
+  const opponentModel=['classic','tactical','partnerAware','knowledgeOnly'].includes(options.opponentModel)
    ?options.opponentModel:'tactical';
   const rnd=seeded(seed),aggregate=Object.fromEntries(pos.legal.map(card=>[card,{card,count:0,wins:0,eyes:0,total:0}]));
   for(let i=0;i<samples;i++){
@@ -185,10 +185,12 @@
   return {ok:true,version:VERSION,card:rows[0].card,forced:false,
    samples,possibleDeals:sampler.count,rows,opponentModel,
    tacticalVersion:opponentModel==='classic'?null:T.VERSION,
-   method:opponentModel==='partnerAware'
-    ?'Monte-Carlo mit oeffentlicher Rufspiel-Partnerinferenz'
-    :opponentModel==='tactical'?'Bisherige Wenz-/Rufspiel-Taktik'
-     :'Bisheriges Gegnermodell',
+   method:opponentModel==='knowledgeOnly'
+    ?'Test: nur zusaetzliche Rufspiel-Teamzuordnung, ohne Taktik-Boni'
+    :opponentModel==='partnerAware'
+     ?'Test: Rufspiel-Teamzuordnung plus heuristische Boni'
+     :opponentModel==='tactical'?'Bisherige Wenz-/Rufspiel-Taktik'
+      :'Bisheriges Gegnermodell',
    calibrated:false};
  }
  return Object.freeze({VERSION,publicView,build,analyze});

@@ -127,7 +127,7 @@
      why='Rufspiel: den bekannten Partner nicht unnoetig ueberstechen';
     }
     if(!leading&&opponentAhead&&beats&&last&&eyes>=10)extra+=1.2;
-    if(mode!=='legacy'){
+    if(mode==='partnerAware'){
      if(!leading&&teammateAhead&&beats&&trump)extra-=2.4;
      if(!leading&&teammateAhead&&!beats&&last&&p.eyes>=10)extra+=1.5;
      if(!leading&&opponentAhead&&beats&&last&&eyes>=9)extra+=2.0;
