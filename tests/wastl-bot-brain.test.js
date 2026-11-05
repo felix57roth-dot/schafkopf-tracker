@@ -59,7 +59,7 @@ test('Wiederholte Berechnung mit gleichem Seed liefert dieselbe Empfehlung',()=>
  const a=Brain.analyze(view,settings),b=Brain.analyze(view,settings);
  assert.deepEqual(a,b);
  assert.equal(a.ok,true,a.reason);
- assert.equal(a.version,'8.0.0');
+ assert.equal(a.version,'8.2.0');
  assert.equal(a.calibrated,false);
  assert.ok(a.possibleDeals>0);
 });
@@ -124,7 +124,7 @@ test('Solo, Wenz, Rufspiel: alle Karten bleiben legal und vollständige Partien 
   const saved=B.toRecord(g);
   assert.equal(E.review(saved).ok,true,type);
   assert.equal(saved.botBrainMoves,brainMoves);
-  assert.equal(saved.botEngineVersion,'8.0.0-hybrid');
+  assert.equal(saved.botEngineVersion,'8.2.0-hybrid');
   assert.equal(saved.tricks.length,8);
  }
 });
