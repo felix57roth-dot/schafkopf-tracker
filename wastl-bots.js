@@ -358,7 +358,7 @@
    }
    if(!options.includes(chosen))chosen=options[0];
    if(liveChoice){
-    g.botEngineVersion='8.0.0-hybrid';
+    g.botEngineVersion='8.2.0-hybrid';
     g.botBrainMoves=(g.botBrainMoves||0)+1;
    }else g.botFallbackMoves=(g.botFallbackMoves||0)+1;
    put(g,seat,chosen);

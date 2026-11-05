@@ -3,7 +3,7 @@
  */
 'use strict';
 importScripts('./wastl-engine.js','./wastl-policy.js','./wastl-opponents.js',
- './wastl-montecarlo.js','./wastl-bot-brain.js','./wastl-bots.js','./wastl-bid-brain.js');
+ './wastl-montecarlo.js','./wastl-tactics.js','./wastl-bot-brain.js','./wastl-bots.js','./wastl-bid-brain.js');
 self.onmessage=function(event){
  const data=event.data||{},id=data.requestId;
  try{
