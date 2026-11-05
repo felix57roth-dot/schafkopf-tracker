@@ -50,9 +50,10 @@ function playGame(test,mode,samples){
   const random=rng((test.seed*1640531535+g.tricks.length*1367+E.SEATS.indexOf(seat)*37+played.length*11+12)>>>0);
   const old=P.choose(hand,played,seat,g.leaderSeat,game,{past:g.tricks},random);
   let chosen=old;
-  if(seat===focal&&mode==='new'&&B.playable(g,seat).length>1){
+  if(seat===focal&&mode!=='old'&&B.playable(g,seat).length>1){
    const view=Brain.publicView(g,seat);
-   const estimated=Brain.analyze(view,{samples,seed:(test.seed*131071+g.tricks.length*911+played.length*101+4)>>>0});
+   const estimated=Brain.analyze(view,{samples,seed:(test.seed*131071+g.tricks.length*911+played.length*101+4)>>>0,
+    opponentModel:mode==='classic'?'classic':'tactical'});
    looked++;
    if(estimated.ok&&B.playable(g,seat).includes(estimated.card)){chosen=estimated.card;if(chosen!==old)disagreements++;}
    else fallbacks++;
