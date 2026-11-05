@@ -49,7 +49,7 @@ test('Rufspiel: nur selbst gehaltenes oder offen gespieltes Ruf-Ass zeigt Partne
 test('Rufspiel: Augen zum bekannten Partner, nicht blind zu fremden Gewinnern',()=>{
  const g={type:'rufspiel',calledSuit:'eichel',declarerSeat:'g'};
  const prior=[{leaderSeat:'vh',cards:['schell-7','eichel-A','herz-7','gras-7']}];
- const hand=['gras-10','gras-9'],cards=['gras-7','gras-A','herz-9'];
+ const hand=['gras-10','gras-9'],cards=['gras-7','gras-A','schell-9'];
  const info=T.situational(hand,cards,'g','vh',g,{past:prior});
  assert.equal(info.teammateAhead,true);
  assert.equal(info.last,true);
