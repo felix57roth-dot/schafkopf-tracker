@@ -441,6 +441,6 @@
   if(!review.ok)throw Error('Die Partie konnte nicht regelkonform gespeichert werden: '+(review.errors[0]?.message||'Unbekannter Fehler'));
   return record;
  }
- return Object.freeze({VERSION:'8.0.0',SEATS,PEOPLE,deal,sortHand,personAt,firstFour,currentActor,knock,shot,declarerTeam,bidOptions,bidStrength,
+ return Object.freeze({VERSION:'8.2.0',SEATS,PEOPLE,deal,sortHand,personAt,firstFour,currentActor,knock,shot,declarerTeam,bidOptions,bidStrength,
   create,bidderSeat,declareInterest,chooseToPlay,cancelChoice,submitBid,stepBot,advance,finishBidding,startPlay,play,playable,nextTrick,showResult,nextRound,result,toRecord});
 });
