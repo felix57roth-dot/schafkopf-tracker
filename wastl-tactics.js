@@ -21,7 +21,7 @@
    if(E.compare(cards[i],cards[index],cards[0],game)<0)index=i;
   return {seat:E.nextSeat(leader,index),card:cards[index]};
  }
- function publicPartner(game,past,played,leader){
+ function publicPartner(game,past,played,leader,mode='legacy'){
   if(game.type!=='rufspiel')return null;
   const ace=game.calledSuit+'-A';
   for(const trick of past){
@@ -29,26 +29,46 @@
    if(index>=0)return E.nextSeat(trick.leaderSeat,index);
   }
   const index=played.indexOf(ace);
-  return index>=0?E.nextSeat(leader,index):null;
+  if(index>=0)return E.nextSeat(leader,index);
+  if(mode==='legacy')return null;
+  // Davonlaufen: nur ein vollstaendiger Stich in Ruffarbe ohne Ruf-Sau
+  // beweist, dass der Anspieler die Sau selbst noch in der Hand hat.
+  for(const trick of past){
+   if(trick.cards?.length!==4)continue;
+   if(E.colorClass(trick.cards[0],game)===game.calledSuit &&
+      !trick.cards.includes(ace) && trick.leaderSeat!==game.declarerSeat)
+    return trick.leaderSeat;
+  }
+  return null;
  }
- function situational(hand,played,seat,leader,game,publicState={}){
-  const past=publicState.past||[],partner=publicPartner(game,past,played,leader);
-  const ownSide=P.teamOf(seat,hand,game,partner);
-  const leading=played.length===0;
-  const top=winner(played,leader,game);
-  const ahead=top?P.teamOf(top.seat,null,game,partner):null;
+ function situational(hand,played,seat,leader,game,publicState={},mode='legacy'){
+  const past=publicState.past||[],partner=publicPartner(game,past,played,leader,mode);
+  const ace=game.type==='rufspiel'?game.calledSuit+'-A':null;
+  const hasAce=!!ace&&hand.includes(ace);
+  const ownSide=game.type==='rufspiel'&&mode!=='legacy'
+   ?(seat===game.declarerSeat||seat===partner||hasAce?'attack':'defense')
+   :P.teamOf(seat,hand,game,partner);
+  const leading=played.length===0,top=winner(played,leader,game);
+  let ahead=top?P.teamOf(top.seat,null,game,partner):null;
+  if(game.type==='rufspiel'&&mode!=='legacy'&&top){
+   if(top.seat===game.declarerSeat||top.seat===partner||hasAce&&top.seat===seat)
+    ahead='attack';
+   else if(partner||hasAce||top.seat===seat)ahead='defense';
+  }
   const teammateAhead=!!top&&ownSide!=='unknown'&&ownSide===ahead;
   const opponentAhead=!!top&&ownSide!=='unknown'&&ahead!=='unknown'&&ownSide!==ahead;
-  const last=played.length===3;
-  const eyes=played.reduce((n,c)=>n+E.parse(c).eyes,0);
-  const revealedPartner=partner!==null;
-  return {ownSide,top,teammateAhead,opponentAhead,last,leading,eyes,
-   revealedPartner,partner,calledAce:game.type==='rufspiel'?game.calledSuit+'-A':null};
+  const last=played.length===3,eyes=played.reduce((n,c)=>n+E.parse(c).eyes,0);
+  return {ownSide,ahead,top,teammateAhead,opponentAhead,last,leading,eyes,
+   revealedPartner:partner!==null,partner,hasAce,calledAce:ace};
  }
- function score(hand,played,seat,leader,game,publicState={},style='balanced'){
+ function score(hand,played,seat,leader,game,publicState={},style='balanced',mode='legacy'){
   if(!TYPES.has(game?.type))return P.evaluate(hand,played,seat,leader,game,publicState,()=>.5);
-  const options=P.evaluate(hand,played,seat,leader,game,publicState,()=>.5);
-  const context=situational(hand,played,seat,leader,game,publicState);
+  const inferred=game.type==='rufspiel'&&mode!=='legacy'
+   ?publicPartner(game,publicState.past||[],played,leader,mode):null;
+  const safeState=game.type==='rufspiel'&&mode!=='legacy'
+   ?{...publicState,partner:inferred}:publicState;
+  const options=P.evaluate(hand,played,seat,leader,game,safeState,()=>.5);
+  const context=situational(hand,played,seat,leader,game,safeState,mode);
   const {top,teammateAhead,opponentAhead,last,leading,eyes,ownSide,calledAce}=context;
   const late=(publicState.past||[]).length>=5;
   const trumps=hand.filter(c=>E.isTrump(c,game));
@@ -107,18 +127,25 @@
      why='Rufspiel: den bekannten Partner nicht unnoetig ueberstechen';
     }
     if(!leading&&opponentAhead&&beats&&last&&eyes>=10)extra+=1.2;
+    if(mode!=='legacy'){
+     if(!leading&&teammateAhead&&beats&&trump)extra-=2.4;
+     if(!leading&&teammateAhead&&!beats&&last&&p.eyes>=10)extra+=1.5;
+     if(!leading&&opponentAhead&&beats&&last&&eyes>=9)extra+=2.0;
+     if(!leading&&!teammateAhead&&!opponentAhead&&ownSide==='attack'
+      &&trump&&beats&&eyes<=5&&!late)extra-=1.2;
+    }
    }
    if(style==='cautious'&&trump&&!late)extra-=0.6;
    if(style==='assertive'&&!leading&&beats&&!teammateAhead)extra+=0.7;
    return {...item,score:item.score+extra,reason:why||item.reason,adjustment:extra};
   }).sort((a,b)=>b.score-a.score||a.card.localeCompare(b.card));
  }
- function choose(hand,played,seat,leader,game,publicState={},style='balanced',random=()=>.5){
+ function choose(hand,played,seat,leader,game,publicState={},style='balanced',random=()=>.5,mode='legacy'){
   if(!TYPES.has(game?.type))return O.choose(hand,played,seat,leader,game,publicState,style,random);
-  const rows=score(hand,played,seat,leader,game,publicState,style);
+  const rows=score(hand,played,seat,leader,game,publicState,style,mode);
   // Winzige Zufallsvariation, gegenueber den taktischen Regeln gering.
   return rows.map(row=>({...row,tie:row.score+(random()-.5)*.12}))
    .sort((a,b)=>b.tie-a.tie||a.card.localeCompare(b.card))[0]?.card||null;
  }
- return Object.freeze({VERSION,situational,score,choose});
+ return Object.freeze({VERSION,publicPartner,situational,score,choose});
 });

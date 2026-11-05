@@ -122,14 +122,17 @@
    const start=cards.length;
    for(let j=start;j<4;j++){
     const seat=E.nextSeat(leader,j),hand=hands[seat];
-    const info={past,partner:publicPartner(g,past,cards,leader)};
+    const partner=opponentModel==='partnerAware'
+     ?T.publicPartner(g,past,cards,leader):publicPartner(g,past,cards,leader);
+    const info={past,partner};
     let card;
     if(turn===pos.trickIndex&&j===pos.prefix.length){
      if(seat!==pos.seat)return null;
      card=candidate;
     }else card=opponentModel==='classic'
       ?O.choose(hand,cards,seat,leader,g,info,styles[seat],random)
-      :T.choose(hand,cards,seat,leader,g,info,styles[seat],random);
+      :T.choose(hand,cards,seat,leader,g,info,styles[seat],random,
+       opponentModel==='tactical'?'legacy':'partnerAware');
     if(!hand.includes(card))return null;
     const legal=E.legalMoves(hand,cards[0]||null,g,{past,trickIndex:turn});
     if(!legal.includes(card))return null;
@@ -156,7 +159,10 @@
   if(!sampler.count)return {ok:false,version:VERSION,reason:'Keine regelkonforme moegliche Kartenverteilung'};
   const samples=Math.max(8,Math.min(90,Number.isFinite(options.samples)?Math.floor(options.samples):26));
   const seed=Number.isFinite(options.seed)?options.seed>>>0:0x8030126;
-  const opponentModel=options.opponentModel==='classic'?'classic':'tactical';
+  // Experimental option "partnerAware" is deliberately NOT live default
+  // until independent held-out comparisons demonstrate an improvement.
+  const opponentModel=['classic','tactical','partnerAware'].includes(options.opponentModel)
+   ?options.opponentModel:'tactical';
   const rnd=seeded(seed),aggregate=Object.fromEntries(pos.legal.map(card=>[card,{card,count:0,wins:0,eyes:0,total:0}]));
   for(let i=0;i<samples;i++){
    const world=sampler.sample(rnd);
@@ -178,10 +184,11 @@
   if(!rows.length)return {ok:false,version:VERSION,reason:'Nicht genug konsistente Simulationen'};
   return {ok:true,version:VERSION,card:rows[0].card,forced:false,
    samples,possibleDeals:sampler.count,rows,opponentModel,
-   tacticalVersion:opponentModel==='tactical'?T.VERSION:null,
-   method:opponentModel==='tactical'
-    ?'Monte-Carlo-Fortsetzungen mit Wenz-/Rufspiel-Taktik und verdeckten Handverteilungen'
-    :'Monte-Carlo-Fortsetzungen mit bisherigem Gegnermodell',
+   tacticalVersion:opponentModel==='classic'?null:T.VERSION,
+   method:opponentModel==='partnerAware'
+    ?'Monte-Carlo mit oeffentlicher Rufspiel-Partnerinferenz'
+    :opponentModel==='tactical'?'Bisherige Wenz-/Rufspiel-Taktik'
+     :'Bisheriges Gegnermodell',
    calibrated:false};
  }
  return Object.freeze({VERSION,publicView,build,analyze});
