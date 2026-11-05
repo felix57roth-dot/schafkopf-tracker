@@ -1633,7 +1633,7 @@ function renderV3(){
  document.getElementById('suits').innerHTML='<button id="settingsGear" type="button" aria-label="Einstellungen öffnen" title="Einstellungen">⚙</button>';
  document.getElementById('main').innerHTML=(tab==='home'?homeV3():tab==='capture'?captureHub():tab==='history'?captureBack()+history():tab==='games'?captureBack()+games():tab==='learn'?window.SchafkopfKurs?.render()||'<section class="card formcard">Lernkurs wird geladen.</section>':tab==='stats'?statsV3():tab==='mentor'?wastlV3():tab==='bots'?window.WastlBotsUI?.render()||'<section class="card formcard">Botmodus wird geladen.</section>':tab==='profile'?profileV3():homeV3());
  document.getElementById('nav').classList.add('sk-nav-six');
- document.getElementById('nav').innerHTML=[['home','Start','home'],['capture','Erfassen','plus'],['bots','Spielen','cards'],['learn','Lernen','learn'],['stats','Statistik','stats'],['mentor','Wastl','mentor']].map(([id,label,ico])=>`<button type="button" data-tab="${id}" class="${id===mainArea?'active':''}" ${id===mainArea?'aria-current="page"':''}>${symbol(ico)}${label}</button>`).join('');
+ document.getElementById('nav').innerHTML=[['capture','Erfassen','plus'],['bots','Spielen','cards'],['home','Start','home'],['learn','Lernen','learn'],['stats','Statistik','stats'],['mentor','Wastl','mentor']].map(([id,label,ico])=>`<button type="button" data-tab="${id}" class="${id===mainArea?'active':''}" ${id===mainArea?'aria-current="page"':''}>${symbol(ico)}${label}</button>`).join('');
  if(tab==='profile'&&importCandidate)importPreview();if(tab==='history')updateManualDateInfo();
 }
 function render(){return renderV3();}

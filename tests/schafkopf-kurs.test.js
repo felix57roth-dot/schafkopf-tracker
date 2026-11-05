@@ -216,3 +216,13 @@ test('Lernfortschritt und altes Sicherungsformat bleiben nach dem Update kompati
  assert.equal(Content.VERSION,'1.1.0');
  assert.ok(Course.stats().questions>=46);
 });
+
+test('Start ist als dritter von sechs Menüpunkten möglichst mittig angeordnet',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+ const nav=html.match(/document\.getElementById\('nav'\)\.innerHTML=(\[\[[^\n]*?\]\])/);
+ assert.ok(nav,'Navigation muss vorhanden sein');
+ const ids=[...nav[1].matchAll(/\['(home|capture|bots|learn|stats|mentor)','/g)].map(m=>m[1]);
+ assert.deepEqual(ids,['capture','bots','home','learn','stats','mentor']);
+ assert.equal(ids.length,6);
+ assert.equal(ids.indexOf('home'),2);
+});
